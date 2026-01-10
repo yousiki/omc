@@ -13,7 +13,7 @@
 
 *Like Sisyphus, these agents persist until every task is complete.*
 
-[Install](#quick-install) • [Usage](#usage) • [Agents](#the-eleven-agents) • [Website](https://yeachan-heo.github.io/oh-my-claude-sisyphus-website)
+[Install](#quick-install) • [Usage](#usage) • [Agents](#the-eleven-agents) • [Architecture](docs/ARCHITECTURE.md) • [Website](https://yeachan-heo.github.io/oh-my-claude-sisyphus-website)
 
 </div>
 
