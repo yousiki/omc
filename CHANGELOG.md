@@ -5,13 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.6.0] - 2026-01-18
+## [2.6.0] - 2026-01-19
 
-### Ralph Loop PRD Support (Major Feature)
+### 🧠 Compaction-Resilient Memory System (Major Feature)
+
+This release introduces a **three-tier memory system** that survives context compaction, ensuring Claude never loses critical project knowledge during long sessions.
+
+### 🔄 Ralph Loop PRD Support (Major Feature)
 
 Implements structured task tracking inspired by the original [Ralph](https://github.com/snarktank/ralph) project. This brings PRD-based task management to ralph-loop, enabling reliable completion tracking across iterations.
 
 ### Added
+
+- **Notepad Memory System** (`src/hooks/notepad/index.ts`) - **Compaction-Resilient Context**
+  - `.sisyphus/notepad.md` persists across context compactions
+  - **Three-tier storage architecture:**
+    - **Priority Context** - Always loaded on session start (max 500 chars, critical discoveries)
+    - **Working Memory** - Session notes with timestamps (auto-pruned after 7 days)
+    - **MANUAL** - User content that is never auto-pruned
+  - **Auto-injection** of Priority Context via SessionStart hook
+  - **Auto-pruning** of old Working Memory entries on session stop
+  - `/note <content>` command for manual note-taking
+
+- **Remember Tag Auto-Capture** (`src/installer/hooks.ts`) - **PostToolUse Hook**
+  - `<remember>content</remember>` - Auto-saves to Working Memory section
+  - `<remember priority>content</remember>` - Auto-saves to Priority Context section
+  - Agents can output remember tags to persist discoveries across compactions
+  - Works without jq dependency (grep/sed fallback)
+  - Installed as `post-tool-use.sh` hook
 
 - **PRD (Product Requirements Document) Support** (`src/hooks/ralph-prd/index.ts`)
   - `prd.json` structured task format with user stories, acceptance criteria, priorities
@@ -26,13 +47,6 @@ Implements structured task tracking inspired by the original [Ralph](https://git
   - Per-story progress entries with implementation notes, files changed, learnings
   - Pattern extraction and learning retrieval for context injection
 
-- **Notepad Memory System** (`src/hooks/notepad/index.ts`)
-  - `.sisyphus/notepad.md` for compaction-resilient context
-  - Three-tier storage: Priority Context (always loaded), Working Memory (auto-pruned), MANUAL (permanent)
-  - Auto-injection of Priority Context on session start
-  - Auto-pruning of Working Memory entries older than 7 days
-  - `/note` command for easy note-taking during sessions
-
 - **New Commands**
   - `/ralph-init <task>` - Scaffold a PRD from task description with auto-generated user stories
   - `/ultrawork-ralph <task>` - Maximum intensity mode with completion guarantee (ultrawork + ralph loop)
@@ -44,12 +58,16 @@ Implements structured task tracking inspired by the original [Ralph](https://git
 - **New Agent Tiers**
   - `qa-tester-high` (Opus) - Complex integration testing
 
+- **New Hooks**
+  - `PostToolUse` hook for processing Task agent output
+  - Remember tag detection and notepad integration
+
 - **Comprehensive Test Suites**
   - `src/__tests__/ralph-prd.test.ts` - 29 tests for PRD operations
   - `src/__tests__/ralph-progress.test.ts` - 30 tests for progress tracking
   - `src/__tests__/notepad.test.ts` - 40 tests for notepad operations
   - `src/__tests__/hooks.test.ts` - 18 new tests for design flaw fixes
-  - Total: 358 tests (up from 231)
+  - Total: **358 tests** (up from 231)
 
 ### Changed
 
@@ -64,6 +82,11 @@ Implements structured task tracking inspired by the original [Ralph](https://git
   - Checks PRD status before allowing ralph-loop completion
   - Clears ultrawork state when PRD loop completes (for ultrawork-ralph)
 
+- **Installer Enhanced**
+  - Now installs `post-tool-use.sh` hook for remember tag processing
+  - Registers `PostToolUse` hook in settings.json
+  - Platform-aware hook installation (bash/node.js)
+
 ### Fixed
 
 - **Stale position bug in `addPattern`** - Placeholder removal now happens before calculating separator position
@@ -77,6 +100,39 @@ Implements structured task tracking inspired by the original [Ralph](https://git
 - **Non-existent /start-work command** - Removed references to command that doesn't exist
 
 ### Technical Details
+
+**Notepad.md Structure:**
+```markdown
+# Notepad
+<!-- Auto-managed by Sisyphus. Manual edits preserved in MANUAL section. -->
+
+## Priority Context
+<!-- ALWAYS loaded. Keep under 500 chars. Critical discoveries only. -->
+Project uses pnpm not npm
+API client at src/api/client.ts
+
+## Working Memory
+<!-- Session notes. Auto-pruned after 7 days. -->
+
+### 2026-01-19 10:30
+Discovered auth middleware in src/middleware/auth.ts
+
+### 2026-01-19 09:15
+Database schema uses PostgreSQL with Prisma ORM
+
+## MANUAL
+<!-- User content. Never auto-pruned. -->
+User's permanent notes here
+```
+
+**Remember Tag Usage:**
+```
+Agent output: <remember>Project uses TypeScript strict mode</remember>
+→ Saved to Working Memory with timestamp
+
+Agent output: <remember priority>API base URL is https://api.example.com</remember>
+→ Saved to Priority Context (replaces previous)
+```
 
 **PRD Structure:**
 ```json
@@ -100,7 +156,7 @@ Implements structured task tracking inspired by the original [Ralph](https://git
 **Progress.txt Structure:**
 ```
 # Ralph Progress Log
-Started: 2026-01-18T...
+Started: 2026-01-19T...
 
 ## Codebase Patterns
 - Pattern learned from iteration 1
@@ -108,7 +164,7 @@ Started: 2026-01-18T...
 
 ---
 
-## [2026-01-18 12:00] - US-001
+## [2026-01-19 12:00] - US-001
 **What was implemented:**
 - Feature A
 - Feature B
