@@ -43,8 +43,8 @@ function getPackageDir(): string {
 function loadTemplate(filename: string): string {
   const templatePath = join(getPackageDir(), 'templates', 'hooks', filename);
   if (!existsSync(templatePath)) {
-    console.error(`FATAL: Hook template not found: ${templatePath}`);
-    process.exit(1);
+    // .sh templates have been removed in favor of .mjs - return empty string for missing bash templates
+    return '';
   }
   return readFileSync(templatePath, 'utf-8');
 }
