@@ -161,8 +161,6 @@ rm -f .omc/state/autopilot-state.json
 rm -f .omc/state/ralph-state.json
 rm -f .omc/state/ultrawork-state.json
 rm -f .omc/state/ultraqa-state.json
-rm -f ~/.claude/ralph-state.json
-rm -f ~/.claude/ultrawork-state.json
 ```
 
 This ensures clean state for future sessions.

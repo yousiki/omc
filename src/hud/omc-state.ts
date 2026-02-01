@@ -104,50 +104,33 @@ interface UltraworkState {
 
 /**
  * Read Ultrawork state for HUD display.
- * Checks both local .omc and global ~/.claude locations.
+ * Checks only local .omc/state location.
  */
 export function readUltraworkStateForHud(
   directory: string
 ): UltraworkStateForHud | null {
-  // Check local state first (with new path fallback)
+  // Check local state only (with new path fallback)
   const localFile = resolveStatePath(directory, 'ultrawork-state.json');
-  let state: UltraworkState | null = null;
-  let stateFile: string | null = null;
 
-  if (localFile && !isStateFileStale(localFile)) {
-    try {
-      const content = readFileSync(localFile, 'utf-8');
-      state = JSON.parse(content) as UltraworkState;
-      stateFile = localFile;
-    } catch {
-      // Try global
-    }
-  }
-
-  // Check global state if local not found or stale
-  if (!state) {
-    const homeDir = process.env.HOME || process.env.USERPROFILE || '';
-    const globalFile = join(homeDir, '.claude', 'ultrawork-state.json');
-
-    if (existsSync(globalFile) && !isStateFileStale(globalFile)) {
-      try {
-        const content = readFileSync(globalFile, 'utf-8');
-        state = JSON.parse(content) as UltraworkState;
-        stateFile = globalFile;
-      } catch {
-        return null;
-      }
-    }
-  }
-
-  if (!state || !state.active) {
+  if (!localFile || isStateFileStale(localFile)) {
     return null;
   }
 
-  return {
-    active: state.active,
-    reinforcementCount: state.reinforcement_count,
-  };
+  try {
+    const content = readFileSync(localFile, 'utf-8');
+    const state = JSON.parse(content) as UltraworkState;
+
+    if (!state.active) {
+      return null;
+    }
+
+    return {
+      active: state.active,
+      reinforcementCount: state.reinforcement_count,
+    };
+  } catch {
+    return null;
+  }
 }
 
 // ============================================================================

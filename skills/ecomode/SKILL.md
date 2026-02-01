@@ -136,7 +136,6 @@ When ecomode completes (all verification passes):
 ```bash
 # Delete ecomode state files
 rm -f .omc/state/ecomode-state.json
-rm -f ~/.claude/ecomode-state.json
 ```
 
 This ensures clean state for future sessions. Stale state files with `active: false` should not be left behind.

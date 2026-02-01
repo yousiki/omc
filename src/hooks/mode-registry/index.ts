@@ -57,13 +57,13 @@ const MODE_CONFIGS: Record<ExecutionMode, ModeConfig> = {
     stateFile: 'ralph-state.json',
     markerFile: 'ralph-verification.json',
     activeProperty: 'active',
-    hasGlobalState: true
+    hasGlobalState: false
   },
   ultrawork: {
     name: 'Ultrawork',
     stateFile: 'ultrawork-state.json',
     activeProperty: 'active',
-    hasGlobalState: true
+    hasGlobalState: false
   },
   ultraqa: {
     name: 'UltraQA',
@@ -74,7 +74,7 @@ const MODE_CONFIGS: Record<ExecutionMode, ModeConfig> = {
     name: 'Ecomode',
     stateFile: 'ecomode-state.json',
     activeProperty: 'active',
-    hasGlobalState: true
+    hasGlobalState: false
   }
 };
 
@@ -122,14 +122,12 @@ export function getMarkerFilePath(cwd: string, mode: ExecutionMode): string | nu
 
 /**
  * Get the global state file path (in ~/.claude/) for modes that support it
+ * @deprecated Global state is no longer supported. All modes use local-only state in .omc/state/
+ * @returns Always returns null
  */
 export function getGlobalStateFilePath(mode: ExecutionMode): string | null {
-  const config = MODE_CONFIGS[mode];
-  if (!config.hasGlobalState) {
-    return null;
-  }
-  const homeDir = process.env.HOME || process.env.USERPROFILE || '';
-  return join(homeDir, '.claude', config.stateFile);
+  // Global state is deprecated - all modes now use local-only state
+  return null;
 }
 
 /**
@@ -350,15 +348,7 @@ export function clearModeState(mode: ExecutionMode, cwd: string): boolean {
     }
   }
 
-  // Delete global state file if applicable
-  const globalFile = getGlobalStateFilePath(mode);
-  if (globalFile && existsSync(globalFile)) {
-    try {
-      unlinkSync(globalFile);
-    } catch {
-      success = false;
-    }
-  }
+  // Note: Global state files are no longer used (local-only state migration)
 
   return success;
 }

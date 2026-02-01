@@ -1,6 +1,5 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import * as os from 'os';
 
 export interface SessionEndInput {
   session_id: string;
@@ -216,16 +215,16 @@ export function cleanupTransientState(directory: string): number {
  * These files track active execution modes that should not persist across sessions.
  */
 const MODE_STATE_FILES = [
-  { file: 'autopilot-state.json', mode: 'autopilot', hasGlobal: false, globalPath: '' },
-  { file: 'ultrapilot-state.json', mode: 'ultrapilot', hasGlobal: false, globalPath: '' },
-  { file: 'ralph-state.json', mode: 'ralph', hasGlobal: true, globalPath: '' },
-  { file: 'ultrawork-state.json', mode: 'ultrawork', hasGlobal: true, globalPath: '.claude/ultrawork-state.json' },
-  { file: 'ecomode-state.json', mode: 'ecomode', hasGlobal: true, globalPath: '' },
-  { file: 'ultraqa-state.json', mode: 'ultraqa', hasGlobal: false, globalPath: '' },
-  { file: 'pipeline-state.json', mode: 'pipeline', hasGlobal: false, globalPath: '' },
+  { file: 'autopilot-state.json', mode: 'autopilot' },
+  { file: 'ultrapilot-state.json', mode: 'ultrapilot' },
+  { file: 'ralph-state.json', mode: 'ralph' },
+  { file: 'ultrawork-state.json', mode: 'ultrawork' },
+  { file: 'ecomode-state.json', mode: 'ecomode' },
+  { file: 'ultraqa-state.json', mode: 'ultraqa' },
+  { file: 'pipeline-state.json', mode: 'pipeline' },
   // Swarm uses marker file + SQLite
-  { file: 'swarm-active.marker', mode: 'swarm', hasGlobal: false, globalPath: '' },
-  { file: 'swarm-summary.json', mode: 'swarm', hasGlobal: false, globalPath: '' },
+  { file: 'swarm-active.marker', mode: 'swarm' },
+  { file: 'swarm-summary.json', mode: 'swarm' },
 ];
 
 /**
@@ -241,13 +240,12 @@ export function cleanupModeStates(directory: string): { filesRemoved: number; mo
   let filesRemoved = 0;
   const modesCleaned: string[] = [];
   const stateDir = path.join(directory, '.omc', 'state');
-  const homeDir = os.homedir();
 
   if (!fs.existsSync(stateDir)) {
     return { filesRemoved, modesCleaned };
   }
 
-  for (const { file, mode, hasGlobal, globalPath } of MODE_STATE_FILES) {
+  for (const { file, mode } of MODE_STATE_FILES) {
     const localPath = path.join(stateDir, file);
 
     // Check if local state exists and is active
@@ -276,32 +274,6 @@ export function cleanupModeStates(directory: string): { filesRemoved: number; mo
         }
       } catch {
         // Ignore errors, continue with other files
-      }
-    }
-
-    // Also clean global state if applicable
-    if (hasGlobal) {
-      const globalStatePath = globalPath
-        ? path.join(homeDir, globalPath)
-        : path.join(homeDir, '.omc', 'state', file);
-
-      if (fs.existsSync(globalStatePath)) {
-        try {
-          if (file.endsWith('.json')) {
-            const content = fs.readFileSync(globalStatePath, 'utf-8');
-            const state = JSON.parse(content);
-
-            if (state.active === true) {
-              fs.unlinkSync(globalStatePath);
-              filesRemoved++;
-            }
-          } else {
-            fs.unlinkSync(globalStatePath);
-            filesRemoved++;
-          }
-        } catch {
-          // Ignore errors
-        }
       }
     }
   }

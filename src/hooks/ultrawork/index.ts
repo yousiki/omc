@@ -8,7 +8,6 @@
 
 import { existsSync, readFileSync, writeFileSync, mkdirSync, unlinkSync } from 'fs';
 import { join } from 'path';
-import { homedir } from 'os';
 
 export interface UltraworkState {
   /** Whether ultrawork mode is currently active */
@@ -44,12 +43,6 @@ function getStateFilePath(directory?: string): string {
   return join(omcDir, 'state', 'ultrawork-state.json');
 }
 
-/**
- * Get global state file path (for cross-session persistence)
- */
-function getGlobalStateFilePath(): string {
-  return join(homedir(), '.claude', 'ultrawork-state.json');
-}
 
 /**
  * Ensure the .omc/state directory exists
@@ -62,36 +55,15 @@ function ensureStateDir(directory?: string): void {
   }
 }
 
-/**
- * Ensure the ~/.claude directory exists
- */
-function ensureGlobalStateDir(): void {
-  const claudeDir = join(homedir(), '.claude');
-  if (!existsSync(claudeDir)) {
-    mkdirSync(claudeDir, { recursive: true });
-  }
-}
 
 /**
- * Read Ultrawork state from disk (checks both local and global)
+ * Read Ultrawork state from disk (local only)
  */
 export function readUltraworkState(directory?: string): UltraworkState | null {
-  // Check local state first
   const localStateFile = getStateFilePath(directory);
   if (existsSync(localStateFile)) {
     try {
       const content = readFileSync(localStateFile, 'utf-8');
-      return JSON.parse(content);
-    } catch {
-      // Fall through to global check
-    }
-  }
-
-  // Check global state
-  const globalStateFile = getGlobalStateFilePath();
-  if (existsSync(globalStateFile)) {
-    try {
-      const content = readFileSync(globalStateFile, 'utf-8');
       return JSON.parse(content);
     } catch {
       return null;
@@ -102,20 +74,13 @@ export function readUltraworkState(directory?: string): UltraworkState | null {
 }
 
 /**
- * Write Ultrawork state to disk (both local and global for redundancy)
+ * Write Ultrawork state to disk (local only)
  */
 export function writeUltraworkState(state: UltraworkState, directory?: string): boolean {
   try {
-    // Write to local .omc
     ensureStateDir(directory);
     const localStateFile = getStateFilePath(directory);
     writeFileSync(localStateFile, JSON.stringify(state, null, 2));
-
-    // Write to global ~/.claude for cross-session persistence
-    ensureGlobalStateDir();
-    const globalStateFile = getGlobalStateFilePath();
-    writeFileSync(globalStateFile, JSON.stringify(state, null, 2));
-
     return true;
   } catch {
     return false;
@@ -148,21 +113,10 @@ export function activateUltrawork(
  * Deactivate ultrawork mode
  */
 export function deactivateUltrawork(directory?: string): boolean {
-  // Remove local state
   const localStateFile = getStateFilePath(directory);
   if (existsSync(localStateFile)) {
     try {
       unlinkSync(localStateFile);
-    } catch {
-      // Continue to global cleanup
-    }
-  }
-
-  // Remove global state
-  const globalStateFile = getGlobalStateFilePath();
-  if (existsSync(globalStateFile)) {
-    try {
-      unlinkSync(globalStateFile);
       return true;
     } catch {
       return false;

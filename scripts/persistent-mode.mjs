@@ -69,19 +69,12 @@ function isStaleState(state) {
 }
 
 /**
- * Read state file from local or global location, tracking the source.
+ * Read state file from local location only.
  */
-function readStateFile(stateDir, globalStateDir, filename) {
+function readStateFile(stateDir, filename) {
   const localPath = join(stateDir, filename);
-  const globalPath = join(globalStateDir, filename);
-
-  let state = readJsonFile(localPath);
-  if (state) return { state, path: localPath };
-
-  state = readJsonFile(globalPath);
-  if (state) return { state, path: globalPath };
-
-  return { state: null, path: localPath }; // Default to local for new writes
+  const state = readJsonFile(localPath);
+  return { state, path: localPath };
 }
 
 /**
@@ -196,7 +189,6 @@ async function main() {
     const directory = data.directory || process.cwd();
     const sessionId = data.sessionId || data.session_id || '';
     const stateDir = join(directory, '.omc', 'state');
-    const globalStateDir = join(homedir(), '.omc', 'state');
 
     // CRITICAL: Never block context-limit stops.
     // Blocking these causes a deadlock where Claude Code cannot compact.
@@ -212,14 +204,14 @@ async function main() {
       return;
     }
 
-    // Read all mode states (local-first with fallback to global)
-    const ralph = readStateFile(stateDir, globalStateDir, 'ralph-state.json');
-    const autopilot = readStateFile(stateDir, globalStateDir, 'autopilot-state.json');
-    const ultrapilot = readStateFile(stateDir, globalStateDir, 'ultrapilot-state.json');
-    const ultrawork = readStateFile(stateDir, globalStateDir, 'ultrawork-state.json');
-    const ecomode = readStateFile(stateDir, globalStateDir, 'ecomode-state.json');
-    const ultraqa = readStateFile(stateDir, globalStateDir, 'ultraqa-state.json');
-    const pipeline = readStateFile(stateDir, globalStateDir, 'pipeline-state.json');
+    // Read all mode states (local-only)
+    const ralph = readStateFile(stateDir, 'ralph-state.json');
+    const autopilot = readStateFile(stateDir, 'autopilot-state.json');
+    const ultrapilot = readStateFile(stateDir, 'ultrapilot-state.json');
+    const ultrawork = readStateFile(stateDir, 'ultrawork-state.json');
+    const ecomode = readStateFile(stateDir, 'ecomode-state.json');
+    const ultraqa = readStateFile(stateDir, 'ultraqa-state.json');
+    const pipeline = readStateFile(stateDir, 'pipeline-state.json');
 
     // Swarm uses swarm-summary.json (not swarm-state.json) + marker file
     const swarmMarker = existsSync(join(stateDir, 'swarm-active.marker'));

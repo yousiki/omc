@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.8.16] - 2026-02-01
+
+### Changed
+
+- **Local-Only State Management** - All execution mode state (ralph, ultrawork, ecomode) is now stored exclusively in `.omc/state/` per project/worktree. Global state in `~/.claude/` and `~/.omc/state/` is no longer written for mode state, enabling multiple git worktrees to run OMC simultaneously without state conflicts. Existing global state is migrated on first read.
+- **Promise Pattern Removal** - Fully removed `<promise>` completion pattern from ralph and verification workflows. Completion now uses architect verification + `/oh-my-claudecode:cancel` for clean exit.
+
+### Added
+
+- **HUD CWD Element** (#229) - Configurable working directory display in HUD with three formats: relative, absolute, folder.
+- **HUD Thinking Indicator** (#229) - Configurable thinking indicator with four formats: bubble, brain, face, text.
+- **HUD Line Limiting** (#228) - Prevents HUD output from shrinking the input field.
+- **HUD Stale Task Threshold** (#236) - Configurable `staleTaskThresholdMinutes` option.
+- **Session End Hook** - New hook for proper state cleanup on session termination, preventing stale state from causing stop hook malfunctions.
+- **Learner Parser Backward Compatibility** (#227) - Backward-compatible parser for legacy skill files with auto-generated IDs and default source field.
+
+### Fixed
+
+- **Stop Hook Not Blocking** (PR #237, fixes #233) - Fixed persistent-mode Stop hook using `{ continue: true }` instead of `{ decision: "block" }`.
+- **Completion Promise Checking** (#239) - Added completion promise checking to Ultrawork and Ecomode stop hooks.
+- **Staleness Check** - Added staleness check and session-end cleanup for mode states.
+
+---
+
 ## [3.8.15] - 2026-01-31
 
 ### Fixed

@@ -32,19 +32,22 @@ import {
 
 // Standard state directories
 const LOCAL_STATE_DIR = '.omc/state';
+/**
+ * @deprecated for mode state. Global state directory is only used for analytics and daemon state.
+ * Mode state should use LOCAL_STATE_DIR exclusively.
+ */
 const GLOBAL_STATE_DIR = path.join(os.homedir(), '.omc', 'state');
 
 // Legacy state locations (for backward compatibility)
 const LEGACY_LOCATIONS: Record<string, string[]> = {
-  // Example legacy locations that might exist
-  'boulder': ['.omc/boulder.json', path.join(os.homedir(), '.omc', 'boulder.json')],
+  'boulder': ['.omc/boulder.json'],
   'autopilot': ['.omc/autopilot-state.json'],
   'autopilot-state': ['.omc/autopilot-state.json'],
   'ralph': ['.omc/ralph-state.json'],
   'ralph-state': ['.omc/ralph-state.json'],
   'ralph-verification': ['.omc/ralph-verification.json'],
-  'ultrawork': ['.omc/ultrawork-state.json', path.join(os.homedir(), '.claude', 'ultrawork-state.json')],
-  'ultrawork-state': ['.omc/ultrawork-state.json', path.join(os.homedir(), '.claude', 'ultrawork-state.json')],
+  'ultrawork': ['.omc/ultrawork-state.json'],
+  'ultrawork-state': ['.omc/ultrawork-state.json'],
   'ultraqa': ['.omc/ultraqa-state.json'],
   'ultraqa-state': ['.omc/ultraqa-state.json'],
   'hud-state': ['.omc/hud-state.json'],

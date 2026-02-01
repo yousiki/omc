@@ -25,12 +25,6 @@ function getLocalStateFilePath(directory?: string): string {
   return join(omcStateDir, 'hud-state.json');
 }
 
-/**
- * Get global HUD state file path (for cross-session persistence)
- */
-function getGlobalStateFilePath(): string {
-  return join(homedir(), '.claude', 'hud-state.json');
-}
 
 /**
  * Get the HUD config file path
@@ -60,22 +54,13 @@ function ensureGlobalConfigDir(): void {
   }
 }
 
-/**
- * Ensure the ~/.claude directory exists
- */
-function ensureGlobalStateDir(): void {
-  const claudeDir = join(homedir(), '.claude');
-  if (!existsSync(claudeDir)) {
-    mkdirSync(claudeDir, { recursive: true });
-  }
-}
 
 // ============================================================================
 // HUD State Operations
 // ============================================================================
 
 /**
- * Read HUD state from disk (checks new local, legacy local, then global)
+ * Read HUD state from disk (checks new local and legacy local only)
  */
 export function readHudState(directory?: string): OmcHudState | null {
   // Check new local state first (.omc/state/hud-state.json)
@@ -97,17 +82,6 @@ export function readHudState(directory?: string): OmcHudState | null {
       const content = readFileSync(legacyStateFile, 'utf-8');
       return JSON.parse(content);
     } catch {
-      // Fall through to global check
-    }
-  }
-
-  // Check global state
-  const globalStateFile = getGlobalStateFilePath();
-  if (existsSync(globalStateFile)) {
-    try {
-      const content = readFileSync(globalStateFile, 'utf-8');
-      return JSON.parse(content);
-    } catch {
       return null;
     }
   }
@@ -116,22 +90,17 @@ export function readHudState(directory?: string): OmcHudState | null {
 }
 
 /**
- * Write HUD state to disk (both local and global for redundancy)
+ * Write HUD state to disk (local only)
  */
 export function writeHudState(
   state: OmcHudState,
   directory?: string
 ): boolean {
   try {
-    // Write to local .omc
+    // Write to local .omc/state only
     ensureStateDir(directory);
     const localStateFile = getLocalStateFilePath(directory);
     writeFileSync(localStateFile, JSON.stringify(state, null, 2));
-
-    // Write to global ~/.claude for cross-session persistence
-    ensureGlobalStateDir();
-    const globalStateFile = getGlobalStateFilePath();
-    writeFileSync(globalStateFile, JSON.stringify(state, null, 2));
 
     return true;
   } catch {

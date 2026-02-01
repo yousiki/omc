@@ -100,7 +100,6 @@ When all verification passes and work is complete:
 ```bash
 # Delete ultrawork state files
 rm -f .omc/state/ultrawork-state.json
-rm -f ~/.claude/ultrawork-state.json
 ```
 
 This ensures clean state for future sessions. Stale state files with `active: false` should not be left behind.
