@@ -252,16 +252,16 @@ When you detect trigger patterns above, you MUST invoke the corresponding skill 
 
 **Execution notes:**
 - Codex/Gemini calls can take up to **1 hour** (complex analysis)
-- These tools are **blocking** — they hold the turn until complete
-- For parallel work, delegate to agents via Task tool with `run_in_background: true`
-- Agents calling Codex/Gemini should be spawned in background when orchestrator needs to continue other work
+- Direct MCP calls are **blocking** — they hold the turn until complete
+- **For parallel work:** Use the Background Orchestration Pattern below
+- **Timeout:** `wait_for_job` supports up to 3,600,000ms (1 hour) timeout
 
 **Tool Parameters (both ask_gemini and ask_codex):**
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `agent_role` | string | Yes | Agent perspective (see routing table above) |
-| `prompt_file` | string | Yes | Required. Path to file containing the prompt. Write prompts under `.omc/prompts/` for audit trail consistency. |
+| `prompt_file` | string | Yes | Required. Path to file containing the prompt. Write prompts under `{working_directory}/.omc/prompts/` using naming convention `{tool}-{purpose}-{timestamp}.md` (e.g., `codex-arch-review-20260205.md`). Must use absolute path within `working_directory`. |
 | `output_file` | string | No | Path to write response; stdout written directly to output_file if CLI doesn't |
 | `files` / `context_files` | array | No | File paths to include as context |
 | `model` | string | No | Model to use (has defaults and fallback chains) |
@@ -271,6 +271,82 @@ When you detect trigger patterns above, you MUST invoke the corresponding skill 
 - The `prompt` parameter has been removed. Always write prompts to a file and use `prompt_file`.
 - When `output_file` is specified, the prompt includes an instruction nudging the CLI to write there
 - `prompt_file` must be within the project working directory (security boundary)
+
+### Background Orchestration Pattern (Spawn → Check → Await)
+
+When agents need Codex/Gemini and the orchestrator has other work:
+
+**1. SPAWN** — Launch agent in background:
+```
+Task(subagent_type="oh-my-claudecode:architect",
+     model="opus",
+     prompt="Analyze architecture...",
+     run_in_background=true)
+```
+
+**2. CHECK** — Continue independent tasks. Periodically check:
+```
+check_job_status(job_id="...")  // Non-blocking
+```
+
+**3. AWAIT** — When results needed OR no other work:
+```
+wait_for_job(job_id="...", timeout_ms=3600000)  // Up to 1 hour
+```
+
+**Critical Rules:**
+- **Dependency Rule:** If a downstream decision depends on Codex/Gemini output, you MUST switch from CHECK to AWAIT before finalizing that decision
+- **Never await immediately** after spawning unless the consult is the critical path
+- **Max concurrent:** Cap at 2-3 parallel background consults to avoid attention loss
+
+**Decision Matrix:**
+
+| Situation | Pattern |
+|-----------|---------|
+| Agent needs Codex/Gemini AND orchestrator has other tasks | Background (SPAWN/CHECK/AWAIT) |
+| Agent needs Codex/Gemini AND this is the only/critical task | Blocking call |
+| Quick validation (<30s expected) | Blocking call |
+| Complex analysis, multi-file review | Background |
+
+**Failure Modes:**
+
+| Failure | Handling |
+|---------|----------|
+| Tool unavailable/not configured | Fall back to local reasoning; log "consultation unavailable" |
+| Long-running consult | Keep working on independent tasks; only await at dependency points |
+| Stale outputs (code changed since spawn) | Re-spawn OR treat results as advisory only |
+| User cancels/mode ends | Ignore background outputs unless explicitly resumed |
+| Verification gating | NEVER claim "validated by Codex/Gemini" unless you awaited and integrated the result |
+
+### Job Management Tools
+
+| Tool | Description | When to Use |
+|------|-------------|-------------|
+| `check_job_status` | Non-blocking status check | Polling during parallel work |
+| `wait_for_job` | Blocking wait until completion | When results needed to proceed |
+| `list_jobs` | List background jobs (filter by status) | Debugging, monitoring |
+| `kill_job` | Send signal to running job | Cancel stuck/unnecessary jobs |
+
+**Status Values:** `spawned`, `running`, `completed`, `failed`
+
+### Skill-Level Consultation Requirements
+
+Certain skills MUST attempt external AI consultation when available:
+
+| Skill | Consultation Required | Tool | Rationale |
+|-------|----------------------|------|-----------|
+| `ralplan` | **Mandatory** | Codex | Planning validation via Planner/Architect/Critic |
+| `frontend-ui-ux` | **Mandatory** | Gemini | Design consistency across components (1M context) |
+| `code-review` | **Mandatory** | Codex | Review validation and cross-checking |
+| `security-review` | **Mandatory** | Codex | Security analysis validation |
+| `analyze` | Recommended | Codex | Deep analysis benefits from second opinion |
+
+> **Note:** These skill-level "Mandatory" requirements override the general "Optionally consult" guidance in the Protocol section above. Skills marked Mandatory MUST attempt consultation; other agents follow the optional guidance.
+
+**Enforcement:**
+- Skills marked "Mandatory" MUST spawn agents that consult the indicated tool
+- If the tool is unavailable (MCP not configured), skill proceeds with graceful degradation
+- Agents should use the Background Orchestration Pattern when orchestrator has parallel work
 
 ### OMC State Tools
 
