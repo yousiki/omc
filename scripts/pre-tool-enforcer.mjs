@@ -115,6 +115,23 @@ function generateMessage(toolName, todoStatus) {
   return messages[toolName] || `${todoStatus}The boulder never stops. Continue until all tasks complete.`;
 }
 
+// Record Skill/Task invocations to flow trace (best-effort)
+async function recordToolInvocation(data, directory) {
+  try {
+    const toolName = data.toolName || data.tool_name || '';
+    const sessionId = data.session_id || data.sessionId || '';
+    if (!sessionId || !directory) return;
+
+    if (toolName === 'Skill') {
+      const skillName = data.toolInput?.skill || data.tool_input?.skill || '';
+      if (skillName) {
+        const { recordSkillInvoked } = await import('../dist/hooks/subagent-tracker/flow-tracer.js');
+        recordSkillInvoked(directory, sessionId, skillName);
+      }
+    }
+  } catch { /* best-effort, never block tool execution */ }
+}
+
 async function main() {
   try {
     const input = await readStdin();
@@ -122,15 +139,16 @@ async function main() {
     const toolName = extractJsonField(input, 'tool_name') || extractJsonField(input, 'toolName', 'unknown');
     const directory = extractJsonField(input, 'cwd') || extractJsonField(input, 'directory', process.cwd());
 
+    // Record Skill invocations to flow trace
+    let data = {};
+    try { data = JSON.parse(input); } catch {}
+    recordToolInvocation(data, directory);
+
     const todoStatus = getTodoStatus(directory);
 
     let message;
     if (toolName === 'Task' || toolName === 'TaskCreate' || toolName === 'TaskUpdate') {
-      let toolInput = null;
-      try {
-        const parsed = JSON.parse(input);
-        toolInput = parsed.tool_input || parsed.toolInput;
-      } catch {}
+      const toolInput = data.toolInput || data.tool_input || null;
       message = generateAgentSpawnMessage(toolInput, directory, todoStatus);
     } else {
       message = generateMessage(toolName, todoStatus);
