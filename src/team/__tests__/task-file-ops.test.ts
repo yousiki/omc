@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdirSync, writeFileSync, rmSync, existsSync, readFileSync, readdirSync } from 'fs';
+import { mkdirSync, writeFileSync, rmSync, existsSync, readFileSync, readdirSync, utimesSync } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
 import {
@@ -225,8 +225,10 @@ describe('acquireTaskLock / releaseTaskLock', () => {
     // PID 999999999 is almost certainly dead
     const stalePayload = JSON.stringify({ pid: 999999999, workerName: 'dead-worker', timestamp: Date.now() - 60_000 });
     writeFileSync(lockPath, stalePayload, { mode: 0o600 });
-    // Set mtime far in the past by using a very short stale threshold
-    const handle = acquireTaskLock(TEST_TEAM, 'lock-test-5', { staleLockMs: 1 });
+    // Backdate the file's mtime so isLockStale sees it as old
+    const pastTime = new Date(Date.now() - 60_000);
+    utimesSync(lockPath, pastTime, pastTime);
+    const handle = acquireTaskLock(TEST_TEAM, 'lock-test-5', { staleLockMs: 1000 });
     expect(handle).not.toBeNull();
     releaseTaskLock(handle!);
   });
