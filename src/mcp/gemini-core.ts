@@ -18,6 +18,7 @@ import { dirname, resolve, relative, sep, isAbsolute, basename, join } from 'pat
 import { createStdoutCollector, safeWriteOutputFile } from './shared-exec.js';
 import { detectGeminiCli } from './cli-detection.js';
 import { getWorktreeRoot } from '../lib/worktree-paths.js';
+import { isExternalPromptAllowed } from './mcp-config.js';
 import { resolveSystemPrompt, buildPromptWithSystemContext, wrapUntrustedFileContent, isValidAgentRoleName, VALID_AGENT_ROLES } from './prompt-injection.js';
 import { persistPrompt, persistResponse, getExpectedResponsePath } from './prompt-persistence.js';
 import { writeJobStatus, getStatusFilePath, readJobStatus } from './prompt-persistence.js';
@@ -444,11 +445,15 @@ export async function handleAskGemini(args: {
   // Derive baseDir from working_directory if provided
   let baseDir = args.working_directory || process.cwd();
   let baseDirReal: string;
+
+  // Path policy for error messages
+  const pathPolicy = process.env.OMC_ALLOW_EXTERNAL_WORKDIR === '1' ? 'permissive' : 'strict';
+
   try {
     baseDirReal = realpathSync(baseDir);
   } catch (err) {
     return {
-      content: [{ type: 'text' as const, text: `working_directory '${args.working_directory}' does not exist or is not accessible: ${(err as Error).message}` }],
+      content: [{ type: 'text' as const, text: `E_WORKDIR_INVALID: working_directory '${args.working_directory}' does not exist or is not accessible.\nError: ${(err as Error).message}\nResolved working directory: ${baseDir}\nPath policy: ${pathPolicy}\nSuggested: ensure the working directory exists and is accessible` }],
       isError: true
     };
   }
@@ -468,7 +473,10 @@ export async function handleAskGemini(args: {
         const relToWorktree = relative(worktreeReal, baseDirReal);
         if (relToWorktree.startsWith('..') || isAbsolute(relToWorktree)) {
           return {
-            content: [{ type: 'text' as const, text: `working_directory '${args.working_directory}' is outside the project worktree (${worktreeRoot}). Set OMC_ALLOW_EXTERNAL_WORKDIR=1 to bypass.` }],
+            content: [{
+              type: 'text' as const,
+              text: `E_WORKDIR_INVALID: working_directory '${args.working_directory}' is outside the project worktree (${worktreeRoot}).\nRequested: ${args.working_directory}\nResolved working directory: ${baseDirReal}\nWorktree root: ${worktreeRoot}\nPath policy: ${pathPolicy}\nSuggested: use a working_directory within the project worktree, or set OMC_ALLOW_EXTERNAL_WORKDIR=1 to bypass`
+            }],
             isError: true
           };
         }
@@ -536,9 +544,12 @@ export async function handleAskGemini(args: {
   const resolvedPath = resolve(baseDir, args.prompt_file);
   const cwdReal = realpathSync(baseDir);
   const relPath = relative(cwdReal, resolvedPath);
-  if (relPath === '..' || relPath.startsWith('..' + sep) || isAbsolute(relPath)) {
+  if (!isExternalPromptAllowed() && (relPath === '..' || relPath.startsWith('..' + sep) || isAbsolute(relPath))) {
     return {
-      content: [{ type: 'text' as const, text: `prompt_file '${args.prompt_file}' is outside the working directory.` }],
+      content: [{
+        type: 'text' as const,
+        text: `E_PATH_OUTSIDE_WORKDIR_PROMPT: prompt_file '${args.prompt_file}' resolves outside working_directory '${baseDirReal}'.\nRequested: ${args.prompt_file}\nWorking directory: ${baseDirReal}\nResolved working directory: ${baseDirReal}\nPath policy: ${pathPolicy}\nSuggested: place the prompt file within the working directory or set working_directory to a common ancestor`
+      }],
       isError: true
     };
   }
@@ -554,9 +565,12 @@ export async function handleAskGemini(args: {
     };
   }
   const relReal = relative(cwdReal, resolvedReal);
-  if (relReal === '..' || relReal.startsWith('..' + sep) || isAbsolute(relReal)) {
+  if (!isExternalPromptAllowed() && (relReal === '..' || relReal.startsWith('..' + sep) || isAbsolute(relReal))) {
     return {
-      content: [{ type: 'text' as const, text: `prompt_file '${args.prompt_file}' resolves to a path outside the working directory.` }],
+      content: [{
+        type: 'text' as const,
+        text: `E_PATH_OUTSIDE_WORKDIR_PROMPT: prompt_file '${args.prompt_file}' resolves to a path outside working_directory '${baseDirReal}'.\nRequested: ${args.prompt_file}\nResolved path: ${resolvedReal}\nWorking directory: ${baseDirReal}\nResolved working directory: ${baseDirReal}\nPath policy: ${pathPolicy}\nSuggested: place the prompt file within the working directory or set working_directory to a common ancestor`
+      }],
       isError: true
     };
   }
@@ -714,22 +728,29 @@ ${resolvedPrompt}`;
 
       // Always write response to output_file.
       if (args.output_file && resolvedOutputPath) {
-        const writeErr = await safeWriteOutputFile(args.output_file, response, baseDirReal, '[gemini-core]');
-        if (writeErr) {
+        const writeResult = safeWriteOutputFile(args.output_file, response, baseDirReal, '[gemini-core]');
+        if (!writeResult.success) {
           return {
             content: [{
               type: 'text' as const,
-              text: `${fallbackNote}${paramLines}\n\n---\n\n${writeErr.content[0].text}`
+              text: `${fallbackNote}${paramLines}\n\n---\n\n${writeResult.errorMessage}\n\nresolved_working_directory: ${baseDirReal}\npath_policy: ${pathPolicy}`
             }],
             isError: true
           };
         }
       }
 
+      // Build success response with metadata for path policy transparency
+      const responseLines = [
+        `${fallbackNote}${paramLines}`,
+        `**Resolved Working Directory:** ${baseDirReal}`,
+        `**Path Policy:** OMC_ALLOW_EXTERNAL_WORKDIR=${process.env.OMC_ALLOW_EXTERNAL_WORKDIR || '0 (enforced)'}`,
+      ];
+
       return {
         content: [{
           type: 'text' as const,
-          text: `${fallbackNote}${paramLines}`
+          text: responseLines.join('\n')
         }]
       };
     } catch (err) {
