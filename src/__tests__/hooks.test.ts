@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdirSync, writeFileSync, rmSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
+import { execSync } from 'child_process';
 import {
   extractPromptText,
   removeCodeBlocks,
@@ -600,6 +601,7 @@ describe('Team staged workflow integration', () => {
   beforeEach(() => {
     testDir = join(tmpdir(), `omc-team-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(join(testDir, '.omc', 'state', 'sessions', sessionId), { recursive: true });
+    execSync('git init', { cwd: testDir });
   });
 
   afterEach(() => {
