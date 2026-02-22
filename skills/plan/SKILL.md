@@ -63,7 +63,7 @@ Jumping into code without understanding requirements leads to rework, scope cree
 ### Consensus Mode (`--consensus` / "ralplan")
 
 1. **Planner** creates initial plan
-2. **User feedback** *(--interactive only)*: If running with `--interactive`, use `AskUserQuestion` to present the draft plan with these options:
+2. **User feedback** *(--interactive only)*: If running with `--interactive`, **MUST** use `AskUserQuestion` to present the draft plan with these options:
    - **Proceed to review** — send to Architect and Critic for evaluation
    - **Request changes** — return to step 1 with user feedback incorporated
    - **Skip review** — go directly to final approval (step 7)
@@ -84,6 +84,7 @@ Jumping into code without understanding requirements leads to rework, scope cree
    d. Note which improvements were applied in a brief changelog section at the end of the plan
 7. On Critic approval (with improvements applied): *(--interactive only)* If running with `--interactive`, use `AskUserQuestion` to present the plan with these options:
    - **Approve and execute** — proceed to implementation via ralph+ultrawork
+   - **Approve and implement via team** — proceed to implementation via coordinated parallel team agents
    - **Clear context and implement** — compact the context window first (recommended when context is large after planning), then start fresh implementation via ralph with the saved plan file
    - **Request changes** — return to step 1 with user feedback
    - **Reject** — discard the plan entirely
@@ -91,6 +92,7 @@ Jumping into code without understanding requirements leads to rework, scope cree
 8. *(--interactive only)* User chooses via the structured `AskUserQuestion` UI (never ask for approval in plain text)
 9. On user approval (--interactive only):
    - **Approve and execute**: **MUST** invoke `Skill("oh-my-claudecode:ralph")` with the approved plan path from `.omc/plans/` as context. Do NOT implement directly. Do NOT edit source code files in the planning agent. The ralph skill handles execution via ultrawork parallel agents.
+   - **Approve and implement via team**: **MUST** invoke `Skill("oh-my-claudecode:team")` with the approved plan path from `.omc/plans/` as context. Do NOT implement directly. The team skill coordinates parallel agents across the staged pipeline for faster execution on large tasks.
    - **Clear context and implement**: First invoke `Skill("compact")` to compress the context window (reduces token usage accumulated during planning), then invoke `Skill("oh-my-claudecode:ralph")` with the approved plan path from `.omc/plans/`. This path is recommended when the context window is 50%+ full after the planning session.
 
 ### Review Mode (`--review`)
