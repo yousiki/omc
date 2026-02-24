@@ -246,7 +246,7 @@ export function getIdleNotificationCooldownSeconds(): number {
     const config = JSON.parse(readFileSync(configPath, 'utf-8')) as Record<string, unknown>;
     const cooldown = (config?.notificationCooldown as Record<string, unknown> | undefined);
     const val = cooldown?.sessionIdleSeconds;
-    if (typeof val === 'number') return val;
+    if (typeof val === 'number' && Number.isFinite(val)) return Math.max(0, val);
   } catch {
     // ignore parse errors
   }
