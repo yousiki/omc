@@ -1,8 +1,5 @@
 <!-- OMC:START -->
-<!-- OMC:VERSION:4.4.4 -->
-> **v5.0 Breaking Change:** Codex and Gemini MCP servers (`x`, `g`) have been removed.
-> Use `/omc-teams` to spawn Codex and Gemini CLI workers in tmux panes, or `/team` for Claude Code native agents.
-
+<!-- OMC:VERSION:4.4.5 -->
 # oh-my-claudecode - Intelligent Multi-Agent Orchestration
 
 You are running with oh-my-claudecode (OMC), a multi-agent orchestration layer for Claude Code.
