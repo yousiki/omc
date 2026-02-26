@@ -11,14 +11,17 @@
  *   3. Ralph  -- boulder/Sisyphus continuation
  *   4. Ultrawork -- ultrawork continuation
  *   5. Autopilot -- autopilot continuation
- *   6. Todo-continuation (stub)
- *   7. Skill-state (stub)
+ *   6. Todo-continuation -- incomplete tasks
+ *   7. Skill-state -- active skill protection
  */
 
 import type { HookInput, HookOutput } from '../types';
 import { isModeActive } from './mode-registry';
 import type { ExecutionMode } from './mode-registry';
 import { processRalphStop } from './ralph';
+import { processAutopilotStop } from './autopilot';
+import { checkIncompleteTodos } from './todo-continuation';
+import { checkSkillActiveState } from './skill-state';
 
 // ---------------------------------------------------------------------------
 // Stop-type detectors
@@ -49,20 +52,6 @@ function modeContinuationMessage(mode: ExecutionMode): string {
   return `<system-reminder>
 hook additional context: [MAGIC KEYWORD: ${mode.toUpperCase()}] The boulder never stops. Continue working on the active plan.
 </system-reminder>`;
-}
-
-// ---------------------------------------------------------------------------
-// Stub checks (to be filled in Task 3.3)
-// ---------------------------------------------------------------------------
-
-/** Check for incomplete todos -- stub, always returns false */
-function _hasIncompleteTodos(_directory: string): boolean {
-  return false;
-}
-
-/** Check if a skill is actively executing -- stub, always returns false */
-function _isSkillActive(_directory: string): boolean {
-  return false;
 }
 
 // ---------------------------------------------------------------------------
@@ -102,26 +91,19 @@ export function checkPersistentModes(input: HookInput, directory: string): HookO
 
   // 5. Autopilot
   if (isModeActive('autopilot', directory)) {
-    return {
-      continue: true,
-      message: modeContinuationMessage('autopilot'),
-    };
+    return processAutopilotStop(directory);
   }
 
-  // 6. Todo-continuation (stub -- Task 3.3)
-  if (_hasIncompleteTodos(directory)) {
-    return {
-      continue: true,
-      message: modeContinuationMessage('ultrawork'), // reuse ultrawork label for now
-    };
+  // 6. Todo-continuation
+  const todoResult = checkIncompleteTodos(input, directory);
+  if (todoResult.message) {
+    return todoResult;
   }
 
-  // 7. Skill-state (stub -- Task 3.3)
-  if (_isSkillActive(directory)) {
-    return {
-      continue: true,
-      message: modeContinuationMessage('ultrawork'), // reuse ultrawork label for now
-    };
+  // 7. Skill-state
+  const skillResult = checkSkillActiveState(directory);
+  if (skillResult.message) {
+    return skillResult;
   }
 
   // Nothing active -- allow stop with no injected message
