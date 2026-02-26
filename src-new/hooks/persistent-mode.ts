@@ -18,6 +18,7 @@
 import type { HookInput, HookOutput } from '../types';
 import { isModeActive } from './mode-registry';
 import type { ExecutionMode } from './mode-registry';
+import { processRalphStop } from './ralph';
 
 // ---------------------------------------------------------------------------
 // Stop-type detectors
@@ -43,12 +44,6 @@ function isExplicitCancel(input: HookInput): boolean {
 // ---------------------------------------------------------------------------
 // Continuation message builders
 // ---------------------------------------------------------------------------
-
-function ralphContinuationMessage(): string {
-  return `<system-reminder>
-hook additional context: [MAGIC KEYWORD: RALPH] The boulder never stops. You are Sisyphus. The boulder must reach the top of the hill. Continue working on the active plan.
-</system-reminder>`;
-}
 
 function modeContinuationMessage(mode: ExecutionMode): string {
   return `<system-reminder>
@@ -94,10 +89,7 @@ export function checkPersistentModes(input: HookInput, directory: string): HookO
 
   // 3. Ralph
   if (isModeActive('ralph', directory)) {
-    return {
-      continue: true,
-      message: ralphContinuationMessage(),
-    };
+    return processRalphStop(directory);
   }
 
   // 4. Ultrawork
