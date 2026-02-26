@@ -1,5 +1,6 @@
 import type { HookInput, HookOutput } from '../types';
 import { processKeywordDetector } from './keyword-detector';
+import { processPreTool, processPostTool } from './orchestrator';
 
 /**
  * Normalize raw hook input from Claude Code (snake_case) to internal format (camelCase).
@@ -35,9 +36,9 @@ export async function processHook(hookType: string, rawInput: unknown): Promise<
     case 'keyword-detector':
       return processKeywordDetector(input);
     case 'pre-tool-use':
-      return { continue: true }; // Task 2.3
+      return processPreTool(input);
     case 'post-tool-use':
-      return { continue: true }; // Task 2.3
+      return processPostTool(input);
     case 'persistent-mode':
       return { continue: true }; // Task 3.1
     case 'session-start':
