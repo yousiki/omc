@@ -514,7 +514,7 @@ Clear old cached plugin versions to avoid conflicts:
 
 ```bash
 # Clear stale plugin cache versions (cross-platform)
-node -e "const p=require('path'),f=require('fs'),h=require('os').homedir(),d=process.env.CLAUDE_CONFIG_DIR||p.join(h,'.claude'),b=p.join(d,'plugins','cache','omc','oh-my-claudecode');try{const v=f.readdirSync(b).filter(x=>/^\d/.test(x)).sort((a,c)=>a.localeCompare(c,void 0,{numeric:true}));if(v.length<=1){console.log('Cache is clean');process.exit()}v.slice(0,-1).forEach(x=>{f.rmSync(p.join(b,x),{recursive:true,force:true})});console.log('Cleared',v.length-1,'stale cache version(s)')}catch{console.log('No cache directory found (normal for new installs)')}"
+bun -e "const p=require('path'),f=require('fs'),h=require('os').homedir(),d=process.env.CLAUDE_CONFIG_DIR||p.join(h,'.claude'),b=p.join(d,'plugins','cache','omc','oh-my-claudecode');try{const v=f.readdirSync(b).filter(x=>/^\d/.test(x)).sort((a,c)=>a.localeCompare(c,void 0,{numeric:true}));if(v.length<=1){console.log('Cache is clean');process.exit()}v.slice(0,-1).forEach(x=>{f.rmSync(p.join(b,x),{recursive:true,force:true})});console.log('Cleared',v.length-1,'stale cache version(s)')}catch{console.log('No cache directory found (normal for new installs)')}"
 ```
 
 ## Step 3.6: Check for Updates
@@ -523,7 +523,7 @@ Notify user if a newer version is available:
 
 ```bash
 # Detect installed version (cross-platform)
-node -e "
+bun -e "
 const p=require('path'),f=require('fs'),h=require('os').homedir();
 const d=process.env.CLAUDE_CONFIG_DIR||p.join(h,'.claude');
 let v='';
@@ -536,25 +536,6 @@ if(v==='')try{const j=JSON.parse(f.readFileSync('.omc-version.json','utf-8'));v=
 if(v==='')for(const c of['.claude/CLAUDE.md',p.join(d,'CLAUDE.md')]){try{const m=f.readFileSync(c,'utf-8').match(/^# oh-my-claudecode.*?(v?\d+\.\d+\.\d+)/m);if(m){v=m[1].replace(/^v/,'');break}}catch{}}
 console.log('Installed:',v||'(not found)');
 "
-
-# Check npm for latest version
-LATEST_VERSION=$(npm view oh-my-claude-sisyphus version 2>/dev/null)
-
-if [ -n "$INSTALLED_VERSION" ] && [ -n "$LATEST_VERSION" ]; then
-  # Simple version comparison (assumes semantic versioning)
-  if [ "$INSTALLED_VERSION" != "$LATEST_VERSION" ]; then
-    echo ""
-    echo "UPDATE AVAILABLE:"
-    echo "  Installed: v$INSTALLED_VERSION"
-    echo "  Latest:    v$LATEST_VERSION"
-    echo ""
-    echo "To update, run: claude /install-plugin oh-my-claudecode"
-  else
-    echo "You're on the latest version: v$INSTALLED_VERSION"
-  fi
-elif [ -n "$LATEST_VERSION" ]; then
-  echo "Latest version available: v$LATEST_VERSION"
-fi
 ```
 
 ## Step 3.7: Set Default Execution Mode
@@ -611,31 +592,32 @@ If `OMC_CLI_INSTALLED` is `"false"`, use the AskUserQuestion tool to prompt the 
 **Question:** "Would you like to install the OMC CLI globally for standalone analytics? (`omc stats`, `omc agents`, `omc tui`)"
 
 **Options:**
-1. **Yes (Recommended)** - Install `oh-my-claude-sisyphus` via `npm install -g`
-2. **No - Skip** - Skip installation (can install manually later with `npm install -g oh-my-claude-sisyphus`)
+1. **Yes (Recommended)** - Install from the local plugin cache via `bun link`
+2. **No - Skip** - Skip installation (can install manually later)
 
 If user chooses **Yes**:
 
 ```bash
-# Check if npm is available
-if ! command -v npm &>/dev/null; then
-  echo "WARNING: npm not found. Cannot install OMC CLI automatically."
-  echo "Install Node.js/npm first, then run: npm install -g oh-my-claude-sisyphus"
+# Check if bun is available
+if ! command -v bun &>/dev/null; then
+  echo "WARNING: bun not found. Cannot install OMC CLI automatically."
+  echo "Install Bun first (https://bun.sh), then link from the plugin cache."
 else
-  # Install the CLI globally
-  if npm install -g oh-my-claude-sisyphus 2>&1; then
-    echo "OMC CLI installed successfully."
-    # Verify installation
+  # Find plugin cache and link
+  CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+  CACHE_BASE="$CONFIG_DIR/plugins/cache/omc/oh-my-claudecode"
+  LATEST=$(ls -d "$CACHE_BASE"/[0-9]* 2>/dev/null | sort -V | tail -1)
+  if [ -n "$LATEST" ]; then
+    cd "$LATEST" && bun link 2>&1
+    echo "OMC CLI linked successfully."
     if command -v omc &>/dev/null; then
       OMC_CLI_VERSION=$(omc --version 2>/dev/null | head -1 || echo "installed")
       echo "Verified: omc $OMC_CLI_VERSION"
     else
-      echo "Installed but 'omc' not on PATH. You may need to restart your shell."
+      echo "Linked but 'omc' not on PATH. You may need to restart your shell."
     fi
   else
-    echo "WARNING: Failed to install OMC CLI (permission issue or network error)."
-    echo "You can install manually later: npm install -g oh-my-claude-sisyphus"
-    echo "Or with sudo: sudo npm install -g oh-my-claude-sisyphus"
+    echo "WARNING: No plugin cache found. Install the plugin first: claude /install-plugin oh-my-claudecode"
   fi
 fi
 ```
@@ -1104,7 +1086,7 @@ echo "Note: Future updates will only refresh CLAUDE.md, not the full setup wizar
 
 ## Keeping Up to Date
 
-After installing oh-my-claudecode updates (via npm or plugin update):
+After installing oh-my-claudecode updates (via plugin update):
 
 **Automatic**: Just run `/oh-my-claudecode:omc-setup` - it will detect you've already configured and offer a quick "Update CLAUDE.md only" option that skips the full wizard.
 

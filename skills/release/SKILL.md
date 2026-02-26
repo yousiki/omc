@@ -29,9 +29,9 @@ Update version in all locations:
 
 ### 2. Run Tests
 ```bash
-npm run test:run
+bun test
 ```
-All 231+ tests must pass before proceeding.
+All tests must pass before proceeding.
 
 ### 3. Commit Version Bump
 ```bash
@@ -46,18 +46,12 @@ git push origin main
 git push origin v<version>
 ```
 
-### 5. Publish to npm
-```bash
-npm publish --access public
-```
-
-### 6. Create GitHub Release
+### 5. Create GitHub Release
 ```bash
 gh release create v<version> --title "v<version> - <title>" --notes "<release notes>"
 ```
 
-### 7. Verify
-- [ ] npm: https://www.npmjs.com/package/oh-my-claudecode
+### 6. Verify
 - [ ] GitHub: https://github.com/Yeachan-Heo/oh-my-claudecode/releases
 
 ## Version Files Reference
@@ -78,6 +72,6 @@ gh release create v<version> --title "v<version> - <title>" --notes "<release no
 
 ## Notes
 
-- Always run tests before publishing
+- Always run tests before tagging
 - Create release notes summarizing changes
 - Plugin marketplace syncs automatically from GitHub releases
