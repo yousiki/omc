@@ -9,9 +9,7 @@
   "homepage": "https://github.com/yousiki/oh-my-claudecode",
   "license": "MIT",
   "keywords": ["claude-code", "plugin", "multi-agent", "orchestration"],
-  "agents": "./agents/",
   "skills": "./skills/",
   "hooks": "./hooks/hooks.json",
-  "mcpServers": "./.mcp.json",
-  "claudeMd": "./docs/CLAUDE.md"
+  "mcpServers": "./.mcp.json"
 }
