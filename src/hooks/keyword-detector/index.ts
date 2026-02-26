@@ -19,10 +19,8 @@ export type KeywordType =
   | 'cancel'      // Priority 1
   | 'ralph'       // Priority 2
   | 'autopilot'   // Priority 3
-  | 'ultrapilot'  // Priority 4
-  | 'team'        // Priority 4.5 (team mode)
+  | 'team'        // Priority 4 (team mode)
   | 'ultrawork'   // Priority 5
-| 'swarm'       // Priority 6
   | 'pipeline'    // Priority 7
   | 'ralplan'     // Priority 8
   | 'tdd'         // Priority 9
@@ -47,9 +45,7 @@ const KEYWORD_PATTERNS: Record<KeywordType, RegExp> = {
   cancel: /\b(cancelomc|stopomc)\b/i,
   ralph: /\b(ralph)\b(?!-)/i,
   autopilot: /\b(autopilot|auto[\s-]?pilot|fullsend|full\s+auto)\b/i,
-  ultrapilot: /\b(ultrapilot|ultra-pilot)\b|\bparallel\s+build\b|\bswarm\s+build\b/i,
   ultrawork: /\b(ultrawork|ulw)\b/i,
-  swarm: /\bswarm\s+\d+\s+agents?\b|\bcoordinated\s+agents\b|\bteam\s+mode\b/i,
   team: /(?<!\b(?:my|the|our|a|his|her|their|its)\s)\bteam\b|\bcoordinated\s+team\b/i,
   pipeline: /\bagent\s+pipeline\b|\bchain\s+agents\b/i,
   ralplan: /\b(ralplan)\b/i,
@@ -66,8 +62,8 @@ const KEYWORD_PATTERNS: Record<KeywordType, RegExp> = {
  * Priority order for keyword detection
  */
 const KEYWORD_PRIORITY: KeywordType[] = [
-  'cancel', 'ralph', 'autopilot', 'ultrapilot', 'team', 'ultrawork',
-  'swarm', 'pipeline', 'ccg', 'ralplan', 'tdd',
+  'cancel', 'ralph', 'autopilot', 'team', 'ultrawork',
+  'pipeline', 'ccg', 'ralplan', 'tdd',
   'ultrathink', 'deepsearch', 'analyze', 'codex', 'gemini'
 ];
 
@@ -138,8 +134,8 @@ export function detectKeywordsWithType(
 
   // Check each keyword type
   for (const type of KEYWORD_PRIORITY) {
-    // Skip team-related types when team feature is disabled
-    if ((type === 'team' || type === 'ultrapilot' || type === 'swarm') && !isTeamEnabled()) {
+    // Skip team type when team feature is disabled
+    if (type === 'team' && !isTeamEnabled()) {
       continue;
     }
 
@@ -152,15 +148,6 @@ export function detectKeywordsWithType(
         keyword: match[0],
         position: match.index
       });
-
-      // Legacy ultrapilot/swarm also activate team mode internally
-      if (type === 'ultrapilot' || type === 'swarm') {
-        detected.push({
-          type: 'team',
-          keyword: match[0],
-          position: match.index
-        });
-      }
     }
   }
 
@@ -187,7 +174,7 @@ export function getAllKeywords(text: string): KeywordType[] {
   // Exclusive: cancel suppresses everything
   if (types.includes('cancel')) return ['cancel'];
 
-  // Mutual exclusion: team beats autopilot (ultrapilot/swarm now map to team at detection)
+  // Mutual exclusion: team beats autopilot
   if (types.includes('team') && types.includes('autopilot')) {
     types = types.filter(t => t !== 'autopilot');
   }
@@ -296,7 +283,6 @@ export const EXECUTION_GATE_KEYWORDS = new Set<KeywordType>([
   'autopilot',
   'team',
   'ultrawork',
-  'ultrapilot',
 ]);
 
 /**
@@ -362,7 +348,7 @@ export function isUnderspecifiedForExecution(text: string): boolean {
 
   // Strip mode keywords for effective word counting
   const stripped = trimmed
-    .replace(/\b(?:ralph|autopilot|team|ultrawork|ultrapilot|ulw|swarm)\b/gi, '')
+    .replace(/\b(?:ralph|autopilot|team|ultrawork|ulw)\b/gi, '')
     .trim();
   const effectiveWords = stripped.split(/\s+/).filter(w => w.length > 0).length;
 
