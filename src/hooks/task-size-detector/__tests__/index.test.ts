@@ -354,14 +354,6 @@ describe('task-size-detector', () => {
       expect(isHeavyMode('ultrawork')).toBe(true);
     });
 
-    it('returns true for ultrapilot', () => {
-      expect(isHeavyMode('ultrapilot')).toBe(true);
-    });
-
-    it('returns true for swarm', () => {
-      expect(isHeavyMode('swarm')).toBe(true);
-    });
-
     it('returns true for pipeline', () => {
       expect(isHeavyMode('pipeline')).toBe(true);
     });
@@ -413,7 +405,7 @@ describe('task-size-detector', () => {
 
   describe('HEAVY_MODE_KEYWORDS set', () => {
     it('contains expected heavy modes', () => {
-      const expected = ['ralph', 'autopilot', 'team', 'ultrawork', 'ultrapilot', 'swarm', 'pipeline', 'ralplan', 'ccg'];
+      const expected = ['ralph', 'autopilot', 'team', 'ultrawork', 'pipeline', 'ralplan', 'ccg'];
       for (const mode of expected) {
         expect(HEAVY_MODE_KEYWORDS.has(mode)).toBe(true);
       }

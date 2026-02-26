@@ -640,37 +640,6 @@ export {
   type CancelResult
 } from './autopilot/index.js';
 
-export {
-  // Ultrapilot Coordinator
-  startUltrapilot,
-  decomposeTask,
-  spawnWorkers,
-  trackProgress,
-  integrateResults,
-  handleSharedFiles,
-  isFileOwnedByWorker,
-  isSharedFile,
-  assignFileToWorker,
-  readUltrapilotState,
-  writeUltrapilotState,
-  initUltrapilot,
-  addWorker,
-  updateWorkerState,
-  completeWorker,
-  failWorker,
-  completeUltrapilot,
-  getCompletedWorkers,
-  getRunningWorkers,
-  getFailedWorkers,
-  recordConflict,
-  DEFAULT_CONFIG as ULTRAPILOT_DEFAULT_CONFIG,
-  type UltrapilotConfig,
-  type UltrapilotState,
-  type WorkerState,
-  type IntegrationResult,
-  type FileOwnership
-} from './ultrapilot/index.js';
-
 // Mode Registry (Centralized State Management)
 export {
   MODE_CONFIGS,

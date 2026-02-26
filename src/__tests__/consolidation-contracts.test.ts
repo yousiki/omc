@@ -34,18 +34,6 @@ describe('Consolidation contracts', () => {
   });
 
   describe('Alias fidelity contracts', () => {
-    it('keeps alias skills pointing to canonical implementations', () => {
-      const swarm = getBuiltinSkill('swarm');
-      const team = getBuiltinSkill('team');
-
-      // swarm is an alias defined in team/SKILL.md frontmatter
-      expect(swarm).toBeDefined();
-      expect(
-        swarm?.template.includes('/oh-my-claudecode:team') ||
-        swarm?.template === team?.template
-      ).toBe(true);
-    });
-
     it('keeps native-command collisions prefixed to omc-* names', () => {
       const names = listBuiltinSkillNames();
 

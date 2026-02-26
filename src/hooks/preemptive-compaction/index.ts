@@ -36,7 +36,7 @@ const DEBUG_FILE = path.join(tmpdir(), 'preemptive-compaction-debug.log');
 /**
  * Rapid-fire debounce window (ms).
  * When multiple tool outputs arrive within this window (e.g. simultaneous
- * subagent completions in swarm/ultrawork), only the first triggers
+ * subagent completions in ultrawork), only the first triggers
  * context analysis. Subsequent calls within the window are skipped.
  * This is much shorter than COMPACTION_COOLDOWN_MS (which debounces warnings)
  * and specifically targets the concurrent flood scenario (issue #453).

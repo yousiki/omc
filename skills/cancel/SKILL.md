@@ -1,6 +1,6 @@
 ---
 name: cancel
-description: Cancel any active OMC mode (autopilot, ralph, ultrawork, ultraqa, swarm, ultrapilot, pipeline, team)
+description: Cancel any active OMC mode (autopilot, ralph, ultrawork, ultraqa, pipeline, team)
 ---
 
 # Cancel Skill
@@ -20,8 +20,6 @@ Automatically detects which mode is active and cancels it:
 - **Ralph**: Stops persistence loop, clears linked ultrawork if applicable
 - **Ultrawork**: Stops parallel execution (standalone or linked)
 - **UltraQA**: Stops QA cycling workflow
-- **Swarm**: Stops coordinated agent swarm, releases claimed tasks
-- **Ultrapilot**: Stops parallel autopilot workers
 - **Pipeline**: Stops sequential agent pipeline
 - **Team**: Sends shutdown_request to all teammates, waits for responses, calls TeamDelete, clears linked ralph if present
 - **Team+Ralph (linked)**: Cancels team first (graceful shutdown), then clears ralph state. Cancelling ralph when linked also cancels team first.
@@ -39,19 +37,16 @@ Or say: "cancelomc", "stopomc"
 `/oh-my-claudecode:cancel` follows the session-aware state contract:
 - By default the command inspects the current session via `state_list_active` and `state_get_status`, navigating `.omc/state/sessions/{sessionId}/…` to discover which mode is active.
 - When a session id is provided or already known, that session-scoped path is authoritative. Legacy files in `.omc/state/*.json` are consulted only as a compatibility fallback if the session id is missing or empty.
-- Swarm is a shared SQLite/marker mode (`.omc/state/swarm.db` / `.omc/state/swarm-active.marker`) and is not session-scoped.
 - The default cleanup flow calls `state_clear` with the session id to remove only the matching session files; modes stay bound to their originating session.
 
 Active modes are still cancelled in dependency order:
-1. Autopilot (includes linked ralph/ultraqa/ cleanup)
-2. Ralph (cleans its linked ultrawork or )
+1. Autopilot (includes linked ralph/ultraqa cleanup)
+2. Ralph (cleans its linked ultrawork)
 3. Ultrawork (standalone)
 4. UltraQA (standalone)
-5. Swarm (standalone)
-6. Ultrapilot (standalone)
-7. Pipeline (standalone)
-8. Team (Claude Code native)
-9. Plan Consensus (standalone)
+5. Pipeline (standalone)
+6. Team (Claude Code native)
+7. Plan Consensus (standalone)
 
 ## Force Clear All
 
@@ -68,7 +63,7 @@ Use `--force` or `--all` when you need to erase every session plus legacy artifa
 Steps under the hood:
 1. `state_list_active` enumerates `.omc/state/sessions/{sessionId}/…` to find every known session.
 2. `state_clear` runs once per session to drop that session’s files.
-3. A global `state_clear` without `session_id` removes legacy files under `.omc/state/*.json`, `.omc/state/swarm*.db`, and compatibility artifacts (see list).
+3. A global `state_clear` without `session_id` removes legacy files under `.omc/state/*.json` and compatibility artifacts (see list).
 4. Team artifacts (`~/.claude/teams/*/`, `~/.claude/tasks/*/`, `.omc/state/team-state.json`) are best-effort cleared as part of the legacy fallback.
 
 Every `state_clear` command honors the `session_id` argument, so even force mode still uses the session-aware paths first before deleting legacy files.
@@ -80,13 +75,6 @@ Legacy compatibility list (removed only under `--force`/`--all`):
 - `.omc/state/ralph-verification.json`
 - `.omc/state/ultrawork-state.json`
 - `.omc/state/ultraqa-state.json`
-- `.omc/state/swarm.db`
-- `.omc/state/swarm.db-wal`
-- `.omc/state/swarm.db-shm`
-- `.omc/state/swarm-active.marker`
-- `.omc/state/swarm-tasks.db`
-- `.omc/state/ultrapilot-state.json`
-- `.omc/state/ultrapilot-ownership.json`
 - `.omc/state/pipeline-state.json`
 - `.omc/state/plan-consensus.json`
 - `.omc/state/ralplan-state.json`

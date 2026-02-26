@@ -84,10 +84,7 @@ describe('Session-Scoped State Isolation', () => {
       expect(path1).toBe(path2);
     });
 
-    it('should reject swarm mode', () => {
-      expect(() => resolveSessionStatePath('swarm', 'sid', tempDir)).toThrow('SQLite');
-    });
-  });
+});
 
   describe('listSessionIds', () => {
     it('should return empty array when no sessions exist', () => {

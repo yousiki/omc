@@ -21,8 +21,7 @@ Skills are reusable workflow templates that can be invoked via `/oh-my-claudecod
 | `autopilot/SKILL.md` | autopilot | Full autonomous execution from idea to working code |
 | `ultrawork/SKILL.md` | ultrawork | Maximum parallel agent execution |
 | `ralph/SKILL.md` | ralph | Persistence until verified complete |
-| `ultrapilot/SKILL.md` | ultrapilot | Parallel autopilot with file ownership |
-| `team/SKILL.md` | team (+ `swarm` alias) | N coordinated agents with task claiming |
+| `team/SKILL.md` | team | N coordinated agents with task claiming |
 | `pipeline/SKILL.md` | pipeline | Sequential agent chaining |
 | `ultraqa/SKILL.md` | ultraqa | QA cycling until goal met |
 
@@ -176,7 +175,7 @@ None - pure markdown files.
 
 | Category | Skills | Trigger Keywords |
 |----------|--------|------------------|
-| Execution | autopilot, ultrawork, ralph, ultrapilot, swarm, pipeline | "autopilot", "ulw", "ralph", "swarm", "eco" |
+| Execution | autopilot, ultrawork, ralph, pipeline, team | "autopilot", "ulw", "ralph", "team" |
 | Planning | plan, ralplan, review, analyze, ralph-init | "plan this", "analyze" |
 | Quality | code-review, security-review, tdd, build-fix | "review", "security", "tdd" |
 | Exploration | deepsearch, deepinit, research | "search", "research" |

@@ -29,9 +29,9 @@ import {
 } from '../hooks/mode-registry/index.js';
 import { ToolDefinition } from './types.js';
 
-// ExecutionMode from mode-registry (8 modes - NO ralplan)
+// ExecutionMode from mode-registry (6 modes - NO ralplan)
 const EXECUTION_MODES: [string, ...string[]] = [
-  'autopilot', 'ultrapilot', 'swarm', 'pipeline', 'team',
+  'autopilot', 'pipeline', 'team',
   'ralph', 'ultrawork', 'ultraqa'
 ];
 
@@ -41,12 +41,10 @@ type StateToolMode = typeof STATE_TOOL_MODES[number];
 const CANCEL_SIGNAL_TTL_MS = 30_000;
 
 /**
- * Get the state file path for any mode (including swarm and ralplan).
+ * Get the state file path for any mode (including ralplan).
  *
- * - For registry modes (8 modes): uses getStateFilePath from mode-registry
+ * - For registry modes (6 modes): uses getStateFilePath from mode-registry
  * - For ralplan (not in registry): uses resolveStatePath from worktree-paths
- *
- * This handles swarm's SQLite (.db) file transparently.
  */
 function getStatePath(mode: StateToolMode, root: string): string {
   if (MODE_CONFIGS[mode as ExecutionMode]) {
@@ -78,25 +76,6 @@ export const stateReadTool: ToolDefinition<{
     try {
       const root = validateWorkingDirectory(workingDirectory);
       const sessionId = session_id as string | undefined;
-
-      // Special handling for swarm (SQLite database - no session support)
-      if (mode === 'swarm') {
-        const statePath = getStatePath(mode, root);
-        if (!existsSync(statePath)) {
-          return {
-            content: [{
-              type: 'text' as const,
-              text: `No state found for mode: swarm\nNote: Swarm uses SQLite (swarm.db), not JSON. Expected path: ${statePath}`
-            }]
-          };
-        }
-        return {
-          content: [{
-            type: 'text' as const,
-            text: `## State for swarm\n\nPath: ${statePath}\n\nNote: Swarm uses SQLite database. Use swarm-specific tools to query state.`
-          }]
-        };
-      }
 
       // If session_id provided, read from session-scoped path
       if (sessionId) {
@@ -219,7 +198,7 @@ export const stateWriteTool: ToolDefinition<{
   session_id: z.ZodOptional<z.ZodString>;
 }> = {
   name: 'state_write',
-  description: 'Write/update state for a specific mode. Creates the state file and directories if they do not exist. Common fields (active, iteration, phase, etc.) can be set directly as parameters. Additional custom fields can be passed via the optional `state` parameter. Note: swarm uses SQLite and cannot be written via this tool.',
+  description: 'Write/update state for a specific mode. Creates the state file and directories if they do not exist. Common fields (active, iteration, phase, etc.) can be set directly as parameters. Additional custom fields can be passed via the optional `state` parameter.',
   schema: {
     mode: z.enum(STATE_TOOL_MODES).describe('The mode to write state for'),
     active: z.boolean().optional().describe('Whether the mode is currently active'),
@@ -255,17 +234,6 @@ export const stateWriteTool: ToolDefinition<{
     try {
       const root = validateWorkingDirectory(workingDirectory);
       const sessionId = session_id as string | undefined;
-
-      // Swarm uses SQLite - cannot be written via this tool
-      if (mode === 'swarm') {
-        return {
-          content: [{
-            type: 'text' as const,
-            text: `Error: Swarm uses SQLite database (swarm.db), not JSON. Use swarm-specific APIs to modify state.`
-          }],
-          isError: true
-        };
-      }
 
       // Determine state path based on session_id
       let statePath: string;
