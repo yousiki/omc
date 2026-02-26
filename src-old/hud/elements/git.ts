@@ -28,6 +28,8 @@ export function getGitRepoName(cwd?: string): string | null {
 
     if (!url) return null;
 
+    // Extract repo name from URL
+    // Handles: https://github.com/user/repo.git, git@github.com:user/repo.git
     const match = url.match(/\/([^/]+?)(?:\.git)?$/) || url.match(/:([^/]+?)(?:\.git)?$/);
     return match ? match[1].replace(/\.git$/, '') : null;
   } catch {

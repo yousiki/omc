@@ -22,7 +22,7 @@
 import { spawn } from 'child_process';
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
-import { homedir } from 'os';
+import { getClaudeConfigDir } from '../utils/paths.js';
 import type {
   RateLimitsProviderConfig,
   CustomBucket,
@@ -32,14 +32,6 @@ import type {
 
 const CACHE_TTL_MS = 30_000;
 const DEFAULT_TIMEOUT_MS = 800;
-
-/**
- * Get Claude config directory path.
- * Respects the CLAUDE_CONFIG_DIR environment variable when set.
- */
-function getClaudeConfigDir(): string {
-  return process.env.CLAUDE_CONFIG_DIR || join(homedir(), '.claude');
-}
 
 interface CustomProviderCache {
   /** Unix timestamp (ms) of the last successful execution */

@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 /**
  * OMC HUD - Main Entry Point
  *
@@ -29,11 +29,66 @@ import type {
   HudRenderContext,
   SessionHealth,
 } from "./types.js";
-import { getRuntimePackageVersion } from "../lib/version.js";
-import { compareVersions } from "../features/auto-update.js";
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "fs";
-import { join } from "path";
+import { join, dirname } from "path";
 import { homedir } from "os";
+import { fileURLToPath } from "url";
+
+// ============================================================================
+// Inlined utilities (avoiding imports from src/)
+// ============================================================================
+
+/**
+ * Get the package version from package.json at runtime.
+ */
+function getRuntimePackageVersion(): string {
+  try {
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = dirname(__filename);
+    for (let i = 0; i < 5; i++) {
+      const candidate = join(__dirname, ...Array(i + 1).fill('..'), 'package.json');
+      try {
+        const pkg = JSON.parse(readFileSync(candidate, 'utf-8'));
+        if (pkg.name && pkg.version) {
+          return pkg.version;
+        }
+      } catch {
+        continue;
+      }
+    }
+  } catch {
+    // Fallback
+  }
+  return 'unknown';
+}
+
+/**
+ * Compare semantic versions.
+ * Returns: -1 if a < b, 0 if a == b, 1 if a > b
+ */
+function compareVersions(a: string, b: string): number {
+  const cleanA = a.replace(/^v/, '');
+  const cleanB = b.replace(/^v/, '');
+
+  const partsA = cleanA.split('.').map(n => parseInt(n, 10) || 0);
+  const partsB = cleanB.split('.').map(n => parseInt(n, 10) || 0);
+
+  const maxLength = Math.max(partsA.length, partsB.length);
+
+  for (let i = 0; i < maxLength; i++) {
+    const numA = partsA[i] || 0;
+    const numB = partsB[i] || 0;
+
+    if (numA < numB) return -1;
+    if (numA > numB) return 1;
+  }
+
+  return 0;
+}
+
+// ============================================================================
+// HUD Pipeline
+// ============================================================================
 
 /**
  * Extract session ID (UUID) from a transcript path.

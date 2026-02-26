@@ -9,9 +9,93 @@
 
 import type { ActiveAgent, AgentsFormat } from '../types.js';
 import { dim, RESET, getModelTierColor, getDurationColor } from '../colors.js';
-import { truncateToWidth } from '../../utils/string-width.js';
 
 const CYAN = '\x1b[36m';
+
+// ============================================================================
+// Inline string-width utility (CJK-aware)
+// ============================================================================
+
+function isCJKCharacter(codePoint: number): boolean {
+  return (
+    (codePoint >= 0x4e00 && codePoint <= 0x9fff) ||
+    (codePoint >= 0x3400 && codePoint <= 0x4dbf) ||
+    (codePoint >= 0x20000 && codePoint <= 0x2ebef) ||
+    (codePoint >= 0xf900 && codePoint <= 0xfaff) ||
+    (codePoint >= 0xac00 && codePoint <= 0xd7af) ||
+    (codePoint >= 0x1100 && codePoint <= 0x11ff) ||
+    (codePoint >= 0x3130 && codePoint <= 0x318f) ||
+    (codePoint >= 0xa960 && codePoint <= 0xa97f) ||
+    (codePoint >= 0xd7b0 && codePoint <= 0xd7ff) ||
+    (codePoint >= 0x3040 && codePoint <= 0x309f) ||
+    (codePoint >= 0x30a0 && codePoint <= 0x30ff) ||
+    (codePoint >= 0x31f0 && codePoint <= 0x31ff) ||
+    (codePoint >= 0xff01 && codePoint <= 0xff60) ||
+    (codePoint >= 0xffe0 && codePoint <= 0xffe6) ||
+    (codePoint >= 0x3000 && codePoint <= 0x303f) ||
+    (codePoint >= 0x3200 && codePoint <= 0x32ff) ||
+    (codePoint >= 0x3300 && codePoint <= 0x33ff) ||
+    (codePoint >= 0xfe30 && codePoint <= 0xfe4f)
+  );
+}
+
+function isZeroWidth(codePoint: number): boolean {
+  return (
+    codePoint === 0x200b ||
+    codePoint === 0x200c ||
+    codePoint === 0x200d ||
+    codePoint === 0xfeff ||
+    (codePoint >= 0x0300 && codePoint <= 0x036f) ||
+    (codePoint >= 0x1ab0 && codePoint <= 0x1aff) ||
+    (codePoint >= 0x1dc0 && codePoint <= 0x1dff) ||
+    (codePoint >= 0x20d0 && codePoint <= 0x20ff) ||
+    (codePoint >= 0xfe20 && codePoint <= 0xfe2f)
+  );
+}
+
+function getCharWidth(char: string): number {
+  const codePoint = char.codePointAt(0);
+  if (codePoint === undefined) return 0;
+  if (isZeroWidth(codePoint)) return 0;
+  if (isCJKCharacter(codePoint)) return 2;
+  return 1;
+}
+
+function stripAnsi(str: string): string {
+  return str.replace(/\x1b\[[0-9;]*[a-zA-Z]|\x1b\][^\x07]*\x07/g, '');
+}
+
+function stringWidth(str: string): number {
+  if (!str) return 0;
+  const stripped = stripAnsi(str);
+  let width = 0;
+  for (const char of stripped) {
+    width += getCharWidth(char);
+  }
+  return width;
+}
+
+function truncateToWidthNoSuffix(str: string, maxWidth: number): string {
+  let width = 0;
+  let result = '';
+  for (const char of str) {
+    const charWidth = getCharWidth(char);
+    if (width + charWidth > maxWidth) break;
+    result += char;
+    width += charWidth;
+  }
+  return result;
+}
+
+function truncateToWidth(str: string, maxWidth: number, suffix: string = '...'): string {
+  if (!str || maxWidth <= 0) return '';
+  const strWidth = stringWidth(str);
+  if (strWidth <= maxWidth) return str;
+  const suffixWidth = stringWidth(suffix);
+  const targetWidth = maxWidth - suffixWidth;
+  if (targetWidth <= 0) return truncateToWidthNoSuffix(suffix, maxWidth);
+  return truncateToWidthNoSuffix(str, targetWidth) + suffix;
+}
 
 // ============================================================================
 // Agent Type Codes
@@ -25,112 +109,56 @@ const AGENT_TYPE_CODES: Record<string, string> = {
   // ============================================================
   // BUILD/ANALYSIS LANE
   // ============================================================
-  // Explore - 'E' for Explore (haiku)
   explore: 'e',
-
-  // Analyst - 'T' for aTalyst (A taken by Architect)
   analyst: 'T',             // opus
-
-  // Planner - 'P' for Planner
   planner: 'P',             // opus
-
-  // Architect - 'A' for Architect
   architect: 'A',           // opus
-
-  // Debugger - 'g' for debuGger (d taken by designer)
   debugger: 'g',            // sonnet
-
-  // Executor - 'X' for eXecutor
   executor: 'x',            // sonnet
-
-  // Deep Executor - 'X' (same family as executor, opus tier)
   'deep-executor': 'X',     // opus
-
-  // Verifier - 'V' for Verifier (but vision uses 'v'... use uppercase 'V' for governance role)
   verifier: 'V',            // sonnet
 
   // ============================================================
   // REVIEW LANE
   // ============================================================
-  // Style Reviewer - 'Y' for stYle
   'style-reviewer': 'y',    // haiku
-
-  // Quality Reviewer - 'Qr' for Quality Reviewer (disambiguated from quality-strategist)
-  'quality-reviewer': 'Qr',  // sonnet
-
-  // API Reviewer - 'I' for Interface/API
+  'quality-reviewer': 'Qr', // sonnet
   'api-reviewer': 'i',      // sonnet
-
-  // Security Reviewer - 'K' for Security (S taken by Scientist)
-  'security-reviewer': 'K',      // sonnet
-
-  // Performance Reviewer - 'O' for perfOrmance
-  'performance-reviewer': 'o',   // sonnet
-
-  // Code Reviewer - 'R' for Review (uppercase, opus tier)
+  'security-reviewer': 'K', // sonnet
+  'performance-reviewer': 'o', // sonnet
   'code-reviewer': 'R',     // opus
 
   // ============================================================
   // DOMAIN SPECIALISTS
   // ============================================================
-  // Dependency Expert - 'L' for Library expert
   'dependency-expert': 'l', // sonnet
-
-  // Test Engineer - 'T' (but analyst uses 'T'... use uppercase 'T')
   'test-engineer': 't',     // sonnet
-
-  // Quality Strategist - 'Qs' for Quality Strategist (disambiguated from quality-reviewer)
-  'quality-strategist': 'Qs',     // sonnet
-
-  // Build Fixer - 'B' for Build
+  'quality-strategist': 'Qs', // sonnet
   'build-fixer': 'b',       // sonnet
-
-  // Designer - 'd' for Designer
   designer: 'd',            // sonnet
-
-  // Writer - 'W' for Writer
   writer: 'w',              // haiku
-
-  // QA Tester - 'Q' for QA
   'qa-tester': 'q',         // sonnet
-
-  // Scientist - 'S' for Scientist
   scientist: 's',           // sonnet
-
-  // Git Master - 'M' for Master
   'git-master': 'm',        // sonnet
 
   // ============================================================
   // PRODUCT LANE
   // ============================================================
-  // Product Manager - 'Pm' for Product Manager (disambiguated from planner)
-  'product-manager': 'Pm',   // sonnet
-
-  // UX Researcher - 'u' for Ux
+  'product-manager': 'Pm',  // sonnet
   'ux-researcher': 'u',     // sonnet
-
-  // Information Architect - 'Ia' for Information Architect (disambiguated from api-reviewer)
   'information-architect': 'Ia', // sonnet
-
-  // Product Analyst - 'a' for analyst
   'product-analyst': 'a',   // sonnet
 
   // ============================================================
   // COORDINATION
   // ============================================================
-  // Critic - 'C' for Critic
   critic: 'C',              // opus
-
-  // Vision - 'V' for Vision (lowercase since sonnet)
   vision: 'v',              // sonnet
-
-  // Document Specialist - 'D' for Document
   'document-specialist': 'D', // sonnet
 
   // ============================================================
   // BACKWARD COMPATIBILITY (Deprecated)
   // ============================================================
-  // Researcher - 'r' for Researcher (deprecated, points to document-specialist)
   researcher: 'r',          // sonnet
 };
 
@@ -138,21 +166,15 @@ const AGENT_TYPE_CODES: Record<string, string> = {
  * Get single-character code for an agent type.
  */
 function getAgentCode(agentType: string, model?: string): string {
-  // Extract the short name from full type (e.g., "oh-my-claudecode:architect" -> "architect")
   const parts = agentType.split(':');
   const shortName = parts[parts.length - 1] || agentType;
 
-  // Look up the code
   let code = AGENT_TYPE_CODES[shortName];
 
   if (!code) {
-    // Unknown agent - use first letter
     code = shortName.charAt(0).toUpperCase();
   }
 
-  // Determine case based on model tier
-  // For single-char codes, the whole code changes case
-  // For multi-char codes, only the first character indicates tier
   if (model) {
     const tier = model.toLowerCase();
     if (code.length === 1) {
@@ -175,13 +197,13 @@ function formatDuration(durationMs: number): string {
   const minutes = Math.floor(seconds / 60);
 
   if (seconds < 10) {
-    return ''; // No suffix for very short durations
+    return '';
   } else if (seconds < 60) {
     return `(${seconds}s)`;
   } else if (minutes < 10) {
     return `(${minutes}m)`;
   } else {
-    return '!'; // Alert for very long durations
+    return '!';
   }
 }
 
@@ -226,7 +248,6 @@ export function renderAgentsCoded(agents: ActiveAgent[]): string | null {
     return null;
   }
 
-  // Build coded string with colors
   const codes = running.map((a) => {
     const code = getAgentCode(a.type, a.model);
     const color = getModelTierColor(a.model);
@@ -251,24 +272,19 @@ export function renderAgentsCodedWithDuration(agents: ActiveAgent[]): string | n
 
   const now = Date.now();
 
-  // Build coded string with colors and durations
   const codes = running.map((a) => {
     const code = getAgentCode(a.type, a.model);
     const durationMs = now - a.startTime.getTime();
     const duration = formatDuration(durationMs);
 
-    // Color the code by model tier
     const modelColor = getModelTierColor(a.model);
 
     if (duration === '!') {
-      // Alert case - show exclamation in duration color
       const durationColor = getDurationColor(durationMs);
       return `${modelColor}${code}${durationColor}!${RESET}`;
     } else if (duration) {
-      // Normal duration - dim the time portion
       return `${modelColor}${code}${dim(duration)}${RESET}`;
     } else {
-      // No duration suffix
       return `${modelColor}${code}${RESET}`;
     }
   });
@@ -290,13 +306,10 @@ export function renderAgentsDetailed(agents: ActiveAgent[]): string | null {
 
   const now = Date.now();
 
-  // Extract short agent type names with duration
   const names = running.map((a) => {
-    // Extract last part of agent type (e.g., "oh-my-claudecode:explore" -> "explore")
     const parts = a.type.split(':');
     let name = parts[parts.length - 1] || a.type;
 
-    // Abbreviate common names
     if (name === 'executor') name = 'exec';
     if (name === 'deep-executor') name = 'deep-x';
     if (name === 'designer') name = 'design';
@@ -321,7 +334,6 @@ export function renderAgentsDetailed(agents: ActiveAgent[]): string | null {
     if (name === 'information-architect') name = 'ia';
     if (name === 'product-analyst') name = 'pa';
 
-    // Add duration if significant
     const durationMs = now - a.startTime.getTime();
     const duration = formatDuration(durationMs);
 
@@ -337,7 +349,6 @@ export function renderAgentsDetailed(agents: ActiveAgent[]): string | null {
  */
 function truncateDescription(desc: string | undefined, maxWidth: number = 20): string {
   if (!desc) return '...';
-  // Use CJK-aware truncation (maxWidth is visual columns, not character count)
   return truncateToWidth(desc, maxWidth);
 }
 
@@ -348,21 +359,17 @@ function getShortAgentName(agentType: string): string {
   const parts = agentType.split(':');
   const name = parts[parts.length - 1] || agentType;
 
-  // Abbreviate common names
   const abbrevs: Record<string, string> = {
-    // Build/Analysis Lane
     'executor': 'exec',
     'deep-executor': 'deep-x',
     'debugger': 'debug',
     'verifier': 'verify',
-    // Review Lane
     'style-reviewer': 'style',
     'quality-reviewer': 'quality',
     'api-reviewer': 'api-rev',
     'security-reviewer': 'sec',
     'performance-reviewer': 'perf',
     'code-reviewer': 'review',
-    // Domain Specialists
     'dependency-expert': 'dep-exp',
     'document-specialist': 'doc-spec',
     'test-engineer': 'test-eng',
@@ -372,12 +379,10 @@ function getShortAgentName(agentType: string): string {
     'qa-tester': 'qa',
     'scientist': 'sci',
     'git-master': 'git',
-    // Product Lane
     'product-manager': 'pm',
     'ux-researcher': 'uxr',
     'information-architect': 'ia',
     'product-analyst': 'pa',
-    // Backward compat
     'researcher': 'dep-exp',
   };
 
@@ -399,7 +404,6 @@ export function renderAgentsWithDescriptions(agents: ActiveAgent[]): string | nu
 
   const now = Date.now();
 
-  // Build agent entries with descriptions
   const entries = running.map((a) => {
     const code = getAgentCode(a.type, a.model);
     const color = getModelTierColor(a.model);
@@ -407,7 +411,6 @@ export function renderAgentsWithDescriptions(agents: ActiveAgent[]): string | nu
     const durationMs = now - a.startTime.getTime();
     const duration = formatDuration(durationMs);
 
-    // Format: O:description or O:description(2m)
     let entry = `${color}${code}${RESET}:${dim(desc)}`;
     if (duration && duration !== '!') {
       entry += dim(duration);
@@ -437,7 +440,6 @@ export function renderAgentsDescOnly(agents: ActiveAgent[]): string | null {
 
   const now = Date.now();
 
-  // Build descriptions
   const descriptions = running.map((a) => {
     const color = getModelTierColor(a.model);
     const shortName = getShortAgentName(a.type);
@@ -465,7 +467,7 @@ function formatDurationPadded(durationMs: number): string {
   const minutes = Math.floor(seconds / 60);
 
   if (seconds < 10) {
-    return '    '; // No duration for very short
+    return '    ';
   } else if (seconds < 60) {
     return `${seconds}s`.padStart(4);
   } else if (minutes < 10) {
@@ -502,10 +504,8 @@ export function renderAgentsMultiLine(
     return { headerPart: null, detailLines: [] };
   }
 
-  // Header part shows count for awareness
   const headerPart = `agents:${CYAN}${running.length}${RESET}`;
 
-  // Build detail lines
   const now = Date.now();
   const detailLines: string[] = [];
   const displayCount = Math.min(running.length, maxLines);
@@ -523,7 +523,6 @@ export function renderAgentsMultiLine(
     const durationColor = getDurationColor(durationMs);
 
     const desc = a.description || '...';
-    // Use CJK-aware truncation (45 visual columns)
     const truncatedDesc = truncateToWidth(desc, 45);
 
     detailLines.push(
@@ -531,7 +530,6 @@ export function renderAgentsMultiLine(
     );
   });
 
-  // Add overflow indicator if needed
   if (running.length > maxLines) {
     const remaining = running.length - maxLines;
     detailLines.push(`${dim(`└─ +${remaining} more agents...`)}`);
@@ -561,8 +559,6 @@ export function renderAgentsByFormat(
     case 'tasks':
       return renderAgentsDescOnly(agents);
     case 'multiline':
-      // For backward compatibility, return just the header part
-      // The render.ts will handle the full multi-line output
       return renderAgentsMultiLine(agents).headerPart;
     default:
       return renderAgentsCoded(agents);

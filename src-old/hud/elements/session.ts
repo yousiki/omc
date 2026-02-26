@@ -7,6 +7,7 @@
 import type { SessionHealth } from '../types.js';
 import { RESET } from '../colors.js';
 
+// Local color constants (following context.ts pattern)
 const GREEN = '\x1b[32m';
 const YELLOW = '\x1b[33m';
 const RED = '\x1b[31m';

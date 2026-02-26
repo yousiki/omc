@@ -8,8 +8,8 @@
  * Output: JSON on stdout
  */
 
-import { readStdin } from '../src-new/utils';
-import { processHook } from '../src-new/hooks/bridge';
+import { readStdin } from '../src/utils';
+import { processHook } from '../src/hooks/bridge';
 
 async function main() {
   const hookType = process.argv[2];

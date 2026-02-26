@@ -62,6 +62,7 @@ export function renderAutopilot(
   const phaseNum = PHASE_INDEX[phase] || 0;
   const phaseName = PHASE_NAMES[phase] || phase;
 
+  // Color based on phase
   let phaseColor: string;
   switch (phase) {
     case 'complete':
@@ -82,15 +83,18 @@ export function renderAutopilot(
 
   let output = `${CYAN}[AUTOPILOT]${RESET} Phase ${phaseColor}${phaseNum}/5${RESET}: ${phaseName}`;
 
+  // Add iteration count if not first iteration
   if (iteration > 1) {
     output += ` (iter ${iteration}/${maxIterations})`;
   }
 
+  // Add task progress if in execution phase
   if (phase === 'execution' && tasksTotal && tasksTotal > 0) {
     const taskColor = tasksCompleted === tasksTotal ? GREEN : YELLOW;
     output += ` | Tasks: ${taskColor}${tasksCompleted || 0}/${tasksTotal}${RESET}`;
   }
 
+  // Add file count if available
   if (filesCreated && filesCreated > 0) {
     output += ` | ${filesCreated} files`;
   }

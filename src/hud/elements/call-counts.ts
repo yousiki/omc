@@ -11,7 +11,16 @@
 // Windows terminals (cmd.exe, PowerShell, Windows Terminal) may not render
 // multi-byte emoji correctly, causing HUD layout corruption.
 // WSL terminals may also lack emoji support.
-import { isWSL } from '../../platform/index.js';
+function isWSL(): boolean {
+  try {
+    const { readFileSync } = require('node:fs');
+    const osRelease = readFileSync('/proc/version', 'utf-8');
+    return /microsoft|wsl/i.test(osRelease);
+  } catch {
+    return false;
+  }
+}
+
 const useAscii = process.platform === 'win32' || isWSL();
 const TOOL_ICON = useAscii ? 'T:' : '\u{1F527}';
 const AGENT_ICON = useAscii ? 'A:' : '\u{1F916}';

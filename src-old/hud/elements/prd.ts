@@ -24,10 +24,12 @@ export function renderPrd(state: PrdStateForHud | null): string | null {
 
   const { currentStoryId, completed, total } = state;
 
+  // If all complete, show completion
   if (completed === total) {
     return `${GREEN}PRD:done${RESET}`;
   }
 
+  // Show current story ID
   if (currentStoryId) {
     return `${CYAN}${currentStoryId}${RESET}`;
   }
@@ -47,13 +49,16 @@ export function renderPrdWithProgress(state: PrdStateForHud | null): string | nu
 
   const { currentStoryId, completed, total } = state;
 
+  // If all complete, show completion
   if (completed === total) {
     return `${GREEN}PRD:${completed}/${total} done${RESET}`;
   }
 
+  // Show current story with progress
   if (currentStoryId) {
     return `${CYAN}${currentStoryId}${RESET} ${DIM}(${completed}/${total})${RESET}`;
   }
 
+  // No current story but PRD exists
   return `${DIM}PRD:${completed}/${total}${RESET}`;
 }

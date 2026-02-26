@@ -148,8 +148,10 @@ function findBridgeScript(): string {
     return process.env.OMC_BRIDGE_SCRIPT;
   }
 
-  // Relative to this file: src-new/tools/python-repl.ts -> ../../bridge/
+  // Relative to this file: src/tools/python-repl.ts -> ../../scripts/
   const candidates = [
+    resolve(dirname(import.meta.path || __filename), '..', '..', 'scripts', 'gyoshu_bridge.py'),
+    resolve(process.cwd(), 'scripts', 'gyoshu_bridge.py'),
     resolve(dirname(import.meta.path || __filename), '..', '..', 'bridge', 'gyoshu_bridge.py'),
     resolve(process.cwd(), 'bridge', 'gyoshu_bridge.py'),
   ];

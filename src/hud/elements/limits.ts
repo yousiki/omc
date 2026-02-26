@@ -40,7 +40,6 @@ function formatResetTime(date: Date | null | undefined): string | null {
   const resetMs = date.getTime();
   const diffMs = resetMs - now;
 
-  // Already reset or invalid
   if (diffMs <= 0) return null;
 
   const diffMinutes = Math.floor(diffMs / 60_000);
@@ -225,7 +224,6 @@ export function renderCustomBuckets(
   result: CustomProviderResult,
   thresholdPercent: number = 85,
 ): string | null {
-  // Command failed and no cached data
   if (result.error && result.buckets.length === 0) {
     return `${YELLOW}[cmd:err]${RESET}`;
   }
@@ -240,7 +238,6 @@ export function renderCustomBuckets(
     const colorReset = pct != null ? RESET : '';
     const usageStr = renderBucketUsageValue(bucket.usage);
 
-    // Show resetsAt only above threshold (string usage never shows it)
     let resetPart = '';
     if (bucket.resetsAt && pct != null && pct >= thresholdPercent) {
       const d = new Date(bucket.resetsAt);

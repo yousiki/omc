@@ -1,232 +1,268 @@
 /**
- * Agent Definitions for Oh-My-ClaudeCode (slim port)
+ * Agent Definitions for Oh-My-ClaudeCode
  *
- * Provides:
- * 1. All 21 agent definitions with correct model tiers
- * 2. getAgentDefinitions() registry
- * 3. omcSystemPrompt for the main orchestrator
+ * This module provides:
+ * 1. Re-exports of base agents from individual files
+ * 2. Tiered agent variants with dynamically loaded prompts from /agents/*.md
+ * 3. getAgentDefinitions() for agent registry
+ * 4. omcSystemPrompt for the main orchestrator
  */
 
-import type { AgentConfig, ModelType } from '../types';
-import { loadAgentPrompt } from './prompt';
+import type { AgentConfig, ModelType } from '../shared/types.js';
+import { loadAgentPrompt, parseDisallowedTools } from './utils.js';
+
+// Re-export base agents from individual files (rebranded names)
+export { deepExecutorAgent } from './deep-executor.js';
+export { architectAgent } from './architect.js';
+export { designerAgent } from './designer.js';
+export { writerAgent } from './writer.js';
+export { criticAgent } from './critic.js';
+export { analystAgent } from './analyst.js';
+export { executorAgent } from './executor.js';
+export { plannerAgent } from './planner.js';
+export { qaTesterAgent } from './qa-tester.js';
+export { scientistAgent } from './scientist.js';
+export { exploreAgent } from './explore.js';
+
+// Backward compatibility: Deprecated aliases
+/** @deprecated Use document-specialist agent instead */
+export { documentSpecialistAgent } from './document-specialist.js';
+/** @deprecated Use document-specialist agent instead */
+export { documentSpecialistAgent as researcherAgent } from './document-specialist.js';
+
+// Import base agents for use in getAgentDefinitions
+import { deepExecutorAgent } from './deep-executor.js';
+import { architectAgent } from './architect.js';
+import { designerAgent } from './designer.js';
+import { writerAgent } from './writer.js';
+import { criticAgent } from './critic.js';
+import { analystAgent } from './analyst.js';
+import { executorAgent } from './executor.js';
+import { plannerAgent } from './planner.js';
+import { qaTesterAgent } from './qa-tester.js';
+import { scientistAgent } from './scientist.js';
+import { exploreAgent } from './explore.js';
+import { documentSpecialistAgent } from './document-specialist.js';
+
+// Re-export loadAgentPrompt (also exported from index.ts)
+export { loadAgentPrompt };
 
 // ============================================================
-// BUILD / ANALYSIS LANE
+// REFORMED AGENTS (BUILD/ANALYSIS LANE)
 // ============================================================
 
-export const exploreAgent: AgentConfig = {
-  name: 'explore',
-  description: 'Internal codebase discovery, symbol/file mapping (Haiku).',
-  prompt: loadAgentPrompt('explore'),
-  model: 'haiku',
-  defaultModel: 'haiku',
-};
-
-export const analystAgent: AgentConfig = {
-  name: 'analyst',
-  description: 'Pre-planning consultant for hidden requirements, edge cases, risk analysis (Opus).',
-  prompt: loadAgentPrompt('analyst'),
-  model: 'opus',
-  defaultModel: 'opus',
-};
-
-export const plannerAgent: AgentConfig = {
-  name: 'planner',
-  description: 'Strategic planning consultant. Creates comprehensive work plans (Opus).',
-  prompt: loadAgentPrompt('planner'),
-  model: 'opus',
-  defaultModel: 'opus',
-};
-
-export const architectAgent: AgentConfig = {
-  name: 'architect',
-  description: 'Read-only consultation agent. High-IQ reasoning for debugging and architecture design (Opus).',
-  prompt: loadAgentPrompt('architect'),
-  model: 'opus',
-  defaultModel: 'opus',
-};
-
+/**
+ * Debugger Agent - Root-Cause Analysis & Debugging (Sonnet)
+ */
 export const debuggerAgent: AgentConfig = {
   name: 'debugger',
   description: 'Root-cause analysis, regression isolation, failure diagnosis (Sonnet).',
   prompt: loadAgentPrompt('debugger'),
   model: 'sonnet',
-  defaultModel: 'sonnet',
+  defaultModel: 'sonnet'
 };
 
-export const executorAgent: AgentConfig = {
-  name: 'executor',
-  description: 'Focused task executor for features and refactoring (Sonnet).',
-  prompt: loadAgentPrompt('executor'),
-  model: 'sonnet',
-  defaultModel: 'sonnet',
-};
-
-export const deepExecutorAgent: AgentConfig = {
-  name: 'deep-executor',
-  description: 'Deep executor for complex goal-oriented tasks. Explores extensively, executes all work itself (Opus).',
-  prompt: loadAgentPrompt('deep-executor'),
-  model: 'opus',
-  defaultModel: 'opus',
-};
-
+/**
+ * Verifier Agent - Completion Evidence & Test Validation (Sonnet)
+ */
 export const verifierAgent: AgentConfig = {
   name: 'verifier',
   description: 'Completion evidence, claim validation, test adequacy (Sonnet).',
   prompt: loadAgentPrompt('verifier'),
   model: 'sonnet',
-  defaultModel: 'sonnet',
+  defaultModel: 'sonnet'
 };
 
 // ============================================================
-// REVIEW LANE
+// REFORMED AGENTS (REVIEW LANE)
 // ============================================================
 
+/**
+ * Quality-Reviewer Agent - Logic Defects & Maintainability (Sonnet)
+ */
 export const qualityReviewerAgent: AgentConfig = {
   name: 'quality-reviewer',
   description: 'Logic defects, maintainability, anti-patterns (Sonnet).',
   prompt: loadAgentPrompt('quality-reviewer'),
   model: 'sonnet',
-  defaultModel: 'sonnet',
+  defaultModel: 'sonnet'
 };
 
-export const securityReviewerAgent: AgentConfig = {
-  name: 'security-reviewer',
-  description: 'Security vulnerability detection specialist (Sonnet).',
-  prompt: loadAgentPrompt('security-reviewer'),
-  model: 'sonnet',
-  defaultModel: 'sonnet',
-};
-
-export const codeReviewerAgent: AgentConfig = {
-  name: 'code-reviewer',
-  description: 'Expert code review specialist (Opus).',
-  prompt: loadAgentPrompt('code-reviewer'),
-  model: 'opus',
-  defaultModel: 'opus',
-};
 
 // ============================================================
-// DOMAIN SPECIALISTS
+// REFORMED AGENTS (DOMAIN SPECIALISTS)
 // ============================================================
 
+/**
+ * Test-Engineer Agent - Test Strategy & Coverage (Sonnet)
+ * Replaces: tdd-guide agent
+ */
 export const testEngineerAgent: AgentConfig = {
   name: 'test-engineer',
   description: 'Test strategy, coverage, flaky test hardening (Sonnet).',
   prompt: loadAgentPrompt('test-engineer'),
   model: 'sonnet',
-  defaultModel: 'sonnet',
+  defaultModel: 'sonnet'
 };
 
+// ============================================================
+// SPECIALIZED AGENTS (Security, Build, TDD, Code Review)
+// ============================================================
+
+/**
+ * Security-Reviewer Agent - Security Vulnerability Detection (Sonnet)
+ */
+export const securityReviewerAgent: AgentConfig = {
+  name: 'security-reviewer',
+  description: 'Security vulnerability detection specialist (Sonnet). Use for security audits and OWASP detection.',
+  prompt: loadAgentPrompt('security-reviewer'),
+  model: 'sonnet',
+  defaultModel: 'sonnet'
+};
+
+/**
+ * Build-Fixer Agent - Build Error Resolution (Sonnet)
+ */
 export const buildFixerAgent: AgentConfig = {
   name: 'build-fixer',
-  description: 'Build and compilation error resolution specialist (Sonnet).',
+  description: 'Build and compilation error resolution specialist (Sonnet). Use for fixing build/type errors in any language.',
   prompt: loadAgentPrompt('build-fixer'),
   model: 'sonnet',
-  defaultModel: 'sonnet',
+  defaultModel: 'sonnet'
 };
 
-export const designerAgent: AgentConfig = {
-  name: 'designer',
-  description: 'UI/UX architecture and interaction design (Sonnet).',
-  prompt: loadAgentPrompt('designer'),
-  model: 'sonnet',
-  defaultModel: 'sonnet',
+/**
+ * Code-Reviewer Agent - Expert Code Review (Opus)
+ */
+export const codeReviewerAgent: AgentConfig = {
+  name: 'code-reviewer',
+  description: 'Expert code review specialist (Opus). Use for comprehensive code quality review.',
+  prompt: loadAgentPrompt('code-reviewer'),
+  model: 'opus',
+  defaultModel: 'opus'
 };
 
-export const writerAgent: AgentConfig = {
-  name: 'writer',
-  description: 'Documentation, migration notes, README files (Haiku).',
-  prompt: loadAgentPrompt('writer'),
-  model: 'haiku',
-  defaultModel: 'haiku',
-};
 
-export const qaTesterAgent: AgentConfig = {
-  name: 'qa-tester',
-  description: 'CLI testing specialist using tmux for interactive runtime validation (Sonnet).',
-  prompt: loadAgentPrompt('qa-tester'),
-  model: 'sonnet',
-  defaultModel: 'sonnet',
-};
-
-export const scientistAgent: AgentConfig = {
-  name: 'scientist',
-  description: 'Data analysis and research execution with Python (Sonnet).',
-  prompt: loadAgentPrompt('scientist'),
-  model: 'sonnet',
-  defaultModel: 'sonnet',
-};
-
+/**
+ * Git-Master Agent - Git Operations Expert (Sonnet)
+ */
 export const gitMasterAgent: AgentConfig = {
   name: 'git-master',
-  description: 'Git expert for atomic commits, rebasing, and history management (Sonnet).',
+  description: 'Git expert for atomic commits, rebasing, and history management with style detection',
   prompt: loadAgentPrompt('git-master'),
   model: 'sonnet',
-  defaultModel: 'sonnet',
+  defaultModel: 'sonnet'
 };
 
-export const documentSpecialistAgent: AgentConfig = {
-  name: 'document-specialist',
-  description: 'External docs and reference lookup for SDK/API/package research (Sonnet).',
-  prompt: loadAgentPrompt('document-specialist'),
-  model: 'sonnet',
-  defaultModel: 'sonnet',
-};
-
-// ============================================================
-// COORDINATION
-// ============================================================
-
-export const criticAgent: AgentConfig = {
-  name: 'critic',
-  description: 'Plan review with critical challenge and evaluation (Opus).',
-  prompt: loadAgentPrompt('critic'),
-  model: 'opus',
-  defaultModel: 'opus',
-};
-
+/**
+ * Code-Simplifier Agent - Code Simplification & Refactoring (Opus)
+ */
 export const codeSimplifierAgent: AgentConfig = {
   name: 'code-simplifier',
   description: 'Simplifies and refines code for clarity, consistency, and maintainability (Opus).',
   prompt: loadAgentPrompt('code-simplifier'),
   model: 'opus',
-  defaultModel: 'opus',
+  defaultModel: 'opus'
 };
+
+// ============================================================
+// DEPRECATED ALIASES (Backward Compatibility)
+// ============================================================
+
+/**
+ * @deprecated Use test-engineer agent instead
+ */
+export const tddGuideAgentAlias = testEngineerAgent;
 
 // ============================================================
 // AGENT REGISTRY
 // ============================================================
 
-/** Get all agent definitions as a registry map */
-export function getAgentDefinitions(): Record<string, AgentConfig> {
-  return {
-    // Build/Analysis Lane
-    'explore': exploreAgent,
-    'analyst': analystAgent,
-    'planner': plannerAgent,
-    'architect': architectAgent,
-    'debugger': debuggerAgent,
-    'executor': executorAgent,
-    'deep-executor': deepExecutorAgent,
-    'verifier': verifierAgent,
-    // Review Lane
+/**
+ * Agent Role Disambiguation
+ *
+ * HIGH-tier review/planning agents have distinct, non-overlapping roles:
+ *
+ * | Agent | Role | What They Do | What They Don't Do |
+ * |-------|------|--------------|-------------------|
+ * | architect | code-analysis | Analyze code, debug, verify | Requirements, plan creation, plan review |
+ * | analyst | requirements-analysis | Find requirement gaps | Code analysis, planning, plan review |
+ * | planner | plan-creation | Create work plans | Requirements, code analysis, plan review |
+ * | critic | plan-review | Review plan quality | Requirements, code analysis, plan creation |
+ *
+ * Workflow: explore → analyst → planner → critic → executor → architect (verify)
+ */
+
+/**
+ * Get all agent definitions as a record for use with Claude Agent SDK
+ */
+export function getAgentDefinitions(overrides?: Partial<Record<string, Partial<AgentConfig>>>): Record<string, {
+  description: string;
+  prompt: string;
+  tools?: string[];
+  disallowedTools?: string[];
+  model?: ModelType;
+  defaultModel?: ModelType;
+}> {
+  const agents = {
+    // ============================================================
+    // BUILD/ANALYSIS LANE
+    // ============================================================
+    explore: exploreAgent,
+    analyst: analystAgent,
+    planner: plannerAgent,
+    architect: architectAgent,
+    debugger: debuggerAgent,
+    executor: executorAgent,
+    verifier: verifierAgent,
+
+    // ============================================================
+    // REVIEW LANE
+    // ============================================================
     'quality-reviewer': qualityReviewerAgent,
     'security-reviewer': securityReviewerAgent,
     'code-reviewer': codeReviewerAgent,
-    // Domain Specialists
+
+    // ============================================================
+    // DOMAIN SPECIALISTS
+    // ============================================================
+    'deep-executor': deepExecutorAgent,
     'test-engineer': testEngineerAgent,
     'build-fixer': buildFixerAgent,
-    'designer': designerAgent,
-    'writer': writerAgent,
+    designer: designerAgent,
+    writer: writerAgent,
     'qa-tester': qaTesterAgent,
-    'scientist': scientistAgent,
+    scientist: scientistAgent,
     'git-master': gitMasterAgent,
-    'document-specialist': documentSpecialistAgent,
-    // Coordination
-    'critic': criticAgent,
     'code-simplifier': codeSimplifierAgent,
+
+    // ============================================================
+    // COORDINATION
+    // ============================================================
+    critic: criticAgent,
+
+    // ============================================================
+    // BACKWARD COMPATIBILITY (Deprecated)
+    // ============================================================
+    'document-specialist': documentSpecialistAgent
   };
+
+  const result: Record<string, { description: string; prompt: string; tools?: string[]; disallowedTools?: string[]; model?: ModelType; defaultModel?: ModelType }> = {};
+
+  for (const [name, config] of Object.entries(agents)) {
+    const override = overrides?.[name];
+    const disallowedTools = config.disallowedTools ?? parseDisallowedTools(name);
+    result[name] = {
+      description: override?.description ?? config.description,
+      prompt: override?.prompt ?? config.prompt,
+      tools: override?.tools ?? config.tools,
+      disallowedTools,
+      model: (override?.model ?? config.model) as ModelType | undefined,
+      defaultModel: (override?.defaultModel ?? config.defaultModel) as ModelType | undefined
+    };
+  }
+
+  return result;
 }
 
 // ============================================================
@@ -234,10 +270,7 @@ export function getAgentDefinitions(): Record<string, AgentConfig> {
 // ============================================================
 
 /**
- * OMC System Prompt - The main orchestrator prompt.
- *
- * Core delegation rules, agent catalog, model routing guidance,
- * and verification rules for the multi-agent system.
+ * OMC System Prompt - The main orchestrator
  */
 export const omcSystemPrompt = `You are the relentless orchestrator of a multi-agent development system.
 
@@ -276,8 +309,13 @@ You coordinate specialized subagents to accomplish complex software engineering 
 
 ### Coordination
 - **critic**: Plan review (opus) — critical challenge and evaluation
-- **code-simplifier**: Code simplification (opus) — clarity, consistency, maintainability
-- **deep-executor**: Deep work (opus) — complex goal-oriented autonomous execution
+
+### Deprecated Aliases
+- **api-reviewer** → code-reviewer
+- **performance-reviewer** → quality-reviewer
+- **dependency-expert** → document-specialist
+- **researcher** → document-specialist
+- **tdd-guide** → test-engineer
 
 ## Orchestration Principles
 1. **Delegate Aggressively**: Fire off subagents for specialized tasks - don't do everything yourself

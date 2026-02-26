@@ -13,8 +13,8 @@
  */
 
 import { existsSync, readFileSync, writeFileSync, renameSync, unlinkSync, mkdirSync } from 'fs';
-import { getClaudeConfigDir } from '../utils/paths.js';
 import { join, dirname } from 'path';
+import { homedir } from 'os';
 import { execSync } from 'child_process';
 import https from 'https';
 import type { RateLimits } from './types.js';
@@ -31,6 +31,14 @@ const TOKEN_REFRESH_URL_PATH = '/v1/oauth/token';
  * This is the production value; can be overridden via CLAUDE_CODE_OAUTH_CLIENT_ID env var.
  */
 const DEFAULT_OAUTH_CLIENT_ID = '9d1c250a-e61b-44d9-88ed-5944d1962f5e';
+
+/**
+ * Get Claude config directory path.
+ * Respects the CLAUDE_CONFIG_DIR environment variable when set.
+ */
+function getClaudeConfigDir(): string {
+  return process.env.CLAUDE_CONFIG_DIR || join(homedir(), '.claude');
+}
 
 interface UsageCache {
   timestamp: number;

@@ -7,6 +7,7 @@
 import type { RalphStateForHud, HudThresholds } from '../types.js';
 import { RESET } from '../colors.js';
 
+// ANSI color codes for inline use
 const RED = '\x1b[31m';
 const YELLOW = '\x1b[33m';
 const GREEN = '\x1b[32m';
