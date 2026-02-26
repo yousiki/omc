@@ -42,6 +42,19 @@ export const MODE_NAMES = {
   TDD: 'tdd',
 } as const;
 
+/** Remove fenced (``` and ~~~) and inline code blocks from text */
+export function removeCodeBlocks(text: string): string {
+  let result = text.replace(/```[\s\S]*?```/g, '');
+  result = result.replace(/~~~[\s\S]*?~~~/g, '');
+  result = result.replace(/`[^`]+`/g, '');
+  return result;
+}
+
+/** Escape special regex characters in a string for safe interpolation into RegExp */
+export function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 /** Read stdin with timeout protection (prevents hangs on Linux/Windows) */
 export function readStdin(timeoutMs = 5000): Promise<string> {
   return new Promise((resolve) => {
