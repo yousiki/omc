@@ -196,13 +196,14 @@ Use the AskUserQuestion tool to prompt the user:
 mkdir -p .claude && echo ".claude directory ready"
 ```
 
-### Download Fresh CLAUDE.md
+### Copy CLAUDE.md from Plugin
 
 ```bash
-# Define target path
+# Define target and source paths
 TARGET_PATH=".claude/CLAUDE.md"
+SOURCE_PATH="${CLAUDE_PLUGIN_ROOT}/docs/CLAUDE.md"
 
-# Extract old version before download
+# Extract old version before update
 OLD_VERSION=$(grep -m1 "^# oh-my-claudecode" "$TARGET_PATH" 2>/dev/null | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' || echo "none")
 
 # Backup existing
@@ -213,20 +214,19 @@ if [ -f "$TARGET_PATH" ]; then
   echo "Backed up existing CLAUDE.md to $BACKUP_PATH"
 fi
 
-# Download fresh OMC content to temp file
+# Copy from plugin directory
 TEMP_OMC=$(mktemp /tmp/omc-claude-XXXXXX.md)
 trap 'rm -f "$TEMP_OMC"' EXIT
-curl -fsSL "https://raw.githubusercontent.com/Yeachan-Heo/oh-my-claudecode/main/docs/CLAUDE.md" -o "$TEMP_OMC"
+cp "$SOURCE_PATH" "$TEMP_OMC"
 
 if [ ! -s "$TEMP_OMC" ]; then
-  echo "ERROR: Failed to download CLAUDE.md. Aborting."
+  echo "ERROR: CLAUDE.md not found at $SOURCE_PATH. Is the plugin installed?"
   rm -f "$TEMP_OMC"
   return 1
 fi
 
-# Strip existing markers from downloaded content (idempotency)
+# Strip existing markers from source content (idempotency)
 if grep -q '<!-- OMC:START -->' "$TEMP_OMC"; then
-  # Extract content between markers (awk is portable across GNU/BSD)
   awk '/<!-- OMC:END -->/{p=0} p; /<!-- OMC:START -->/{p=1}' "$TEMP_OMC" > "${TEMP_OMC}.clean"
   mv "${TEMP_OMC}.clean" "$TEMP_OMC"
 fi
@@ -243,8 +243,6 @@ if [ ! -f "$TARGET_PATH" ]; then
 else
   # Merge: preserve user content outside OMC markers
   if grep -q '<!-- OMC:START -->' "$TARGET_PATH"; then
-    # Has markers: replace OMC section, keep user content
-    # Use awk instead of sed for cross-platform compatibility (GNU/BSD)
     BEFORE_OMC=$(awk '/<!-- OMC:START -->/{exit} {print}' "$TARGET_PATH")
     AFTER_OMC=$(awk 'p; /<!-- OMC:END -->/{p=1}' "$TARGET_PATH")
     {
@@ -257,7 +255,6 @@ else
     mv "${TARGET_PATH}.tmp" "$TARGET_PATH"
     echo "Updated OMC section (user customizations preserved)"
   else
-    # No markers: wrap new content in markers, append old content as user section
     OLD_CONTENT=$(cat "$TARGET_PATH")
     {
       echo '<!-- OMC:START -->'
@@ -284,15 +281,9 @@ else
 fi
 ```
 
-**Note**: The downloaded CLAUDE.md includes Context Persistence instructions with `<remember>` tags for surviving conversation compaction.
+**Note**: CLAUDE.md is copied directly from the plugin directory (`${CLAUDE_PLUGIN_ROOT}/docs/CLAUDE.md`), no network access needed.
 
-**Note**: If an existing CLAUDE.md is found, it will be backed up to `.claude/CLAUDE.md.backup.YYYY-MM-DD` before downloading the new version.
-
-**MANDATORY**: Always run this command. Do NOT skip. Do NOT use Write tool.
-
-**FALLBACK** if curl fails:
-Tell user to manually download from:
-https://raw.githubusercontent.com/Yeachan-Heo/oh-my-claudecode/main/docs/CLAUDE.md
+**Note**: If an existing CLAUDE.md is found, it will be backed up to `.claude/CLAUDE.md.backup.YYYY-MM-DD` before update.
 
 ### Verify Plugin Installation
 
@@ -336,13 +327,14 @@ Do not continue to HUD setup or other steps.
 
 **CRITICAL**: This ALWAYS downloads fresh CLAUDE.md from GitHub to global config. DO NOT use the Write tool - use bash curl exclusively.
 
-### Download Fresh CLAUDE.md
+### Copy CLAUDE.md from Plugin
 
 ```bash
-# Define target path
+# Define target and source paths
 TARGET_PATH="$HOME/.claude/CLAUDE.md"
+SOURCE_PATH="${CLAUDE_PLUGIN_ROOT}/docs/CLAUDE.md"
 
-# Extract old version before download
+# Extract old version before update
 OLD_VERSION=$(grep -m1 "^# oh-my-claudecode" "$TARGET_PATH" 2>/dev/null | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' || echo "none")
 
 # Backup existing
@@ -353,20 +345,19 @@ if [ -f "$TARGET_PATH" ]; then
   echo "Backed up existing CLAUDE.md to $BACKUP_PATH"
 fi
 
-# Download fresh OMC content to temp file
+# Copy from plugin directory
 TEMP_OMC=$(mktemp /tmp/omc-claude-XXXXXX.md)
 trap 'rm -f "$TEMP_OMC"' EXIT
-curl -fsSL "https://raw.githubusercontent.com/Yeachan-Heo/oh-my-claudecode/main/docs/CLAUDE.md" -o "$TEMP_OMC"
+cp "$SOURCE_PATH" "$TEMP_OMC"
 
 if [ ! -s "$TEMP_OMC" ]; then
-  echo "ERROR: Failed to download CLAUDE.md. Aborting."
+  echo "ERROR: CLAUDE.md not found at $SOURCE_PATH. Is the plugin installed?"
   rm -f "$TEMP_OMC"
   return 1
 fi
 
-# Strip existing markers from downloaded content (idempotency)
+# Strip existing markers from source content (idempotency)
 if grep -q '<!-- OMC:START -->' "$TEMP_OMC"; then
-  # Extract content between markers (awk is portable across GNU/BSD)
   awk '/<!-- OMC:END -->/{p=0} p; /<!-- OMC:START -->/{p=1}' "$TEMP_OMC" > "${TEMP_OMC}.clean"
   mv "${TEMP_OMC}.clean" "$TEMP_OMC"
 fi
@@ -383,8 +374,6 @@ if [ ! -f "$TARGET_PATH" ]; then
 else
   # Merge: preserve user content outside OMC markers
   if grep -q '<!-- OMC:START -->' "$TARGET_PATH"; then
-    # Has markers: replace OMC section, keep user content
-    # Use awk instead of sed for cross-platform compatibility (GNU/BSD)
     BEFORE_OMC=$(awk '/<!-- OMC:START -->/{exit} {print}' "$TARGET_PATH")
     AFTER_OMC=$(awk 'p; /<!-- OMC:END -->/{p=1}' "$TARGET_PATH")
     {
@@ -397,7 +386,6 @@ else
     mv "${TARGET_PATH}.tmp" "$TARGET_PATH"
     echo "Updated OMC section (user customizations preserved)"
   else
-    # No markers: wrap new content in markers, append old content as user section
     OLD_CONTENT=$(cat "$TARGET_PATH")
     {
       echo '<!-- OMC:START -->'
@@ -424,7 +412,9 @@ else
 fi
 ```
 
-**Note**: If an existing CLAUDE.md is found, it will be backed up to `~/.claude/CLAUDE.md.backup.YYYY-MM-DD` before downloading the new version.
+**Note**: CLAUDE.md is copied directly from the plugin directory (`${CLAUDE_PLUGIN_ROOT}/docs/CLAUDE.md`), no network access needed.
+
+**Note**: If an existing CLAUDE.md is found, it will be backed up to `~/.claude/CLAUDE.md.backup.YYYY-MM-DD` before update.
 
 ### Clean Up Legacy Hooks (if present)
 
@@ -1002,55 +992,7 @@ CLI ANALYTICS (if installed):
 Your workflow won't break - it just got easier!
 ```
 
-## Step 8: Ask About Starring Repository
-
-First, check if `gh` CLI is available and authenticated:
-
-```bash
-gh auth status &>/dev/null
-```
-
-### If gh is available and authenticated:
-
-**Before prompting, check if the repository is already starred:**
-
-```bash
-gh api user/starred/Yeachan-Heo/oh-my-claudecode &>/dev/null
-```
-
-**If already starred (exit code 0):**
-- Skip the prompt entirely
-- Continue to next step silently
-
-**If NOT starred (exit code non-zero):**
-
-Use the AskUserQuestion tool to prompt the user:
-
-**Question:** "If you're enjoying oh-my-claudecode, would you like to support the project by starring it on GitHub?"
-
-**Options:**
-1. **Yes, star it!** - Star the repository
-2. **No thanks** - Skip without further prompts
-3. **Maybe later** - Skip without further prompts
-
-If user chooses "Yes, star it!":
-
-```bash
-gh api -X PUT /user/starred/Yeachan-Heo/oh-my-claudecode 2>/dev/null && echo "Thanks for starring! ⭐" || true
-```
-
-**Note:** Fail silently if the API call doesn't work - never block setup completion.
-
-### If gh is NOT available or not authenticated:
-
-```bash
-echo ""
-echo "If you enjoy oh-my-claudecode, consider starring the repo:"
-echo "  https://github.com/Yeachan-Heo/oh-my-claudecode"
-echo ""
-```
-
-### Clear Setup State and Mark Completion
+## Step 8: Clear Setup State and Mark Completion
 
 After Step 8 completes (regardless of star choice), clear the temporary state and mark setup as completed:
 
@@ -1145,7 +1087,7 @@ EXAMPLES:
   /oh-my-claudecode:omc-setup --global  # Update all projects
   /oh-my-claudecode:omc-setup --force   # Re-run full setup wizard
 
-For more info: https://github.com/Yeachan-Heo/oh-my-claudecode
+For more info: https://github.com/yousiki/oh-my-claudecode
 ```
 
 ## Optional Rule Templates

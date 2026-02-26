@@ -156,9 +156,9 @@ bun -e "const p=require('path'),f=require('fs'),h=require('os').homedir(),d=proc
 ```
 
 ### Fix: Missing/Outdated CLAUDE.md
-Fetch latest from GitHub and write to `~/.claude/CLAUDE.md`:
-```
-WebFetch(url: "https://raw.githubusercontent.com/Yeachan-Heo/oh-my-claudecode/main/docs/CLAUDE.md", prompt: "Return the complete raw markdown content exactly as-is")
+Copy from plugin directory to `~/.claude/CLAUDE.md`:
+```bash
+cp "${CLAUDE_PLUGIN_ROOT}/docs/CLAUDE.md" ~/.claude/CLAUDE.md
 ```
 
 ### Fix: Legacy Curl-Installed Content
