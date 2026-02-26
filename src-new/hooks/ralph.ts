@@ -17,6 +17,7 @@ import type { HookOutput } from '../types';
 import type { ModeState } from './mode-registry';
 import { isModeActive, startMode, stopMode } from './mode-registry';
 import { readJsonFile, writeJsonFile } from '../utils';
+import { readBoulderState, getPlanProgress } from '../features/boulder-state';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -33,19 +34,6 @@ export interface RalphState extends ModeState {
   };
 }
 
-/** Minimal boulder state shape (avoids import cycle with boulder-state stub) */
-interface BoulderSnapshot {
-  active_plan?: string;
-  plan_name?: string;
-  active?: boolean;
-}
-
-/** Minimal plan progress parsed from checkbox markdown */
-interface PlanProgress {
-  total: number;
-  completed: number;
-}
-
 // ---------------------------------------------------------------------------
 // Paths
 // ---------------------------------------------------------------------------
@@ -54,34 +42,8 @@ function statePath(directory: string): string {
   return join(directory, '.omc', 'state', 'ralph-state.json');
 }
 
-function boulderPath(directory: string): string {
-  return join(directory, '.omc', 'boulder.json');
-}
-
 function plansDir(directory: string): string {
   return join(directory, '.omc', 'plans');
-}
-
-// ---------------------------------------------------------------------------
-// Boulder helpers (inline to avoid dependency on unported module)
-// ---------------------------------------------------------------------------
-
-function readBoulder(directory: string): BoulderSnapshot | null {
-  return readJsonFile<BoulderSnapshot>(boulderPath(directory));
-}
-
-function getPlanProgress(planFilePath: string): PlanProgress {
-  if (!existsSync(planFilePath)) {
-    return { total: 0, completed: 0 };
-  }
-  try {
-    const content = readFileSync(planFilePath, 'utf-8');
-    const unchecked = (content.match(/^[-*]\s*\[\s*\]/gm) || []).length;
-    const checked = (content.match(/^[-*]\s*\[[xX]\]/gm) || []).length;
-    return { total: unchecked + checked, completed: checked };
-  } catch {
-    return { total: 0, completed: 0 };
-  }
 }
 
 // ---------------------------------------------------------------------------
@@ -146,7 +108,7 @@ export function startRalph(
   if (prdPath) {
     meta.prdName = prdPath;
   }
-  const boulder = readBoulder(directory);
+  const boulder = readBoulderState(directory);
   if (boulder?.active_plan) {
     meta.planPath = boulder.active_plan;
   }
@@ -246,7 +208,7 @@ export function getRalphContext(directory: string): string | null {
   }
 
   // Plan progress via boulder
-  const boulder = readBoulder(directory);
+  const boulder = readBoulderState(directory);
   if (boulder?.active_plan && boulder.active) {
     const progress = getPlanProgress(boulder.active_plan);
     if (progress.total > 0) {

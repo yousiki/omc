@@ -8,7 +8,8 @@
 import { existsSync, readFileSync, mkdirSync, appendFileSync, writeFileSync } from 'fs';
 import { join, extname, normalize, relative, isAbsolute, dirname } from 'path';
 import type { HookInput, HookOutput } from '../types';
-import { resolveWorktreeRoot, readJsonFile } from '../utils';
+import { resolveWorktreeRoot } from '../utils';
+import { readBoulderState, getPlanProgress } from '../features/boulder-state';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -75,37 +76,6 @@ function extractFilePath(toolInput: unknown): string | undefined {
   const t = toolInput as Record<string, unknown>;
   const raw = t.file_path ?? t.filePath ?? t.path ?? t.file ?? t.notebook_path;
   return typeof raw === 'string' ? raw : undefined;
-}
-
-// ---------------------------------------------------------------------------
-// Boulder state (lightweight inline — avoids pulling in unported module)
-// ---------------------------------------------------------------------------
-
-interface BoulderState {
-  active_plan: string;
-  plan_name: string;
-  active?: boolean;
-}
-
-interface PlanProgress {
-  total: number;
-  completed: number;
-}
-
-function readBoulderState(directory: string): BoulderState | null {
-  return readJsonFile<BoulderState>(join(directory, '.omc', 'boulder.json'));
-}
-
-function getPlanProgress(planPath: string): PlanProgress {
-  try {
-    if (!existsSync(planPath)) return { total: 0, completed: 0 };
-    const content = readFileSync(planPath, 'utf-8');
-    const unchecked = content.match(/^[-*]\s*\[\s*\]/gm) || [];
-    const checked = content.match(/^[-*]\s*\[[xX]\]/gm) || [];
-    return { total: unchecked.length + checked.length, completed: checked.length };
-  } catch {
-    return { total: 0, completed: 0 };
-  }
 }
 
 // ---------------------------------------------------------------------------
