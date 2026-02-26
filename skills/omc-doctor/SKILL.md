@@ -92,6 +92,16 @@ Look for files like:
 - `ultrawork.md`, `deepsearch.md`, etc. in commands/
 - Any oh-my-claudecode-related `.md` files in skills/
 
+**Note on removed skills**: The following skills have been removed from oh-my-claudecode and should not be present. Flag any of these as WARN - removed skill (no longer part of the plugin):
+- `team.md` / `omc-teams.md` — team management (removed)
+- `project-session-manager.md` — project session management (removed)
+- `configure-notifications.md` — notification configuration (removed)
+- `configure-openclaw.md` — openclaw configuration (removed)
+- `ccg.md` — claude code generator (removed)
+- `deepinit.md` — deep initialization (removed)
+- `omc-setup.md` — setup wizard (removed)
+- `release.md` — release skill (removed)
+
 ---
 
 ## Report Format
