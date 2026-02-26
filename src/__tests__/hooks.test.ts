@@ -4,7 +4,7 @@ import { join } from 'path';
 import { tmpdir, homedir } from 'os';
 import { execSync } from 'child_process';
 
-// Mock isTeamEnabled so team/ultrapilot/swarm keywords are detected in CI
+// Mock isTeamEnabled so team keywords are detected in CI
 vi.mock('../features/auto-update.js', async (importOriginal) => {
   const actual = await importOriginal<Record<string, unknown>>();
   return {
@@ -242,44 +242,6 @@ describe('Keyword Detector', () => {
         expect(detected[0].type).toBe('cancel');
         expect(detected[0].keyword).toBe(term);
       }
-    });
-
-    it('should route legacy ultrapilot keyword to team (with dual-emission)', () => {
-      const detected = detectKeywordsWithType('use ultrapilot for this');
-      expect(detected).toHaveLength(2);
-      expect(detected[0].type).toBe('ultrapilot');
-      expect(detected[1].type).toBe('team');
-      expect(detected[0].keyword).toBe('ultrapilot');
-    });
-
-    it('should route legacy ultrapilot patterns to team', () => {
-      const patterns = [
-        'ultrapilot this project',
-        'parallel build the app',
-        'swarm build the system'
-      ];
-      for (const pattern of patterns) {
-        const detected = detectKeywordsWithType(pattern);
-        expect(detected.length).toBeGreaterThan(0);
-        const hasTeam = detected.some(d => d.type === 'team');
-        expect(hasTeam).toBe(true);
-      }
-    });
-
-    it('should route legacy swarm keyword to team (with dual-emission)', () => {
-      const detected = detectKeywordsWithType('swarm 5 agents to fix this');
-      expect(detected).toHaveLength(2);
-      expect(detected[0].type).toBe('swarm');
-      expect(detected[1].type).toBe('team');
-      expect(detected[0].keyword).toBe('swarm 5 agents');
-    });
-
-    it('should route coordinated agents pattern to team (with dual-emission)', () => {
-      const detected = detectKeywordsWithType('use coordinated agents');
-      expect(detected).toHaveLength(2);
-      expect(detected[0].type).toBe('swarm');
-      expect(detected[1].type).toBe('team');
-      expect(detected[0].keyword).toBe('coordinated agents');
     });
 
     it('should detect pipeline keyword', () => {
@@ -523,18 +485,6 @@ describe('Keyword Detector', () => {
       const ralphMatch = detected.find(d => d.type === 'ralph');
       expect(ralphMatch).toBeDefined();
       expect(ralphMatch!.keyword).toBe('ralph');
-    });
-
-    it('should prioritize ultrapilot for legacy ultrapilot trigger', () => {
-      const primary = getPrimaryKeyword('ultrapilot this task');
-      expect(primary).not.toBeNull();
-      expect(primary!.type).toBe('ultrapilot');
-    });
-
-    it('should prioritize team for legacy swarm trigger', () => {
-      const primary = getPrimaryKeyword('swarm 5 agents for this');
-      expect(primary).not.toBeNull();
-      expect(primary!.type).toBe('team');
     });
 
     it('should prioritize pipeline correctly', () => {

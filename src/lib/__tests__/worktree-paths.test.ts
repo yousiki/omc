@@ -82,11 +82,7 @@ describe('worktree-paths', () => {
       expect(result).toBe(join(TEST_DIR, '.omc', 'state', 'ultrawork-state.json'));
     });
 
-    it('should throw for swarm (uses SQLite, not JSON)', () => {
-      expect(() => resolveStatePath('swarm', TEST_DIR)).toThrow('SQLite');
-      expect(() => resolveStatePath('swarm-state', TEST_DIR)).toThrow('SQLite');
-    });
-  });
+});
 
   describe('ensureOmcDir', () => {
     it('should create directories under .omc', () => {

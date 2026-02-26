@@ -323,12 +323,6 @@ describe('permission-handler', () => {
       expect(isActiveModeRunning(testDir)).toBe(false);
     });
 
-    it('should return true when swarm marker exists', () => {
-      fs.mkdirSync(stateDir, { recursive: true });
-      fs.writeFileSync(path.join(stateDir, 'swarm-active.marker'), '');
-      expect(isActiveModeRunning(testDir)).toBe(true);
-    });
-
     it('should return true when team mode is active', () => {
       fs.mkdirSync(stateDir, { recursive: true });
       fs.writeFileSync(
