@@ -2,6 +2,9 @@ import type { HookInput, HookOutput } from '../types';
 import { processKeywordDetector } from './keyword-detector';
 import { processPreTool, processPostTool } from './orchestrator';
 import { checkPersistentModes } from './persistent-mode';
+import { processSetup } from './setup';
+import { processPermissionRequest } from './permission-handler';
+import { processRecovery } from './recovery';
 
 /**
  * Normalize raw hook input from Claude Code (snake_case) to internal format (camelCase).
@@ -43,20 +46,20 @@ export async function processHook(hookType: string, rawInput: unknown): Promise<
     case 'persistent-mode':
       return checkPersistentModes(input, input.directory ?? process.cwd());
     case 'session-start':
-      return { continue: true }; // Task 4.1
+      return processSetup(input, input.directory ?? process.cwd());
     case 'session-end':
       return { continue: true }; // Task 9.4
     case 'setup':
     case 'setup-init':
     case 'setup-maintenance':
-      return { continue: true }; // Task 4.1
+      return processSetup(input, input.directory ?? process.cwd());
     case 'permission-request':
-      return { continue: true }; // Task 4.1
+      return processPermissionRequest(input);
     case 'subagent-start':
     case 'subagent-stop':
       return { continue: true }; // Task 4.2
     case 'pre-compact':
-      return { continue: true }; // Task 4.2
+      return processRecovery(input, input.directory ?? process.cwd());
     default:
       return { continue: true };
   }
