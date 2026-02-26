@@ -11,7 +11,44 @@ export { getAgentDefinitions, omcSystemPrompt } from './agents/definitions';
 export { loadAgentPrompt } from './agents/prompt';
 
 // Utilities
-export { resolveWorktreeRoot, readJsonFile, writeJsonFile, MODE_NAMES, readStdin } from './utils';
+export {
+  resolveWorktreeRoot,
+  readJsonFile,
+  writeJsonFile,
+  MODE_NAMES,
+  readStdin,
+  removeCodeBlocks,
+  escapeRegex,
+} from './utils';
+
+// Hook system
+export { processHook, normalizeHookInput } from './hooks/bridge';
+export { processKeywordDetector, detectKeywords, getPrimaryKeyword } from './hooks/keyword-detector';
+export { processPreTool, processPostTool } from './hooks/orchestrator';
+export { checkPersistentModes } from './hooks/persistent-mode';
+export { processSetup } from './hooks/setup';
+export { processPermissionRequest } from './hooks/permission-handler';
+export { processRecovery } from './hooks/recovery';
+
+// Features
+export { applyMagicKeywords, detectMagicKeywords, BUILTIN_MAGIC_KEYWORDS } from './features/magic-keywords';
+export { readBoulderState, getPlanProgress, checkBoulderContinuation } from './features/boulder-state';
+export { enforceModel, resolveDelegation } from './features/delegation';
+export { routeModel, analyzeComplexity } from './features/model-routing';
+export {
+  BackgroundManager,
+  ConcurrencyManager,
+  getBackgroundManager,
+  shouldRunInBackground,
+  getBackgroundTaskGuidance,
+} from './features/background';
+export {
+  ContextCollector,
+  contextCollector,
+  injectPendingContext,
+  injectContextIntoText,
+  createContextInjectorHook,
+} from './features/context';
 
 // Config loading
 import { existsSync, readFileSync } from 'fs';
