@@ -1,8 +1,9 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 /**
  * Plugin Post-Install Setup
  *
  * Configures HUD statusline when plugin is installed.
+ * Uses Bun runtime to run TypeScript source directly.
  */
 
 import { existsSync, mkdirSync, writeFileSync, readFileSync, readdirSync, chmodSync } from 'node:fs';
@@ -26,7 +27,7 @@ if (!existsSync(HUD_DIR)) {
 
 // 2. Create HUD wrapper script
 const hudScriptPath = join(HUD_DIR, 'omc-hud.mjs').replace(/\\/g, '/');
-const hudScript = `#!/usr/bin/env node
+const hudScript = `#!/usr/bin/env bun
 /**
  * OMC HUD - Statusline Script
  * Wrapper that imports from plugin cache or development paths
@@ -66,14 +67,14 @@ async function main() {
     try {
       const versions = readdirSync(pluginCacheBase);
       if (versions.length > 0) {
-        // Filter to only versions with built dist/hud/index.js
+        // Filter to only versions with src/hud/index.ts
         const builtVersions = versions.filter(v => {
-          const hudPath = join(pluginCacheBase, v, "dist/hud/index.js");
+          const hudPath = join(pluginCacheBase, v, "src/hud/index.ts");
           return existsSync(hudPath);
         });
         if (builtVersions.length > 0) {
           const latestBuilt = builtVersions.sort(semverCompare).reverse()[0];
-          const pluginPath = join(pluginCacheBase, latestBuilt, "dist/hud/index.js");
+          const pluginPath = join(pluginCacheBase, latestBuilt, "src/hud/index.ts");
           await import(pathToFileURL(pluginPath).href);
           return;
         }
@@ -83,10 +84,9 @@ async function main() {
 
   // 2. Development paths
   const devPaths = [
-    join(home, "Workspace/oh-my-claudecode/dist/hud/index.js"),
-    join(home, "workspace/oh-my-claudecode/dist/hud/index.js"),
-    join(home, "Workspace/oh-my-claudecode/dist/hud/index.js"),
-    join(home, "workspace/oh-my-claudecode/dist/hud/index.js"),
+    join(home, "Workspace/oh-my-claudecode/src/hud/index.ts"),
+    join(home, "workspace/oh-my-claudecode/src/hud/index.ts"),
+    join(home, "projects/oh-my-claudecode/src/hud/index.ts"),
   ];
 
   for (const devPath of devPaths) {
@@ -118,41 +118,35 @@ try {
     settings = JSON.parse(readFileSync(SETTINGS_FILE, 'utf-8'));
   }
 
-  // Use the absolute node binary path so nvm/fnm users don't get
-  // "node not found" errors in non-interactive shells (issue #892).
-  const nodeBin = process.execPath || 'node';
+  // Use bun to run the HUD script directly (handles TypeScript natively)
   settings.statusLine = {
     type: 'command',
-    command: `"${nodeBin}" "${hudScriptPath.replace(/\\/g, "/")}"`
+    command: `"bun" "${hudScriptPath.replace(/\\/g, "/")}"`
   };
   writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2));
   console.log('[OMC] Configured HUD statusLine in settings.json');
 
-  // Persist the node binary path to .omc-config.json for use by find-node.sh
+  // Persist the runtime binary path to .omc-config.json for use by hooks
   try {
     const configPath = join(CLAUDE_DIR, '.omc-config.json');
     let omcConfig = {};
     if (existsSync(configPath)) {
       omcConfig = JSON.parse(readFileSync(configPath, 'utf-8'));
     }
-    if (nodeBin !== 'node') {
-      omcConfig.nodeBinary = nodeBin;
-      writeFileSync(configPath, JSON.stringify(omcConfig, null, 2));
-      console.log(`[OMC] Saved node binary path: ${nodeBin}`);
-    }
+    omcConfig.nodeBinary = 'bun';
+    writeFileSync(configPath, JSON.stringify(omcConfig, null, 2));
+    console.log('[OMC] Saved runtime binary path: bun');
   } catch (e) {
-    console.log('[OMC] Warning: Could not save node binary path (non-fatal):', e.message);
+    console.log('[OMC] Warning: Could not save runtime binary path (non-fatal):', e.message);
   }
 } catch (e) {
   console.log('[OMC] Warning: Could not configure settings.json:', e.message);
 }
 
-// Patch hooks.json to use the absolute node binary path so hooks work on all
-// platforms: Windows (no `sh`), nvm/fnm users (node not on PATH in hooks), etc.
+// Patch hooks.json to use bun so hooks work on all platforms.
 //
 // The source hooks.json uses `node run.cjs` as a portable template; this step
-// substitutes the real process.execPath so Claude Code always invokes the same
-// Node binary that ran this setup script.
+// substitutes bun so Claude Code invokes the Bun runtime for hooks.
 //
 // Two patterns are handled:
 //  1. New format  – node "${CLAUDE_PLUGIN_ROOT}/scripts/run.cjs" ... (all platforms)
@@ -179,19 +173,19 @@ try {
         for (const hook of (group.hooks ?? [])) {
           if (typeof hook.command !== 'string') continue;
 
-          // New run.cjs format — replace bare `node` with absolute path (all platforms)
+          // New run.cjs format — replace bare `node` with bun (all platforms)
           const m1 = hook.command.match(runCjsPattern);
           if (m1) {
-            hook.command = `"${nodeBin}" ${m1[1]}`;
+            hook.command = `"bun" ${m1[1]}`;
             patched = true;
             continue;
           }
 
-          // Old find-node.sh format — migrate to run.cjs + absolute path (Windows only)
+          // Old find-node.sh format — migrate to run.cjs + bun (Windows only)
           if (process.platform === 'win32') {
             const m2 = hook.command.match(findNodePattern);
             if (m2) {
-              hook.command = `"${nodeBin}" "\${CLAUDE_PLUGIN_ROOT}/scripts/run.cjs" "${m2[1]}"${m2[2]}`;
+              hook.command = `"bun" "\${CLAUDE_PLUGIN_ROOT}/scripts/run.cjs" "${m2[1]}"${m2[2]}`;
               patched = true;
             }
           }
@@ -201,7 +195,7 @@ try {
 
     if (patched) {
       writeFileSync(hooksJsonPath, JSON.stringify(data, null, 2) + '\n');
-      console.log(`[OMC] Patched hooks.json with absolute node path (${nodeBin}), fixes issues #909, #899, #892`);
+      console.log(`[OMC] Patched hooks.json to use bun runtime, fixes issues #909, #899, #892`);
     }
   }
 } catch (e) {

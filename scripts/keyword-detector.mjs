@@ -436,7 +436,7 @@ async function main() {
 
     // Import flow tracer once (best-effort)
     let tracer = null;
-    try { tracer = await import('../dist/hooks/subagent-tracker/flow-tracer.js'); } catch { /* silent */ }
+    try { tracer = await import('../src/hooks/subagent-tracker/flow-tracer.ts'); } catch { /* silent */ }
 
     // Record detected keywords to flow trace
     if (tracer) {

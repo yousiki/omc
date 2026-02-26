@@ -9,7 +9,7 @@ async function main() {
 
   try {
     const data = JSON.parse(input);
-    const { processSetupMaintenance } = await import('../dist/hooks/setup/index.js');
+    const { processSetupMaintenance } = await import('../src/hooks/setup/index.ts');
     const result = await processSetupMaintenance(data);
     console.log(JSON.stringify(result));
   } catch (error) {

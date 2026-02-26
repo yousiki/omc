@@ -9,7 +9,7 @@ async function main() {
 
   try {
     const data = JSON.parse(input);
-    const { processPreCompact } = await import('../dist/hooks/pre-compact/index.js');
+    const { processPreCompact } = await import('../src/hooks/pre-compact/index.ts');
     const result = await processPreCompact(data);
     console.log(JSON.stringify(result));
   } catch (error) {

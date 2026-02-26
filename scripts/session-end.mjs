@@ -9,7 +9,7 @@ async function main() {
 
   try {
     const data = JSON.parse(input);
-    const { processSessionEnd } = await import('../dist/hooks/session-end/index.js');
+    const { processSessionEnd } = await import('../src/hooks/session-end/index.ts');
     const result = await processSessionEnd(data);
     console.log(JSON.stringify(result));
   } catch (error) {

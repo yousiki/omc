@@ -9,7 +9,7 @@ async function main() {
 
   try {
     const data = JSON.parse(input);
-    const { processPermissionRequest } = await import('../dist/hooks/permission-handler/index.js');
+    const { processPermissionRequest } = await import('../src/hooks/permission-handler/index.ts');
     const result = await processPermissionRequest(data);
     console.log(JSON.stringify(result));
   } catch (error) {

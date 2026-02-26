@@ -184,8 +184,8 @@ Tip: Run /omc-setup to configure OMC properly.
 
 ## Need More Help?
 
-- **README**: https://github.com/Yeachan-Heo/oh-my-claudecode
-- **Issues**: https://github.com/Yeachan-Heo/oh-my-claudecode/issues
+- **README**: https://github.com/yousiki/oh-my-claudecode
+- **Issues**: https://github.com/yousiki/oh-my-claudecode/issues
 
 ---
 

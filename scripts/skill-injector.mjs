@@ -4,8 +4,8 @@
  * Skill Injector Hook (UserPromptSubmit)
  * Injects relevant learned skills into context based on prompt triggers.
  *
- * STANDALONE SCRIPT - uses compiled bridge bundle from dist/hooks/skill-bridge.cjs
- * Falls back to inline implementation if bundle not available (first run before build)
+ * STANDALONE SCRIPT - uses bridge module from src/hooks/learner/bridge.ts
+ * Falls back to inline implementation if bridge not available
  *
  * Enhancement in v3.5: Now uses RECURSIVE discovery (skills in subdirectories included)
  */
@@ -14,15 +14,13 @@ import { existsSync, readdirSync, readFileSync, realpathSync } from 'fs';
 import { join, basename } from 'path';
 import { homedir } from 'os';
 import { readStdin } from './lib/stdin.mjs';
-import { createRequire } from 'module';
 
-// Try to load the compiled bridge bundle
-const require = createRequire(import.meta.url);
+// Try to load the bridge module (TS source, run via bun)
 let bridge = null;
 try {
-  bridge = require('../dist/hooks/skill-bridge.cjs');
+  bridge = await import('../src/hooks/learner/bridge.ts');
 } catch {
-  // Bridge not available - use fallback (first run before build, or dist/ missing)
+  // Bridge not available - use fallback
 }
 
 // Constants (used by fallback)
@@ -265,7 +263,7 @@ async function main() {
     // Record skill activations to flow trace (best-effort)
     if (matchingSkills.length > 0) {
       try {
-        const { recordSkillActivated } = await import('../dist/hooks/subagent-tracker/flow-tracer.js');
+        const { recordSkillActivated } = await import('../src/hooks/subagent-tracker/flow-tracer.ts');
         for (const skill of matchingSkills) {
           recordSkillActivated(directory, sessionId, skill.name, skill.scope || 'learned');
         }
