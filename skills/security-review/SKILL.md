@@ -260,9 +260,9 @@ The security-reviewer agent verifies:
 ```
 Uses: explore → security-reviewer → executor → security-reviewer-low (re-verify)
 
-**With Swarm:**
+**With Team:**
 ```
-/swarm 4:security-reviewer "audit all API endpoints"
+/team 4:security-reviewer "audit all API endpoints"
 ```
 Parallel security review across multiple endpoints.
 

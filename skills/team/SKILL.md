@@ -1,14 +1,11 @@
 ---
 name: team
 description: N coordinated agents on shared task list using Claude Code native teams
-aliases: [swarm]
 ---
 
 # Team Skill
 
-Spawn N coordinated agents working on a shared task list using Claude Code's native team tools. Replaces the legacy `/swarm` skill (SQLite-based) with built-in team management, inter-agent messaging, and task dependencies -- no external dependencies required.
-
-`swarm` is the compatibility alias for this canonical skill entrypoint.
+Spawn N coordinated agents working on a shared task list using Claude Code's native team tools. Uses built-in team management, inter-agent messaging, and task dependencies -- no external dependencies required.
 
 ## Usage
 
@@ -793,16 +790,15 @@ If the lead crashes mid-run, the team skill should detect existing state and res
 
 This prevents duplicate teams and allows graceful recovery from lead failures.
 
-## Comparison: Team vs Legacy Swarm
+## Task Claiming Notes
 
-| Aspect | Team (Native) | Swarm (Legacy SQLite) |
-|--------|--------------|----------------------|
-| **Storage** | JSON files in `~/.claude/teams/` and `~/.claude/tasks/` | SQLite in `.omc/state/swarm.db` |
-| **Dependencies** | `better-sqlite3` not needed | Requires `better-sqlite3` npm package |
-| **Task claiming** | `TaskUpdate(owner + in_progress)` -- lead pre-assigns | SQLite IMMEDIATE transaction -- atomic |
-| **Race conditions** | Possible if two agents claim same task (mitigate by pre-assigning) | None (SQLite transactions) |
-| **Communication** | `SendMessage` (DM, broadcast, shutdown) | None (fire-and-forget agents) |
-| **Task dependencies** | Built-in `blocks` / `blockedBy` arrays | Not supported |
+| Aspect | Team (Native) |
+|--------|--------------|
+| **Storage** | JSON files in `~/.claude/teams/` and `~/.claude/tasks/` |
+| **Task claiming** | `TaskUpdate(owner + in_progress)` -- lead pre-assigns |
+| **Race conditions** | Possible if two agents claim same task (mitigate by pre-assigning) |
+| **Communication** | `SendMessage` (DM, broadcast, shutdown) |
+| **Task dependencies** | Built-in `blocks` / `blockedBy` arrays |
 | **Heartbeat** | Automatic idle notifications from Claude Code | Manual heartbeat table + polling |
 | **Shutdown** | Graceful request/response protocol | Signal-based termination |
 | **Agent lifecycle** | Auto-tracked via internal tasks + config members | Manual tracking via heartbeat table |
