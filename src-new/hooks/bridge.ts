@@ -5,6 +5,11 @@ import { checkPersistentModes } from './persistent-mode';
 import { processSetup } from './setup';
 import { processPermissionRequest } from './permission-handler';
 import { processRecovery } from './recovery';
+import { processPreCompact } from './preemptive-compact';
+import { processSubagentStart, processSubagentStop } from './subagent-tracker';
+import { processTaskSizeDetection } from './task-size-detector';
+import { processEmptyMsgSanitizer } from './empty-msg-sanitizer';
+import { processThinkingValidator } from './thinking-validator';
 
 /**
  * Normalize raw hook input from Claude Code (snake_case) to internal format (camelCase).
@@ -29,20 +34,51 @@ export function normalizeHookInput(raw: Record<string, unknown>): HookInput {
 }
 
 /**
+ * Compose multiple hook results. Messages are concatenated; modifiedInput
+ * from the first hook that provides one wins; continue is ANDed.
+ */
+function composeResults(...results: HookOutput[]): HookOutput {
+  const messages: string[] = [];
+  let modifiedInput: unknown = undefined;
+  let shouldContinue = true;
+
+  for (const r of results) {
+    if (!r.continue) shouldContinue = false;
+    if (r.message) messages.push(r.message);
+    if (r.modifiedInput && modifiedInput === undefined) {
+      modifiedInput = r.modifiedInput;
+    }
+  }
+
+  const result: HookOutput = { continue: shouldContinue };
+  if (messages.length > 0) result.message = messages.join('\n\n');
+  if (modifiedInput !== undefined) result.modifiedInput = modifiedInput;
+  return result;
+}
+
+/**
  * Main hook dispatch. Routes each hook type to its handler.
- * Initially all hooks are stubs returning { continue: true }.
- * They will be implemented in subsequent tasks.
  */
 export async function processHook(hookType: string, rawInput: unknown): Promise<HookOutput> {
   const input = normalizeHookInput((rawInput ?? {}) as Record<string, unknown>);
 
   switch (hookType) {
-    case 'keyword-detector':
-      return processKeywordDetector(input);
+    case 'keyword-detector': {
+      // UserPromptSubmit: compose empty-msg sanitizer, task-size detection,
+      // and keyword detection into one response.
+      const sanitizerResult = processEmptyMsgSanitizer(input);
+      const taskSizeResult = processTaskSizeDetection(input);
+      const keywordResult = processKeywordDetector(input);
+      return composeResults(sanitizerResult, taskSizeResult, keywordResult);
+    }
     case 'pre-tool-use':
       return processPreTool(input);
-    case 'post-tool-use':
-      return processPostTool(input);
+    case 'post-tool-use': {
+      // PostToolUse: run orchestrator post-tool, then thinking validator
+      const postToolResult = processPostTool(input);
+      const thinkingResult = processThinkingValidator(input);
+      return composeResults(postToolResult, thinkingResult);
+    }
     case 'persistent-mode':
       return checkPersistentModes(input, input.directory ?? process.cwd());
     case 'session-start':
@@ -56,10 +92,20 @@ export async function processHook(hookType: string, rawInput: unknown): Promise<
     case 'permission-request':
       return processPermissionRequest(input);
     case 'subagent-start':
-    case 'subagent-stop':
-      return { continue: true }; // Task 4.2
-    case 'pre-compact':
-      return processRecovery(input, input.directory ?? process.cwd());
+      return processSubagentStart(input, input.directory ?? process.cwd());
+    case 'subagent-stop': {
+      // SubagentStop: run tracker, then thinking validator on agent output
+      const stopResult = processSubagentStop(input, input.directory ?? process.cwd());
+      const thinkingStopResult = processThinkingValidator(input);
+      return composeResults(stopResult, thinkingStopResult);
+    }
+    case 'pre-compact': {
+      // PreCompact: run both recovery (stale state cleanup) and
+      // preemptive compact (context preservation)
+      const recoveryResult = processRecovery(input, input.directory ?? process.cwd());
+      const compactResult = processPreCompact(input, input.directory ?? process.cwd());
+      return composeResults(recoveryResult, compactResult);
+    }
     default:
       return { continue: true };
   }
