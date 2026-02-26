@@ -4,7 +4,7 @@
  * Handles installation of OMC agents, commands, and configuration
  * into the Claude Code config directory (~/.claude/).
  *
- * Cross-platform support via Node.js-based hook scripts (.mjs).
+ * Cross-platform support via Bun-based hook scripts (.mjs).
  * Bash hook scripts were removed in v3.9.0.
  */
 
@@ -19,7 +19,6 @@ import {
 } from './hooks.js';
 import { getRuntimePackageVersion } from '../lib/version.js';
 import { getConfigDir } from '../utils/config-dir.js';
-import { resolveNodeBinary } from '../utils/resolve-node.js';
 
 /** Claude Code configuration directory */
 export const CLAUDE_CONFIG_DIR = getConfigDir();
@@ -127,7 +126,7 @@ export function isOmcStatusLine(statusLine: unknown): boolean {
   if (typeof statusLine === 'string') {
     return statusLine.includes('omc-hud');
   }
-  // Current object format: { type: "command", command: "node ...omc-hud.mjs" }
+  // Current object format: { type: "command", command: "bun ...omc-hud.mjs" }
   if (typeof statusLine === 'object') {
     const sl = statusLine as Record<string, unknown>;
     if (typeof sl.command === 'string') {
@@ -421,7 +420,7 @@ export function install(options: InstallOptions = {}): InstallResult {
   }
 
   // Log platform info
-  log(`Platform: ${process.platform} (Node.js hooks)`);
+  log(`Platform: ${process.platform} (Bun runtime)`);
 
   // Check if running as a plugin
   const runningAsPlugin = isRunningAsPlugin();
@@ -589,7 +588,7 @@ export function install(options: InstallOptions = {}): InstallResult {
       // Create a wrapper that checks multiple locations for the HUD module
       hudScriptPath = join(HUD_DIR, 'omc-hud.mjs').replace(/\\/g, '/');
       const hudScriptLines = [
-        '#!/usr/bin/env node',
+        '#!/usr/bin/env bun',
         '/**',
         ' * OMC HUD - Statusline Script',
         ' * Wrapper that imports from dev paths, plugin cache, or npm package',
@@ -608,9 +607,9 @@ export function install(options: InstallOptions = {}): InstallResult {
         '  // 1. Development paths (only when OMC_DEV=1)',
         '  if (process.env.OMC_DEV === "1") {',
         '    const devPaths = [',
-        '      join(home, "Workspace/oh-my-claudecode/dist/hud/index.js"),',
-        '      join(home, "workspace/oh-my-claudecode/dist/hud/index.js"),',
-        '      join(home, "projects/oh-my-claudecode/dist/hud/index.js"),',
+        '      join(home, "Workspace/oh-my-claudecode/src/hud/index.ts"),',
+        '      join(home, "workspace/oh-my-claudecode/src/hud/index.ts"),',
+        '      join(home, "projects/oh-my-claudecode/src/hud/index.ts"),',
         '    ];',
         '    ',
         '    for (const devPath of devPaths) {',
@@ -631,10 +630,9 @@ export function install(options: InstallOptions = {}): InstallResult {
         '    try {',
         '      const versions = readdirSync(pluginCacheBase);',
         '      if (versions.length > 0) {',
-        '        // Filter to only versions with built dist/hud/index.js',
-        '        // This prevents picking an unbuilt new version after plugin update',
+        '        // Filter to only versions with src/hud/index.ts',
         '        const builtVersions = versions.filter(version => {',
-        '          const pluginPath = join(pluginCacheBase, version, "dist/hud/index.js");',
+        '          const pluginPath = join(pluginCacheBase, version, "src/hud/index.ts");',
         '          return existsSync(pluginPath);',
         '        });',
         '        ',
@@ -642,7 +640,7 @@ export function install(options: InstallOptions = {}): InstallResult {
         '          const latestVersion = builtVersions.sort((a, b) => a.localeCompare(b, undefined, { numeric: true })).reverse()[0];',
         '          pluginCacheVersion = latestVersion;',
         '          pluginCacheDir = join(pluginCacheBase, latestVersion);',
-        '          const pluginPath = join(pluginCacheDir, "dist/hud/index.js");',
+        '          const pluginPath = join(pluginCacheDir, "src/hud/index.ts");',
         '          await import(pathToFileURL(pluginPath).href);',
         '          return;',
         '        }',
@@ -652,18 +650,18 @@ export function install(options: InstallOptions = {}): InstallResult {
         '  ',
         '  // 3. npm package (global or local install)',
         '  try {',
-        '    await import("oh-my-claudecode/dist/hud/index.js");',
+        '    await import("oh-my-claudecode/src/hud/index.ts");',
         '    return;',
         '  } catch { /* continue */ }',
         '  ',
         '  // 4. Fallback: provide detailed error message with fix instructions',
         '  if (pluginCacheDir && existsSync(pluginCacheDir)) {',
-        '    // Plugin exists but dist/ folder is missing - needs build',
-        '    const distDir = join(pluginCacheDir, "dist");',
-        '    if (!existsSync(distDir)) {',
-        '      console.log(`[OMC HUD] Plugin installed but not built. Run: cd "${pluginCacheDir}" && npm install && npm run build`);',
+        '    // Plugin exists but src/ folder is missing',
+        '    const srcDir = join(pluginCacheDir, "src");',
+        '    if (!existsSync(srcDir)) {',
+        '      console.log(`[OMC HUD] Plugin installed but source missing. Run: cd "${pluginCacheDir}" && bun install`);',
         '    } else {',
-        '      console.log(`[OMC HUD] Plugin dist/ exists but HUD not found. Run: cd "${pluginCacheDir}" && npm run build`);',
+        '      console.log(`[OMC HUD] Plugin src/ exists but HUD not found. Run: cd "${pluginCacheDir}" && bun install`);',
         '    }',
         '  } else if (existsSync(pluginCacheBase)) {',
         '    // Plugin cache directory exists but no versions',
@@ -736,10 +734,8 @@ export function install(options: InstallOptions = {}): InstallResult {
 
       // 2. Configure statusLine (always, even in plugin mode)
       if (hudScriptPath) {
-        // Use absolute node path so nvm/fnm users don't get "node not found"
-        // errors when Claude Code invokes the statusLine in a non-interactive shell.
-        const nodeBin = resolveNodeBinary();
-        const statusLineCommand = '"' + nodeBin + '" "' + hudScriptPath.replace(/\\/g, '/') + '"';
+        // Use bun to run the HUD script directly (handles TypeScript natively)
+        const statusLineCommand = '"bun" "' + hudScriptPath.replace(/\\/g, '/') + '"';
         // Auto-migrate legacy string format (pre-v4.5) to object format
         const needsMigration = typeof existingSettings.statusLine === 'string'
           && isOmcStatusLine(existingSettings.statusLine);
@@ -764,23 +760,19 @@ export function install(options: InstallOptions = {}): InstallResult {
         }
       }
 
-      // 3. Persist the detected node binary path into .omc-config.json so that
-      //    find-node.sh (used in hooks/hooks.json) can locate it at hook runtime
-      //    even when node is not on PATH (nvm/fnm users, issue #892).
+      // 3. Persist the runtime binary path into .omc-config.json so that
+      //    hooks can locate the runtime at hook execution time.
       try {
         const configPath = join(CLAUDE_CONFIG_DIR, '.omc-config.json');
         let omcConfig: Record<string, unknown> = {};
         if (existsSync(configPath)) {
           omcConfig = JSON.parse(readFileSync(configPath, 'utf-8'));
         }
-        const detectedNode = resolveNodeBinary();
-        if (detectedNode !== 'node') {
-          omcConfig.nodeBinary = detectedNode;
-          writeFileSync(configPath, JSON.stringify(omcConfig, null, 2));
-          log(`  Saved node binary path to .omc-config.json: ${detectedNode}`);
-        }
+        omcConfig.nodeBinary = 'bun';
+        writeFileSync(configPath, JSON.stringify(omcConfig, null, 2));
+        log('  Saved runtime binary path to .omc-config.json: bun');
       } catch {
-        log('  Warning: Could not save node binary path (non-fatal)');
+        log('  Warning: Could not save runtime binary path (non-fatal)');
       }
 
       // 4. Single atomic write
