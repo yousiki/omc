@@ -1,6 +1,7 @@
 import type { HookInput, HookOutput } from '../types';
 import { processKeywordDetector } from './keyword-detector';
 import { processPreTool, processPostTool } from './orchestrator';
+import { checkPersistentModes } from './persistent-mode';
 
 /**
  * Normalize raw hook input from Claude Code (snake_case) to internal format (camelCase).
@@ -40,7 +41,7 @@ export async function processHook(hookType: string, rawInput: unknown): Promise<
     case 'post-tool-use':
       return processPostTool(input);
     case 'persistent-mode':
-      return { continue: true }; // Task 3.1
+      return checkPersistentModes(input, input.directory ?? process.cwd());
     case 'session-start':
       return { continue: true }; // Task 4.1
     case 'session-end':
