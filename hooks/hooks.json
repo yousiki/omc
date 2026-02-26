@@ -1,5 +1,5 @@
 {
-  "description": "OMC orchestration hooks with async capabilities",
+  "description": "OMC orchestration hooks — bun-native single entry point",
   "hooks": {
     "UserPromptSubmit": [
       {
@@ -7,13 +7,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/run.cjs\" \"${CLAUDE_PLUGIN_ROOT}/scripts/keyword-detector.mjs\"",
+            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/scripts/hook-entry.ts\" keyword-detector",
             "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/run.cjs\" \"${CLAUDE_PLUGIN_ROOT}/scripts/skill-injector.mjs\"",
-            "timeout": 3
           }
         ]
       }
@@ -24,12 +19,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/run.cjs\" \"${CLAUDE_PLUGIN_ROOT}/scripts/session-start.mjs\"",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/run.cjs\" \"${CLAUDE_PLUGIN_ROOT}/scripts/project-memory-session.mjs\"",
+            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/scripts/hook-entry.ts\" session-start",
             "timeout": 5
           }
         ]
@@ -39,7 +29,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/run.cjs\" \"${CLAUDE_PLUGIN_ROOT}/scripts/setup-init.mjs\"",
+            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/scripts/hook-entry.ts\" setup-init",
             "timeout": 30
           }
         ]
@@ -49,7 +39,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/run.cjs\" \"${CLAUDE_PLUGIN_ROOT}/scripts/setup-maintenance.mjs\"",
+            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/scripts/hook-entry.ts\" setup-maintenance",
             "timeout": 60
           }
         ]
@@ -61,17 +51,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/run.cjs\" \"${CLAUDE_PLUGIN_ROOT}/scripts/pre-tool-enforcer.mjs\"",
-            "timeout": 3
-          }
-        ]
-      },
-      {
-        "matcher": "ExitPlanMode",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/run.cjs\" \"${CLAUDE_PLUGIN_ROOT}/scripts/context-safety.mjs\"",
+            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/scripts/hook-entry.ts\" pre-tool-use",
             "timeout": 3
           }
         ]
@@ -83,7 +63,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/run.cjs\" \"${CLAUDE_PLUGIN_ROOT}/scripts/permission-handler.mjs\"",
+            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/scripts/hook-entry.ts\" permission-request",
             "timeout": 5
           }
         ]
@@ -95,24 +75,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/run.cjs\" \"${CLAUDE_PLUGIN_ROOT}/scripts/post-tool-verifier.mjs\"",
-            "timeout": 3
-          },
-          {
-            "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/run.cjs\" \"${CLAUDE_PLUGIN_ROOT}/scripts/project-memory-posttool.mjs\"",
-            "timeout": 3
-          }
-        ]
-      }
-    ],
-    "PostToolUseFailure": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/run.cjs\" \"${CLAUDE_PLUGIN_ROOT}/scripts/post-tool-use-failure.mjs\"",
+            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/scripts/hook-entry.ts\" post-tool-use",
             "timeout": 3
           }
         ]
@@ -124,7 +87,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/run.cjs\" \"${CLAUDE_PLUGIN_ROOT}/scripts/subagent-tracker.mjs\" start",
+            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/scripts/hook-entry.ts\" subagent-start",
             "timeout": 3
           }
         ]
@@ -136,12 +99,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/run.cjs\" \"${CLAUDE_PLUGIN_ROOT}/scripts/subagent-tracker.mjs\" stop",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/run.cjs\" \"${CLAUDE_PLUGIN_ROOT}/scripts/verify-deliverables.mjs\"",
+            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/scripts/hook-entry.ts\" subagent-stop",
             "timeout": 5
           }
         ]
@@ -153,13 +111,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/run.cjs\" \"${CLAUDE_PLUGIN_ROOT}/scripts/pre-compact.mjs\"",
+            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/scripts/hook-entry.ts\" pre-compact",
             "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/run.cjs\" \"${CLAUDE_PLUGIN_ROOT}/scripts/project-memory-precompact.mjs\"",
-            "timeout": 5
           }
         ]
       }
@@ -170,18 +123,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/run.cjs\" \"${CLAUDE_PLUGIN_ROOT}/scripts/context-guard-stop.mjs\"",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/run.cjs\" \"${CLAUDE_PLUGIN_ROOT}/scripts/persistent-mode.cjs\"",
+            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/scripts/hook-entry.ts\" persistent-mode",
             "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/run.cjs\" \"${CLAUDE_PLUGIN_ROOT}/scripts/code-simplifier.mjs\"",
-            "timeout": 5
           }
         ]
       }
@@ -192,7 +135,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/run.cjs\" \"${CLAUDE_PLUGIN_ROOT}/scripts/session-end.mjs\"",
+            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/scripts/hook-entry.ts\" session-end",
             "timeout": 10
           }
         ]
