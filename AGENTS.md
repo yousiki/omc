@@ -96,7 +96,6 @@ oh-my-claudecode enhances Claude Code with:
 | `src/hooks/*` | `src/hooks/index.ts`, `src/hooks/bridge.ts`, related skill/command |
 | Agent prompt | Tiered variants (`-low`, `-medium`, `-high`) |
 | Tool definition | `src/tools/index.ts`, `src/mcp/omc-tools-server.ts`, `docs/REFERENCE.md` |
-| `src/hud/*` | `commands/hud.md`, `skills/hud/SKILL.md` |
 | `src/mcp/*` | `docs/REFERENCE.md` (MCP Tools section) |
 | Agent tool assignments | `docs/CLAUDE.md` (Agent Tool Matrix) |
 | `templates/rules/*` | `src/hooks/rules-injector/` if pattern changes |
@@ -241,9 +240,9 @@ import { allCustomTools, lspTools, astTools } from './tools';
 | ultrapilot | "ultrapilot", "parallel build" | Parallel autonomous execution |
 | pipeline | "pipeline" | Sequential agent chaining with data passing |
 
-## Skills (28)
+## Skills (27)
 
-Skills: `autopilot`, `ultrawork`, `ralph`, `ultrapilot`, `plan`, `ralplan`, `tdd`, `security-review`, `code-review`, `sciomc`, `external-context`, `analyze`, `pipeline`, `cancel`, `learner`, `note`, `hud`, `omc-doctor`, `mcp-setup`, `build-fix`, `ultraqa`, `omc-help`, `trace`, `skill`, `writer-memory`, `ralph-init`, `learn-about-omc`, `review`
+Skills: `autopilot`, `ultrawork`, `ralph`, `ultrapilot`, `plan`, `ralplan`, `tdd`, `security-review`, `code-review`, `sciomc`, `external-context`, `analyze`, `pipeline`, `cancel`, `learner`, `note`, `omc-doctor`, `mcp-setup`, `build-fix`, `ultraqa`, `omc-help`, `trace`, `skill`, `writer-memory`, `ralph-init`, `learn-about-omc`, `review`
 
 ## LSP/AST Tools
 

@@ -69,7 +69,7 @@ Skills are invocable commands that automate complex workflows:
 | **Orchestration** | `autopilot`, `ralph`, `ultrawork`, `ultrapilot`, `pipeline`, `ultraqa` |
 | **Planning** | `plan`, `ralplan`, `review` |
 | **Analysis** | `analyze`, `sciomc`, `external-context`, `tdd`, `build-fix`, `code-review`, `security-review` |
-| **Utilities** | `cancel`, `note`, `learner`, `hud`, `omc-doctor`, `omc-help`, `mcp-setup`, `skill`, `trace`, `ralph-init`, `learn-about-omc`, `writer-memory` |
+| **Utilities** | `cancel`, `note`, `learner`, `omc-doctor`, `omc-help`, `mcp-setup`, `skill`, `trace`, `ralph-init`, `learn-about-omc`, `writer-memory` |
 
 ### 10 Magic Keywords
 
@@ -85,12 +85,6 @@ Skills are invocable commands that automate complex workflows:
 | `analyze` | Root-cause analysis and debugging |
 | `tdd` | Test-driven development workflow |
 | `sciomc` | Parallel scientist agents for analysis |
-
-### HUD Statusline
-
-Real-time orchestration metrics in your terminal status bar. Shows active agents, execution mode, task progress, and token usage at a glance.
-
-Activate with `/oh-my-claudecode:hud`.
 
 ### MCP Tools
 

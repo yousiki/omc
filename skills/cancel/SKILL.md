@@ -87,7 +87,6 @@ Legacy compatibility list (removed only under `--force`/`--all`):
 - `.omc/state/plan-consensus.json`
 - `.omc/state/ralplan-state.json`
 - `.omc/state/boulder.json`
-- `.omc/state/hud-state.json`
 - `.omc/state/subagent-tracking.json`
 - `.omc/state/subagent-tracker.lock`
 - `.omc/state/rate-limit-daemon.pid`
