@@ -11,7 +11,7 @@ async function main() {
 
   try {
     const data = JSON.parse(input);
-    const { processSubagentStart, processSubagentStop } = await import('../dist/hooks/subagent-tracker/index.js');
+    const { processSubagentStart, processSubagentStop } = await import('../src/hooks/subagent-tracker/index.ts');
 
     let result;
     if (action === 'start') {

@@ -16,19 +16,19 @@ const debugLog = (...args) => {
 let learnFromToolOutput = null;
 let findProjectRoot = null;
 try {
-  learnFromToolOutput = (await import('../dist/hooks/project-memory/learner.js')).learnFromToolOutput;
+  learnFromToolOutput = (await import('../src/hooks/project-memory/learner.ts')).learnFromToolOutput;
 } catch (err) {
-  if (err?.code === 'ERR_MODULE_NOT_FOUND' && /dist\//.test(err?.message)) {
-    debugLog('dist/ learner module not found, skipping');
+  if (err?.code === 'ERR_MODULE_NOT_FOUND') {
+    debugLog('learner module not found, skipping');
   } else {
     debugLog('Unexpected learner import error:', err?.code, err?.message);
   }
 }
 try {
-  findProjectRoot = (await import('../dist/hooks/rules-injector/finder.js')).findProjectRoot;
+  findProjectRoot = (await import('../src/hooks/rules-injector/finder.ts')).findProjectRoot;
 } catch (err) {
-  if (err?.code === 'ERR_MODULE_NOT_FOUND' && /dist\//.test(err?.message)) {
-    debugLog('dist/ finder module not found, skipping');
+  if (err?.code === 'ERR_MODULE_NOT_FOUND') {
+    debugLog('finder module not found, skipping');
   } else {
     debugLog('Unexpected finder import error:', err?.code, err?.message);
   }

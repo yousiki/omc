@@ -5,7 +5,7 @@
  * Ensures user directives and project context survive compaction
  */
 
-import { processPreCompact } from '../dist/hooks/project-memory/pre-compact.js';
+import { processPreCompact } from '../src/hooks/project-memory/pre-compact.ts';
 import { readStdin } from './lib/stdin.mjs';
 
 /**

@@ -225,7 +225,7 @@ async function recordToolInvocation(data, directory) {
     if (toolName === 'Skill') {
       const skillName = data.toolInput?.skill || data.tool_input?.skill || '';
       if (skillName) {
-        const { recordSkillInvoked } = await import('../dist/hooks/subagent-tracker/flow-tracer.js');
+        const { recordSkillInvoked } = await import('../src/hooks/subagent-tracker/flow-tracer.ts');
         recordSkillInvoked(directory, sessionId, skillName);
       }
     }
@@ -265,7 +265,7 @@ async function main() {
       try {
         const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT;
         if (pluginRoot) {
-          const { notify } = await import(pathToFileURL(join(pluginRoot, 'dist', 'notifications', 'index.js')).href);
+          const { notify } = await import(pathToFileURL(join(pluginRoot, 'src', 'notifications', 'index.ts')).href);
 
           const toolInput = data.toolInput || data.tool_input || {};
           const questions = toolInput.questions || [];
