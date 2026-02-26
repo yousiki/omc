@@ -11,7 +11,7 @@ description: Guide on using oh-my-claudecode plugin
 
 | When You... | I Automatically... |
 |-------------|-------------------|
-| Give me a complex task | Parallelize and delegate to specialist agents |
+| Give me a complex task | Parallelize and delegate to 21 specialist agents |
 | Ask me to plan something | Start a planning interview |
 | Need something done completely | Persist until verified complete |
 | Work on UI/frontend | Activate design sensibility |
@@ -23,12 +23,29 @@ You can include these words naturally in your request for explicit control:
 
 | Keyword | Effect | Example |
 |---------|--------|---------|
-| **ralph** | Persistence mode | "ralph: fix all the bugs" |
-| **ralplan** | Iterative planning | "ralplan this feature" |
-| **ulw** | Max parallelism | "ulw refactor the API" |
-| **plan** | Planning interview | "plan the new endpoints" |
+| **autopilot** | Full autonomous execution | "autopilot: build a REST API" |
+| **ralph** | Persistent execution with verify/fix loops | "ralph: fix all the bugs" |
+| **ulw** / **ultrawork** | Maximum parallelism | "ulw refactor the API" |
+| **ultrapilot** | Parallel autonomous execution | "ultrapilot: build the frontend" |
+| **plan** | Strategic planning interview | "plan the new endpoints" |
+| **ralplan** | Iterative planning with consensus | "ralplan this feature" |
+| **pipeline** | Sequential staged processing | "pipeline: review then fix then test" |
+| **analyze** | Root-cause analysis and debugging | "analyze why tests fail" |
+| **tdd** | Test-driven development workflow | "tdd: add user validation" |
+| **sciomc** | Parallel scientist agents | "sciomc: analyze performance data" |
 
 **ralph includes ultrawork:** When you activate ralph mode, it automatically includes ultrawork's parallel execution. No need to combine keywords.
+
+## 27 Skills Available
+
+Use any skill with `/oh-my-claudecode:<skill-name>`.
+
+| Category | Skills |
+|----------|--------|
+| **Orchestration** | `autopilot`, `ralph`, `ultrawork`, `ultrapilot`, `pipeline`, `ultraqa` |
+| **Planning** | `plan`, `ralplan`, `review` |
+| **Analysis** | `analyze`, `sciomc`, `external-context`, `tdd`, `build-fix`, `code-review`, `security-review` |
+| **Utilities** | `cancel`, `note`, `learner`, `omc-doctor`, `omc-help`, `mcp-setup`, `skill`, `trace`, `ralph-init`, `learn-about-omc`, `writer-memory` |
 
 ## Stopping Things
 
@@ -38,22 +55,6 @@ Just say:
 - "abort"
 
 I'll figure out what to stop based on context.
-
-## First Time Setup
-
-If you haven't configured OMC yet:
-
-```
-/oh-my-claudecode:omc-setup
-```
-
-This is the **only command** you need to know. It downloads the configuration and you're done.
-
-## For 2.x Users
-
-Your old commands still work! `/ralph`, `/ultrawork`, `/plan`, etc. all function exactly as before.
-
-But now you don't NEED them - everything is automatic.
 
 ---
 
@@ -124,8 +125,8 @@ fi
 
 Based on patterns found, output recommendations:
 
-**If high Opus usage (>40%) and no :**
-- "Consider using  for routine tasks to save tokens"
+**If high Opus usage (>40%):**
+- "Consider using haiku-tier agents for routine tasks to save tokens"
 
 **If no pipeline usage:**
 - "Try /pipeline for code review workflows"
@@ -134,7 +135,7 @@ Based on patterns found, output recommendations:
 - "Use security-reviewer after auth/API changes"
 
 **If defaultExecutionMode not set:**
-- "Set defaultExecutionMode in /omc-setup for consistent behavior"
+- "Set defaultExecutionMode in config for consistent behavior"
 
 ### Step 4: Output Report
 
@@ -147,7 +148,7 @@ Format a summary with:
 ### Example Output
 
 ```
-📊 Your OMC Usage Analysis
+Your OMC Usage Analysis
 
 TOKEN SUMMARY:
 - Total records: 1,234
@@ -159,12 +160,12 @@ TOP AGENTS:
 3. explore (67 uses)
 
 UNDERUTILIZED FEATURES:
-- : 0 uses (could save ~30% on routine tasks)
+- haiku-tier agents: 0 uses (could save ~30% on routine tasks)
 - pipeline: 0 uses (great for review workflows)
 
 RECOMMENDATIONS:
-1. Set defaultExecutionMode: "" to save tokens
-2. Try /pipeline review for PR reviews
+1. Use haiku-tier agents for simple lookups to save tokens
+2. Try /pipeline for sequential review workflows
 3. Use explore agent before architect to save context
 ```
 
@@ -173,20 +174,20 @@ RECOMMENDATIONS:
 If no data found:
 
 ```
-📊 Limited Usage Data Available
+Limited Usage Data Available
 
 No token tracking found. To enable tracking:
 1. Ensure ~/.omc/state/ directory exists
 2. Run any OMC command to start tracking
 
-Tip: Run /omc-setup to configure OMC properly.
+Tip: Run any skill to get started.
 ```
 
 ## Need More Help?
 
-- **README**: https://github.com/Yeachan-Heo/oh-my-claudecode
-- **Issues**: https://github.com/Yeachan-Heo/oh-my-claudecode/issues
+- **README**: https://github.com/yousiki/oh-my-claudecode
+- **Issues**: https://github.com/yousiki/oh-my-claudecode/issues
 
 ---
 
-*Version: 4.2.3*
+*Version: 5.0.0*
