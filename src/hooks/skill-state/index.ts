@@ -73,7 +73,6 @@ const SKILL_PROTECTION: Record<string, SkillProtectionLevel> = {
   autopilot: 'none',
   ralph: 'none',
   ultrawork: 'none',
-  ultrapilot: 'none',
   team: 'none',
   'omc-teams': 'none',
   ultraqa: 'none',

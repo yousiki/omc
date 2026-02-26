@@ -6,7 +6,7 @@
  * MCP server instances. Only job metadata is stored here; prompt/response
  * content remains as files on disk.
  *
- * Follows the same patterns as src/hooks/swarm/state.ts:
+ * Implementation patterns:
  * - Dynamic import of better-sqlite3 with graceful fallback
  * - WAL mode for concurrency
  * - Schema versioning with migrations
