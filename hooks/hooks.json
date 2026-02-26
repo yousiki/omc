@@ -19,8 +19,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/scripts/hook-entry.ts\" session-start",
-            "timeout": 5
+            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/scripts/session-start.ts\"",
+            "timeout": 10
           }
         ]
       },
@@ -135,7 +135,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/scripts/hook-entry.ts\" session-end",
+            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/scripts/session-end.ts\"",
             "timeout": 10
           }
         ]
