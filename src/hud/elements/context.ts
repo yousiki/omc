@@ -4,8 +4,8 @@
  * Renders context window usage display.
  */
 
-import type { HudThresholds } from '../types.js';
 import { RESET } from '../colors.js';
+import type { HudThresholds } from '../types.js';
 
 const GREEN = '\x1b[32m';
 const YELLOW = '\x1b[33m';
@@ -17,10 +17,7 @@ const DIM = '\x1b[2m';
  *
  * Format: ctx:67%
  */
-export function renderContext(
-  percent: number,
-  thresholds: HudThresholds
-): string | null {
+export function renderContext(percent: number, thresholds: HudThresholds): string | null {
   const safePercent = Math.min(100, Math.max(0, Math.round(percent)));
   let color: string;
   let suffix = '';
@@ -45,11 +42,7 @@ export function renderContext(
  *
  * Format: ctx:[████░░░░░░]67%
  */
-export function renderContextWithBar(
-  percent: number,
-  thresholds: HudThresholds,
-  barWidth: number = 10
-): string | null {
+export function renderContextWithBar(percent: number, thresholds: HudThresholds, barWidth: number = 10): string | null {
   const safePercent = Math.min(100, Math.max(0, Math.round(percent)));
   const filled = Math.round((safePercent / 100) * barWidth);
   const empty = barWidth - filled;

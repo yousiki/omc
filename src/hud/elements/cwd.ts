@@ -16,10 +16,7 @@ import type { CwdFormat } from '../types.js';
  * @param format - Display format (relative, absolute, folder)
  * @returns Formatted path string or null if empty
  */
-export function renderCwd(
-  cwd: string | undefined,
-  format: CwdFormat = 'relative'
-): string | null {
+export function renderCwd(cwd: string | undefined, format: CwdFormat = 'relative'): string | null {
   if (!cwd) return null;
 
   let displayPath: string;
@@ -27,9 +24,7 @@ export function renderCwd(
   switch (format) {
     case 'relative': {
       const home = homedir();
-      displayPath = cwd.startsWith(home)
-        ? '~' + cwd.slice(home.length)
-        : cwd;
+      displayPath = cwd.startsWith(home) ? `~${cwd.slice(home.length)}` : cwd;
       break;
     }
     case 'absolute':

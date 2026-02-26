@@ -1,14 +1,14 @@
 import type { HookInput, HookOutput } from '../types';
+import { processEmptyMsgSanitizer } from './empty-msg-sanitizer';
 import { processKeywordDetector } from './keyword-detector';
-import { processPreTool, processPostTool } from './orchestrator';
-import { checkPersistentModes } from './persistent-mode';
-import { processSetup } from './setup';
+import { processPostTool, processPreTool } from './orchestrator';
 import { processPermissionRequest } from './permission-handler';
-import { processRecovery } from './recovery';
+import { checkPersistentModes } from './persistent-mode';
 import { processPreCompact } from './preemptive-compact';
+import { processRecovery } from './recovery';
+import { processSetup } from './setup';
 import { processSubagentStart, processSubagentStop } from './subagent-tracker';
 import { processTaskSizeDetection } from './task-size-detector';
-import { processEmptyMsgSanitizer } from './empty-msg-sanitizer';
 import { processThinkingValidator } from './thinking-validator';
 
 /**
@@ -39,7 +39,7 @@ export function normalizeHookInput(raw: Record<string, unknown>): HookInput {
  */
 function composeResults(...results: HookOutput[]): HookOutput {
   const messages: string[] = [];
-  let modifiedInput: unknown = undefined;
+  let modifiedInput: unknown;
   let shouldContinue = true;
 
   for (const r of results) {

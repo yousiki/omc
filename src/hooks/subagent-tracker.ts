@@ -8,8 +8,8 @@
  * to just JSONL logging and staleness warnings.
  */
 
-import { existsSync, mkdirSync, appendFileSync, readFileSync } from 'fs';
-import { join } from 'path';
+import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import type { HookInput, HookOutput } from '../types';
 
 // ---------------------------------------------------------------------------
@@ -50,7 +50,7 @@ function getLogPath(directory: string): string {
 function logMetric(directory: string, entry: AgentMetricEntry): void {
   try {
     const logPath = getLogPath(directory);
-    appendFileSync(logPath, JSON.stringify(entry) + '\n', 'utf-8');
+    appendFileSync(logPath, `${JSON.stringify(entry)}\n`, 'utf-8');
   } catch {
     // best-effort logging, never fail the hook
   }
@@ -77,9 +77,7 @@ function findStartTime(directory: string, agentId: string | undefined): number |
         if (entry.event === 'start' && entry.agentId === agentId) {
           return new Date(entry.timestamp).getTime();
         }
-      } catch {
-        continue;
-      }
+      } catch {}
     }
   } catch {
     // best effort
@@ -115,9 +113,7 @@ function detectStaleAgents(directory: string): string[] {
         } else if (entry.event === 'stop') {
           stopped.add(entry.agentId);
         }
-      } catch {
-        continue;
-      }
+      } catch {}
     }
 
     const now = Date.now();

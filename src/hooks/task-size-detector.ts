@@ -102,16 +102,16 @@ export function processTaskSizeDetection(input: HookInput): HookOutput {
     case 'small':
       return {
         continue: true,
-        message: '[TASK-SIZE: SMALL] This appears to be a small/quick task. Use a lightweight approach -- no heavy orchestration needed. Execute directly.',
+        message:
+          '[TASK-SIZE: SMALL] This appears to be a small/quick task. Use a lightweight approach -- no heavy orchestration needed. Execute directly.',
       };
 
     case 'large':
       return {
         continue: true,
-        message: '[TASK-SIZE: LARGE] This appears to be a large/complex task. Consider planning first: break it into steps, identify affected files, and consider using TODO tracking.',
+        message:
+          '[TASK-SIZE: LARGE] This appears to be a large/complex task. Consider planning first: break it into steps, identify affected files, and consider using TODO tracking.',
       };
-
-    case 'medium':
     default:
       return { continue: true };
   }

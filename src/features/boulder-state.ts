@@ -8,8 +8,8 @@
  * maintaining inline duplicates.
  */
 
-import { existsSync, readFileSync, readdirSync, statSync, unlinkSync } from 'fs';
-import { join, basename } from 'path';
+import { existsSync, readdirSync, readFileSync, statSync, unlinkSync } from 'node:fs';
+import { basename, join } from 'node:path';
 import { readJsonFile, writeJsonFile } from '../utils';
 
 // ---------------------------------------------------------------------------

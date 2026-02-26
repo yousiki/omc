@@ -69,22 +69,13 @@ const AGENT_MODELS: Record<string, ModelType> = {
 
 // ---- Keyword lists for lexical signal detection ----
 
-const ARCHITECTURE_KEYWORDS = [
-  'refactor', 'redesign', 'decouple', 'modularize', 'abstract',
-  'pattern', 'architecture',
-];
+const ARCHITECTURE_KEYWORDS = ['refactor', 'redesign', 'decouple', 'modularize', 'abstract', 'pattern', 'architecture'];
 
-const DEBUGGING_KEYWORDS = [
-  'debug', 'diagnose', 'root cause', 'investigate', 'trace',
-];
+const DEBUGGING_KEYWORDS = ['debug', 'diagnose', 'root cause', 'investigate', 'trace'];
 
-const SIMPLE_KEYWORDS = [
-  'find', 'search', 'locate', 'list', 'show', 'get', 'fetch',
-];
+const SIMPLE_KEYWORDS = ['find', 'search', 'locate', 'list', 'show', 'get', 'fetch'];
 
-const RISK_KEYWORDS = [
-  'critical', 'production', 'security', 'breaking', 'migration', 'deploy',
-];
+const RISK_KEYWORDS = ['critical', 'production', 'security', 'breaking', 'migration', 'deploy'];
 
 // ============================================================
 // PUBLIC API

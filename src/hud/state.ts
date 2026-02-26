@@ -5,13 +5,13 @@
  * Follows patterns from ultrawork-state.
  */
 
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
-import { join } from 'path';
-import { homedir } from 'os';
-import { execSync } from 'child_process';
-import type { OmcHudState, BackgroundTask, HudConfig } from './types.js';
-import { DEFAULT_HUD_CONFIG, PRESET_CONFIGS } from './types.js';
+import { execSync } from 'node:child_process';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
 import { cleanupStaleBackgroundTasks, markOrphanedTasksAsStale } from './background-cleanup.js';
+import type { BackgroundTask, HudConfig, OmcHudState } from './types.js';
+import { DEFAULT_HUD_CONFIG, PRESET_CONFIGS } from './types.js';
 
 // ============================================================================
 // Path Helpers
@@ -49,7 +49,6 @@ function getLocalStateFilePath(directory?: string): string {
   return join(omcStateDir, 'hud-state.json');
 }
 
-
 /**
  * Get Claude Code settings.json path
  */
@@ -74,8 +73,6 @@ function ensureStateDir(directory?: string): void {
     mkdirSync(omcStateDir, { recursive: true });
   }
 }
-
-
 
 // ============================================================================
 // HUD State Operations
@@ -114,10 +111,7 @@ export function readHudState(directory?: string): OmcHudState | null {
 /**
  * Write HUD state to disk (local only)
  */
-export function writeHudState(
-  state: OmcHudState,
-  directory?: string
-): boolean {
+export function writeHudState(state: OmcHudState, directory?: string): boolean {
   try {
     // Write to local .omc/state only
     ensureStateDir(directory);
@@ -156,9 +150,7 @@ export function getBackgroundTaskCount(state: OmcHudState | null): {
   max: number;
 } {
   const MAX_CONCURRENT = 5;
-  const running = state
-    ? state.backgroundTasks.filter((t) => t.status === 'running').length
-    : 0;
+  const running = state ? state.backgroundTasks.filter((t) => t.status === 'running').length : 0;
   return { running, max: MAX_CONCURRENT };
 }
 
@@ -212,9 +204,9 @@ function mergeWithDefaults(config: Partial<HudConfig>): HudConfig {
   return {
     preset,
     elements: {
-      ...DEFAULT_HUD_CONFIG.elements,  // Base defaults
-      ...presetElements,                // Preset overrides
-      ...config.elements,               // User overrides
+      ...DEFAULT_HUD_CONFIG.elements, // Base defaults
+      ...presetElements, // Preset overrides
+      ...config.elements, // User overrides
     },
     thresholds: {
       ...DEFAULT_HUD_CONFIG.thresholds,

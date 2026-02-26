@@ -11,12 +11,11 @@
  *        lsp_rename, lsp_code_actions, lsp_code_action_resolve
  */
 
-import { spawn } from 'child_process';
-import { spawnSync, execSync } from 'child_process';
-import { readFileSync, existsSync, readdirSync, statSync } from 'fs';
-import { resolve, dirname, parse, join, extname } from 'path';
-import { pathToFileURL } from 'url';
-import type { ChildProcess } from 'child_process';
+import type { ChildProcess } from 'node:child_process';
+import { execSync, spawn, spawnSync } from 'node:child_process';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { dirname, extname, join, parse, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 // ---------------------------------------------------------------------------
 // Tool definition type (matches MCP server registration)
@@ -52,10 +51,7 @@ interface Location {
 }
 
 interface Hover {
-  contents:
-    | string
-    | { kind: string; value: string }
-    | Array<string | { kind: string; value: string }>;
+  contents: string | { kind: string; value: string } | Array<string | { kind: string; value: string }>;
   range?: Range;
 }
 
@@ -233,8 +229,7 @@ const LSP_SERVERS: Record<string, LspServerConfig> = {
     command: 'kotlin-language-server',
     args: [],
     extensions: ['.kt', '.kts'],
-    installHint:
-      'Install from https://github.com/fwcd/kotlin-language-server',
+    installHint: 'Install from https://github.com/fwcd/kotlin-language-server',
   },
   elixir: {
     name: 'ElixirLS',
@@ -255,16 +250,14 @@ const LSP_SERVERS: Record<string, LspServerConfig> = {
     command: 'dart',
     args: ['language-server', '--protocol=lsp'],
     extensions: ['.dart'],
-    installHint:
-      'Install Dart SDK from https://dart.dev/get-dart or Flutter SDK from https://flutter.dev',
+    installHint: 'Install Dart SDK from https://dart.dev/get-dart or Flutter SDK from https://flutter.dev',
   },
   swift: {
     name: 'SourceKit-LSP',
     command: 'sourcekit-lsp',
     args: [],
     extensions: ['.swift'],
-    installHint:
-      'Install Swift from https://swift.org/download or via Xcode',
+    installHint: 'Install Swift from https://swift.org/download or via Xcode',
   },
 };
 
@@ -353,8 +346,7 @@ function formatRange(range: Range): string {
 }
 
 function formatLocation(location: Location): string {
-  const uri =
-    location.uri || (location as Record<string, unknown>).targetUri;
+  const uri = location.uri || (location as Record<string, unknown>).targetUri;
   if (!uri) return 'Unknown location';
   const path = uriToPath(uri as string);
   const locationRange =
@@ -373,9 +365,7 @@ function formatHover(hover: Hover | null): string {
   if (typeof hover.contents === 'string') {
     text = hover.contents;
   } else if (Array.isArray(hover.contents)) {
-    text = hover.contents
-      .map((c) => (typeof c === 'string' ? c : c.value))
-      .join('\n\n');
+    text = hover.contents.map((c) => (typeof c === 'string' ? c : c.value)).join('\n\n');
   } else if ('value' in hover.contents) {
     text = hover.contents.value;
   }
@@ -387,19 +377,14 @@ function formatHover(hover: Hover | null): string {
   return text || 'No hover information available';
 }
 
-function formatLocations(
-  locations: Location | Location[] | null,
-): string {
+function formatLocations(locations: Location | Location[] | null): string {
   if (!locations) return 'No locations found';
   const locs = Array.isArray(locations) ? locations : [locations];
   if (locs.length === 0) return 'No locations found';
   return locs.map((loc) => formatLocation(loc)).join('\n');
 }
 
-function formatDocumentSymbols(
-  symbols: DocumentSymbol[] | SymbolInformation[] | null,
-  indent = 0,
-): string {
+function formatDocumentSymbols(symbols: DocumentSymbol[] | SymbolInformation[] | null, indent = 0): string {
   if (!symbols || symbols.length === 0) return 'No symbols found';
 
   const lines: string[] = [];
@@ -411,16 +396,8 @@ function formatDocumentSymbols(
       // DocumentSymbol
       const range = formatRange(symbol.range);
       lines.push(`${prefix}${kind}: ${symbol.name} [${range}]`);
-      if (
-        (symbol as DocumentSymbol).children &&
-        (symbol as DocumentSymbol).children!.length > 0
-      ) {
-        lines.push(
-          formatDocumentSymbols(
-            (symbol as DocumentSymbol).children!,
-            indent + 1,
-          ),
-        );
+      if ((symbol as DocumentSymbol).children && (symbol as DocumentSymbol).children?.length > 0) {
+        lines.push(formatDocumentSymbols((symbol as DocumentSymbol).children!, indent + 1));
       }
     } else {
       // SymbolInformation
@@ -435,25 +412,18 @@ function formatDocumentSymbols(
   return lines.join('\n');
 }
 
-function formatWorkspaceSymbols(
-  symbols: SymbolInformation[] | null,
-): string {
+function formatWorkspaceSymbols(symbols: SymbolInformation[] | null): string {
   if (!symbols || symbols.length === 0) return 'No symbols found';
   const lines = symbols.map((symbol) => {
     const kind = SYMBOL_KINDS[symbol.kind] || 'Unknown';
     const loc = formatLocation(symbol.location);
-    const container = symbol.containerName
-      ? ` (in ${symbol.containerName})`
-      : '';
+    const container = symbol.containerName ? ` (in ${symbol.containerName})` : '';
     return `${kind}: ${symbol.name}${container}\n  ${loc}`;
   });
   return lines.join('\n\n');
 }
 
-function formatDiagnostics(
-  diagnostics: Diagnostic[],
-  filePath?: string,
-): string {
+function formatDiagnostics(diagnostics: Diagnostic[], filePath?: string): string {
   if (diagnostics.length === 0) return 'No diagnostics';
   const lines = diagnostics.map((diag) => {
     const severity = SEVERITY_NAMES[diag.severity || 1] || 'Unknown';
@@ -486,10 +456,7 @@ function formatWorkspaceEdit(edit: WorkspaceEdit | null): string {
       lines.push(`File: ${path}`);
       for (const change of changes) {
         const range = formatRange(change.range);
-        const preview =
-          change.newText.length > 50
-            ? change.newText.slice(0, 50) + '...'
-            : change.newText;
+        const preview = change.newText.length > 50 ? `${change.newText.slice(0, 50)}...` : change.newText;
         lines.push(`  ${range}: "${preview}"`);
       }
     }
@@ -501,10 +468,7 @@ function formatWorkspaceEdit(edit: WorkspaceEdit | null): string {
       lines.push(`File: ${path}`);
       for (const change of docChange.edits) {
         const range = formatRange(change.range);
-        const preview =
-          change.newText.length > 50
-            ? change.newText.slice(0, 50) + '...'
-            : change.newText;
+        const preview = change.newText.length > 50 ? `${change.newText.slice(0, 50)}...` : change.newText;
         lines.push(`  ${range}: "${preview}"`);
       }
     }
@@ -513,27 +477,19 @@ function formatWorkspaceEdit(edit: WorkspaceEdit | null): string {
   return lines.length > 0 ? lines.join('\n') : 'No edits';
 }
 
-function countEdits(
-  edit: WorkspaceEdit | null,
-): { files: number; edits: number } {
+function countEdits(edit: WorkspaceEdit | null): { files: number; edits: number } {
   if (!edit) return { files: 0, edits: 0 };
   let files = 0;
   let edits = 0;
 
   if (edit.changes) {
     files += Object.keys(edit.changes).length;
-    edits += Object.values(edit.changes).reduce(
-      (sum, changes) => sum + changes.length,
-      0,
-    );
+    edits += Object.values(edit.changes).reduce((sum, changes) => sum + changes.length, 0);
   }
 
   if (edit.documentChanges) {
     files += edit.documentChanges.length;
-    edits += edit.documentChanges.reduce(
-      (sum, doc) => sum + doc.edits.length,
-      0,
-    );
+    edits += edit.documentChanges.reduce((sum, doc) => sum + doc.edits.length, 0);
   }
 
   return { files, edits };
@@ -608,7 +564,6 @@ class LspClient {
   private diagnosticWaiters = new Map<string, Array<() => void>>();
   private workspaceRoot: string;
   private serverConfig: LspServerConfig;
-  private initialized = false;
 
   constructor(workspaceRoot: string, serverConfig: LspServerConfig) {
     this.workspaceRoot = resolve(workspaceRoot);
@@ -639,17 +594,13 @@ class LspClient {
       });
 
       this.proc.on('error', (error) => {
-        rejectConnect(
-          new Error(`Failed to start LSP server: ${error.message}`),
-        );
+        rejectConnect(new Error(`Failed to start LSP server: ${error.message}`));
       });
 
       this.proc.on('exit', (code) => {
         this.proc = null;
         this.initialized = false;
-        this.rejectPendingRequests(
-          new Error(`LSP server exited (code ${code})`),
-        );
+        this.rejectPendingRequests(new Error(`LSP server exited (code ${code})`));
       });
 
       this.initialize()
@@ -717,20 +668,14 @@ class LspClient {
     }
   }
 
-  private handleMessage(
-    message: JsonRpcResponse | JsonRpcNotification,
-  ): void {
+  private handleMessage(message: JsonRpcResponse | JsonRpcNotification): void {
     if ('id' in message && message.id !== undefined) {
-      const pending = this.pendingRequests.get(
-        message.id as number,
-      );
+      const pending = this.pendingRequests.get(message.id as number);
       if (pending) {
         clearTimeout(pending.timeout);
         this.pendingRequests.delete(message.id as number);
         if ((message as JsonRpcResponse).error) {
-          pending.reject(
-            new Error((message as JsonRpcResponse).error!.message),
-          );
+          pending.reject(new Error((message as JsonRpcResponse).error?.message));
         } else {
           pending.resolve((message as JsonRpcResponse).result);
         }
@@ -757,11 +702,7 @@ class LspClient {
 
   // -- JSON-RPC transport ------------------------------------------------
 
-  private async request<T>(
-    method: string,
-    params: unknown,
-    timeout = 15000,
-  ): Promise<T> {
+  private async request<T>(method: string, params: unknown, timeout = 15000): Promise<T> {
     if (!this.proc?.stdin) {
       throw new Error('LSP server not connected');
     }
@@ -773,11 +714,7 @@ class LspClient {
     return new Promise<T>((resolveReq, rejectReq) => {
       const timeoutHandle = setTimeout(() => {
         this.pendingRequests.delete(id);
-        rejectReq(
-          new Error(
-            `LSP request '${method}' timed out after ${timeout}ms`,
-          ),
-        );
+        rejectReq(new Error(`LSP request '${method}' timed out after ${timeout}ms`));
       }, timeout);
 
       this.pendingRequests.set(id, {
@@ -862,11 +799,7 @@ class LspClient {
 
   // -- LSP Request Methods -----------------------------------------------
 
-  async hover(
-    filePath: string,
-    line: number,
-    character: number,
-  ): Promise<Hover | null> {
+  async hover(filePath: string, line: number, character: number): Promise<Hover | null> {
     const uri = await this.prepareDocument(filePath);
     return this.request<Hover | null>('textDocument/hover', {
       textDocument: { uri },
@@ -874,16 +807,12 @@ class LspClient {
     });
   }
 
-  async definition(
-    filePath: string,
-    line: number,
-    character: number,
-  ): Promise<Location | Location[] | null> {
+  async definition(filePath: string, line: number, character: number): Promise<Location | Location[] | null> {
     const uri = await this.prepareDocument(filePath);
-    return this.request<Location | Location[] | null>(
-      'textDocument/definition',
-      { textDocument: { uri }, position: { line, character } },
-    );
+    return this.request<Location | Location[] | null>('textDocument/definition', {
+      textDocument: { uri },
+      position: { line, character },
+    });
   }
 
   async references(
@@ -900,19 +829,14 @@ class LspClient {
     });
   }
 
-  async documentSymbols(
-    filePath: string,
-  ): Promise<DocumentSymbol[] | SymbolInformation[] | null> {
+  async documentSymbols(filePath: string): Promise<DocumentSymbol[] | SymbolInformation[] | null> {
     const uri = await this.prepareDocument(filePath);
-    return this.request<DocumentSymbol[] | SymbolInformation[] | null>(
-      'textDocument/documentSymbol',
-      { textDocument: { uri } },
-    );
+    return this.request<DocumentSymbol[] | SymbolInformation[] | null>('textDocument/documentSymbol', {
+      textDocument: { uri },
+    });
   }
 
-  async workspaceSymbols(
-    query: string,
-  ): Promise<SymbolInformation[] | null> {
+  async workspaceSymbols(query: string): Promise<SymbolInformation[] | null> {
     return this.request<SymbolInformation[] | null>('workspace/symbol', {
       query,
     });
@@ -950,19 +874,16 @@ class LspClient {
     });
   }
 
-  async prepareRename(
-    filePath: string,
-    line: number,
-    character: number,
-  ): Promise<Range | null> {
+  async prepareRename(filePath: string, line: number, character: number): Promise<Range | null> {
     const uri = await this.prepareDocument(filePath);
     try {
-      const result = await this.request<
-        Range | { range: Range; placeholder: string } | null
-      >('textDocument/prepareRename', {
-        textDocument: { uri },
-        position: { line, character },
-      });
+      const result = await this.request<Range | { range: Range; placeholder: string } | null>(
+        'textDocument/prepareRename',
+        {
+          textDocument: { uri },
+          position: { line, character },
+        },
+      );
       if (!result) return null;
       return 'range' in result ? result.range : result;
     } catch {
@@ -970,12 +891,7 @@ class LspClient {
     }
   }
 
-  async rename(
-    filePath: string,
-    line: number,
-    character: number,
-    newName: string,
-  ): Promise<WorkspaceEdit | null> {
+  async rename(filePath: string, line: number, character: number, newName: string): Promise<WorkspaceEdit | null> {
     const uri = await this.prepareDocument(filePath);
     return this.request<WorkspaceEdit | null>('textDocument/rename', {
       textDocument: { uri },
@@ -984,11 +900,7 @@ class LspClient {
     });
   }
 
-  async codeActions(
-    filePath: string,
-    range: Range,
-    diagnostics: Diagnostic[] = [],
-  ): Promise<CodeAction[] | null> {
+  async codeActions(filePath: string, range: Range, diagnostics: Diagnostic[] = []): Promise<CodeAction[] | null> {
     const uri = await this.prepareDocument(filePath);
     return this.request<CodeAction[] | null>('textDocument/codeAction', {
       textDocument: { uri },
@@ -1016,10 +928,7 @@ class LspClientManager {
   }
 
   /** Run a function with in-flight tracking; protects client from idle eviction */
-  async runWithClientLease<T>(
-    filePath: string,
-    fn: (client: LspClient) => Promise<T>,
-  ): Promise<T> {
+  async runWithClientLease<T>(filePath: string, fn: (client: LspClient) => Promise<T>): Promise<T> {
     const serverConfig = getServerForFile(filePath);
     if (!serverConfig) {
       throw new Error(`No language server available for: ${filePath}`);
@@ -1053,14 +962,7 @@ class LspClientManager {
 
   private findWorkspaceRoot(filePath: string): string {
     let dir = dirname(resolve(filePath));
-    const markers = [
-      'package.json',
-      'tsconfig.json',
-      'pyproject.toml',
-      'Cargo.toml',
-      'go.mod',
-      '.git',
-    ];
+    const markers = ['package.json', 'tsconfig.json', 'pyproject.toml', 'Cargo.toml', 'go.mod', '.git'];
 
     while (true) {
       const parsed = parse(dir);
@@ -1076,15 +978,8 @@ class LspClientManager {
 
   private startIdleCheck(): void {
     if (this.idleTimer) return;
-    this.idleTimer = setInterval(
-      () => this.evictIdleClients(),
-      IDLE_CHECK_INTERVAL_MS,
-    );
-    if (
-      this.idleTimer &&
-      typeof this.idleTimer === 'object' &&
-      'unref' in this.idleTimer
-    ) {
+    this.idleTimer = setInterval(() => this.evictIdleClients(), IDLE_CHECK_INTERVAL_MS);
+    if (this.idleTimer && typeof this.idleTimer === 'object' && 'unref' in this.idleTimer) {
       (this.idleTimer as NodeJS.Timeout).unref();
     }
   }
@@ -1151,8 +1046,7 @@ async function withLspClient(
     const result = await lspClientManager.runWithClientLease(filePath, fn);
     return { content: [{ type: 'text', text: result }] };
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : String(error);
+    const message = error instanceof Error ? error.message : String(error);
     if (message.includes('not found')) {
       return {
         isError: true,
@@ -1161,9 +1055,7 @@ async function withLspClient(
     }
     return {
       isError: true,
-      content: [
-        { type: 'text', text: `Error in ${operation}: ${message}` },
-      ],
+      content: [{ type: 'text', text: `Error in ${operation}: ${message}` }],
     };
   }
 }
@@ -1204,18 +1096,14 @@ function runTscDiagnostics(directory: string): TscResult {
     });
     return { success: true, diagnostics: [], errorCount: 0, warningCount: 0 };
   } catch (error: unknown) {
-    const output =
-      (error as { stdout?: string }).stdout ||
-      (error as { stderr?: string }).stderr ||
-      '';
+    const output = (error as { stdout?: string }).stdout || (error as { stderr?: string }).stderr || '';
     return parseTscOutput(output);
   }
 }
 
 function parseTscOutput(output: string): TscResult {
   const diagnostics: TscDiagnostic[] = [];
-  const regex =
-    /^(.+)\((\d+),(\d+)\):\s+(error|warning)\s+(TS\d+):\s+(.+)$/gm;
+  const regex = /^(.+)\((\d+),(\d+)\):\s+(error|warning)\s+(TS\d+):\s+(.+)$/gm;
   let match: RegExpExecArray | null;
 
   while ((match = regex.exec(output)) !== null) {
@@ -1230,18 +1118,12 @@ function parseTscOutput(output: string): TscResult {
   }
 
   const errorCount = diagnostics.filter((d) => d.severity === 'error').length;
-  const warningCount = diagnostics.filter(
-    (d) => d.severity === 'warning',
-  ).length;
+  const warningCount = diagnostics.filter((d) => d.severity === 'warning').length;
 
   return { success: errorCount === 0, diagnostics, errorCount, warningCount };
 }
 
-function findFiles(
-  directory: string,
-  extensions: string[],
-  ignoreDirs: string[] = [],
-): string[] {
+function findFiles(directory: string, extensions: string[], ignoreDirs: string[] = []): string[] {
   const results: string[] = [];
   const ignoreDirSet = new Set(ignoreDirs);
 
@@ -1257,9 +1139,7 @@ function findFiles(
           } else if (stat.isFile()) {
             if (extensions.includes(extname(fullPath))) results.push(fullPath);
           }
-        } catch {
-          continue;
-        }
+        } catch {}
       }
     } catch {
       return;
@@ -1284,15 +1164,12 @@ async function runDirectoryDiagnostics(
   strategy: 'tsc' | 'lsp' | 'auto' = 'auto',
 ): Promise<DirectoryDiagnosticResult> {
   const hasTsconfig = existsSync(join(directory, 'tsconfig.json'));
-  const useStrategy: 'tsc' | 'lsp' =
-    strategy === 'auto' ? (hasTsconfig ? 'tsc' : 'lsp') : strategy;
+  const useStrategy: 'tsc' | 'lsp' = strategy === 'auto' ? (hasTsconfig ? 'tsc' : 'lsp') : strategy;
 
   if (useStrategy === 'tsc' && hasTsconfig) {
     return formatTscResult(runTscDiagnostics(directory));
   }
-  return formatLspAggregatedResult(
-    await runLspAggregatedDiagnostics(directory),
-  );
+  return formatLspAggregatedResult(await runLspAggregatedDiagnostics(directory));
 }
 
 function formatTscResult(result: TscResult): DirectoryDiagnosticResult {
@@ -1310,7 +1187,7 @@ function formatTscResult(result: TscResult): DirectoryDiagnosticResult {
   const byFile = new Map<string, TscDiagnostic[]>();
   for (const diag of result.diagnostics) {
     if (!byFile.has(diag.file)) byFile.set(diag.file, []);
-    byFile.get(diag.file)!.push(diag);
+    byFile.get(diag.file)?.push(diag);
   }
 
   const fileOutputs: string[] = [];
@@ -1344,12 +1221,7 @@ async function runLspAggregatedDiagnostics(
   directory: string,
   extensions: string[] = ['.ts', '.tsx', '.js', '.jsx'],
 ): Promise<LspAggregationResult> {
-  const files = findFiles(directory, extensions, [
-    'node_modules',
-    'dist',
-    'build',
-    '.git',
-  ]);
+  const files = findFiles(directory, extensions, ['node_modules', 'dist', 'build', '.git']);
 
   const allDiagnostics: Array<{ file: string; diagnostic: Diagnostic }> = [];
   let filesChecked = 0;
@@ -1365,17 +1237,11 @@ async function runLspAggregatedDiagnostics(
         }
         filesChecked++;
       });
-    } catch {
-      continue;
-    }
+    } catch {}
   }
 
-  const errorCount = allDiagnostics.filter(
-    (d) => d.diagnostic.severity === 1,
-  ).length;
-  const warningCount = allDiagnostics.filter(
-    (d) => d.diagnostic.severity === 2,
-  ).length;
+  const errorCount = allDiagnostics.filter((d) => d.diagnostic.severity === 1).length;
+  const warningCount = allDiagnostics.filter((d) => d.diagnostic.severity === 2).length;
 
   return {
     success: errorCount === 0,
@@ -1386,9 +1252,7 @@ async function runLspAggregatedDiagnostics(
   };
 }
 
-function formatLspAggregatedResult(
-  result: LspAggregationResult,
-): DirectoryDiagnosticResult {
+function formatLspAggregatedResult(result: LspAggregationResult): DirectoryDiagnosticResult {
   if (result.diagnostics.length === 0) {
     return {
       strategy: 'lsp',
@@ -1400,13 +1264,10 @@ function formatLspAggregatedResult(
     };
   }
 
-  const byFile = new Map<
-    string,
-    Array<{ file: string; diagnostic: Diagnostic }>
-  >();
+  const byFile = new Map<string, Array<{ file: string; diagnostic: Diagnostic }>>();
   for (const item of result.diagnostics) {
     if (!byFile.has(item.file)) byFile.set(item.file, []);
-    byFile.get(item.file)!.push(item);
+    byFile.get(item.file)?.push(item);
   }
 
   const fileOutputs: string[] = [];
@@ -1487,15 +1348,9 @@ export const lspTools: LspToolDefinition[] = [
       const file = args.file as string;
       const line = args.line as number;
       const character = args.character as number;
-      const includeDeclaration =
-        (args.includeDeclaration as boolean | undefined) ?? true;
+      const includeDeclaration = (args.includeDeclaration as boolean | undefined) ?? true;
       return withLspClient(file, 'find references', async (client) => {
-        const locations = await client.references(
-          file,
-          line - 1,
-          character,
-          includeDeclaration,
-        );
+        const locations = await client.references(file, line - 1, character, includeDeclaration);
         if (!locations || locations.length === 0) {
           return 'No references found';
         }
@@ -1570,16 +1425,12 @@ export const lspTools: LspToolDefinition[] = [
           };
           const severityNum = severityMap[severity];
           if (severityNum) {
-            diagnostics = diagnostics.filter(
-              (d) => d.severity === severityNum,
-            );
+            diagnostics = diagnostics.filter((d) => d.severity === severityNum);
           }
         }
 
         if (diagnostics.length === 0) {
-          return severity
-            ? `No ${severity} diagnostics in ${file}`
-            : `No diagnostics in ${file}`;
+          return severity ? `No ${severity} diagnostics in ${file}` : `No diagnostics in ${file}`;
         }
 
         return `Found ${diagnostics.length} diagnostic(s):\n\n${formatDiagnostics(diagnostics, file)}`;

@@ -4,8 +4,8 @@
  * Renders heuristic-based permission pending indicator.
  */
 
-import type { PendingPermission } from '../types.js';
 import { RESET } from '../colors.js';
+import type { PendingPermission } from '../types.js';
 
 const YELLOW = '\x1b[33m';
 const DIM = '\x1b[2m';

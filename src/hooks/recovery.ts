@@ -5,8 +5,8 @@
  * from crashed sessions and provide recovery context.
  */
 
-import { existsSync, readdirSync, statSync } from 'fs';
-import { join } from 'path';
+import { existsSync, readdirSync, statSync } from 'node:fs';
+import { join } from 'node:path';
 import type { HookInput, HookOutput } from '../types';
 import { readJsonFile, writeJsonFile } from '../utils';
 
@@ -58,11 +58,8 @@ function markStaleStateFiles(stateDir: string): string[] {
     // Determine last update time: prefer updatedAt field, fall back to file mtime
     let lastUpdate: number;
     if (state.updatedAt) {
-      lastUpdate =
-        typeof state.updatedAt === 'number'
-          ? state.updatedAt
-          : new Date(state.updatedAt).getTime();
-      if (isNaN(lastUpdate)) {
+      lastUpdate = typeof state.updatedAt === 'number' ? state.updatedAt : new Date(state.updatedAt).getTime();
+      if (Number.isNaN(lastUpdate)) {
         // Invalid date string, fall back to file mtime
         try {
           lastUpdate = statSync(filePath).mtimeMs;
@@ -111,9 +108,7 @@ export function processRecovery(input: HookInput, directory: string): HookOutput
   // Check for stale state from crashed sessions
   const staleFiles = markStaleStateFiles(stateDir);
   if (staleFiles.length > 0) {
-    messages.push(
-      `Recovered stale state from crashed sessions: ${staleFiles.join(', ')} (marked inactive).`,
-    );
+    messages.push(`Recovered stale state from crashed sessions: ${staleFiles.join(', ')} (marked inactive).`);
   }
 
   if (messages.length > 0) {

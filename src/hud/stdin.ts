@@ -5,8 +5,8 @@
  * Based on claude-hud reference implementation.
  */
 
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
-import { join } from 'path';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import type { StatuslineStdin } from './types.js';
 
 // ============================================================================
@@ -88,11 +88,7 @@ export async function readStdin(): Promise<StatuslineStdin | null> {
  */
 function getTotalTokens(stdin: StatuslineStdin): number {
   const usage = stdin.context_window?.current_usage;
-  return (
-    (usage?.input_tokens ?? 0) +
-    (usage?.cache_creation_input_tokens ?? 0) +
-    (usage?.cache_read_input_tokens ?? 0)
-  );
+  return (usage?.input_tokens ?? 0) + (usage?.cache_creation_input_tokens ?? 0) + (usage?.cache_read_input_tokens ?? 0);
 }
 
 /**

@@ -10,8 +10,8 @@
  * file for the Bun-native rewrite.
  */
 
-import { existsSync, readFileSync, readdirSync, statSync } from 'fs';
-import { join } from 'path';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { join } from 'node:path';
 import type { HookInput, HookOutput } from '../types';
 import { readJsonFile } from '../utils';
 
@@ -47,32 +47,36 @@ function readActiveModes(stateDir: string): string[] {
     {
       file: 'autopilot-state.json',
       label: 'Autopilot',
-      extract: (s) => s.active ? `Autopilot (Phase: ${s.phase || 'unknown'}, Idea: ${(s.originalIdea || '').slice(0, 100)})` : null,
+      extract: (s) =>
+        s.active ? `Autopilot (Phase: ${s.phase || 'unknown'}, Idea: ${(s.originalIdea || '').slice(0, 100)})` : null,
     },
     {
       file: 'ralph-state.json',
       label: 'Ralph',
-      extract: (s) => s.active ? `Ralph (Iteration: ${s.iteration || 0}, Prompt: ${(s.originalPrompt || s.prompt || '').slice(0, 100)})` : null,
+      extract: (s) =>
+        s.active
+          ? `Ralph (Iteration: ${s.iteration || 0}, Prompt: ${(s.originalPrompt || s.prompt || '').slice(0, 100)})`
+          : null,
     },
     {
       file: 'ultrawork-state.json',
       label: 'Ultrawork',
-      extract: (s) => s.active ? `Ultrawork (Prompt: ${(s.original_prompt || s.prompt || '').slice(0, 100)})` : null,
+      extract: (s) => (s.active ? `Ultrawork (Prompt: ${(s.original_prompt || s.prompt || '').slice(0, 100)})` : null),
     },
     {
       file: 'pipeline-state.json',
       label: 'Pipeline',
-      extract: (s) => s.active ? `Pipeline (Preset: ${s.preset || 'custom'}, Stage: ${s.current_stage || 0})` : null,
+      extract: (s) => (s.active ? `Pipeline (Preset: ${s.preset || 'custom'}, Stage: ${s.current_stage || 0})` : null),
     },
     {
       file: 'ultraqa-state.json',
       label: 'UltraQA',
-      extract: (s) => s.active ? `UltraQA (Cycle: ${s.cycle || 0})` : null,
+      extract: (s) => (s.active ? `UltraQA (Cycle: ${s.cycle || 0})` : null),
     },
     {
       file: 'ultrapilot-state.json',
       label: 'Ultrapilot',
-      extract: (s) => s.active ? `Ultrapilot (Workers: ${s.worker_count || 0})` : null,
+      extract: (s) => (s.active ? `Ultrapilot (Workers: ${s.worker_count || 0})` : null),
     },
   ];
 
@@ -92,10 +96,7 @@ function readActiveModes(stateDir: string): string[] {
  * Read TODO summary from todos.json
  */
 function readTodoSummary(directory: string): string | null {
-  const todoPaths = [
-    join(directory, '.claude', 'todos.json'),
-    join(directory, '.omc', 'state', 'todos.json'),
-  ];
+  const todoPaths = [join(directory, '.claude', 'todos.json'), join(directory, '.omc', 'state', 'todos.json')];
 
   for (const todoPath of todoPaths) {
     const todos = readJsonFile<Array<{ status: string }>>(todoPath);
@@ -166,7 +167,7 @@ function readRecentWisdom(directory: string): string[] {
  * Gathers active modes, TODO state, and notepad wisdom, then returns a
  * message that preserves critical context through the compaction window.
  */
-export function processPreCompact(input: HookInput, directory: string): HookOutput {
+export function processPreCompact(_input: HookInput, directory: string): HookOutput {
   const stateDir = join(directory, '.omc', 'state');
   const sections: string[] = [];
 

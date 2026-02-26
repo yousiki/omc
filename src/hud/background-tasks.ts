@@ -5,7 +5,7 @@
  * Called from bridge.ts pre-tool-use and post-tool-use handlers.
  */
 
-import { readHudState, writeHudState, createEmptyHudState } from './state.js';
+import { createEmptyHudState, readHudState, writeHudState } from './state.js';
 import type { BackgroundTask, OmcHudState } from './types.js';
 
 const MAX_TASK_HISTORY = 20;
@@ -15,12 +15,7 @@ const TASK_EXPIRY_MS = 30 * 60 * 1000; // 30 minutes
  * Add a background task to HUD state.
  * Called when a Task tool starts with run_in_background=true.
  */
-export function addBackgroundTask(
-  id: string,
-  description: string,
-  agentType?: string,
-  directory?: string
-): boolean {
+export function addBackgroundTask(id: string, description: string, agentType?: string, directory?: string): boolean {
   try {
     let state = readHudState(directory) || createEmptyHudState();
 
@@ -49,11 +44,7 @@ export function addBackgroundTask(
  * Mark a background task as completed.
  * Called when a Task tool completes.
  */
-export function completeBackgroundTask(
-  id: string,
-  directory?: string,
-  failed: boolean = false
-): boolean {
+export function completeBackgroundTask(id: string, directory?: string, failed: boolean = false): boolean {
   try {
     const state = readHudState(directory);
     if (!state) {

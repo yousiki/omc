@@ -91,8 +91,8 @@ export interface SkillInvocation {
 }
 
 export interface PendingPermission {
-  toolName: string;       // "Edit", "Bash", etc. (proxy_ prefix stripped)
-  targetSummary: string;  // "src/main.ts" or "npm install"
+  toolName: string; // "Edit", "Bash", etc. (proxy_ prefix stripped)
+  targetSummary: string; // "src/main.ts" or "npm install"
   timestamp: Date;
 }
 
@@ -141,7 +141,6 @@ export interface PrdStateForHud {
   completed: number;
   total: number;
 }
-
 
 // ============================================================================
 // Render Context
@@ -354,14 +353,14 @@ export type CwdFormat = 'relative' | 'absolute' | 'folder';
 export type ModelFormat = 'short' | 'versioned' | 'full';
 
 export interface HudElementConfig {
-  cwd: boolean;              // Show working directory
-  cwdFormat: CwdFormat;      // Path display format
-  gitRepo: boolean;          // Show git repository name
-  gitBranch: boolean;        // Show git branch
-  model: boolean;            // Show current model name
-  modelFormat: ModelFormat;   // Model name verbosity level
+  cwd: boolean; // Show working directory
+  cwdFormat: CwdFormat; // Path display format
+  gitRepo: boolean; // Show git repository name
+  gitBranch: boolean; // Show git branch
+  model: boolean; // Show current model name
+  modelFormat: ModelFormat; // Model name verbosity level
   omcLabel: boolean;
-  rateLimits: boolean;  // Show 5h and weekly rate limits
+  rateLimits: boolean; // Show 5h and weekly rate limits
   ralph: boolean;
   autopilot: boolean;
   prdStory: boolean;
@@ -370,21 +369,21 @@ export interface HudElementConfig {
   contextBar: boolean;
   agents: boolean;
   agentsFormat: AgentsFormat;
-  agentsMaxLines: number;  // Max agent detail lines for multiline format (default: 5)
+  agentsMaxLines: number; // Max agent detail lines for multiline format (default: 5)
   backgroundTasks: boolean;
   todos: boolean;
-  permissionStatus: boolean;  // Show pending permission indicator
-  thinking: boolean;          // Show extended thinking indicator
-  thinkingFormat: ThinkingFormat;  // Thinking indicator format
-  promptTime: boolean;        // Show last prompt submission time (HH:MM:SS)
-  sessionHealth: boolean;     // Show session health/duration
-  showSessionDuration?: boolean;  // Show session:19m duration display (default: true if sessionHealth is true)
-  showHealthIndicator?: boolean;  // Show 🟢/🟡/🔴 health indicator (default: true if sessionHealth is true)
-  showTokens?: boolean;           // Show token count like 79.3k (default: true if sessionHealth is true)
-  useBars: boolean;           // Show visual progress bars instead of/alongside percentages
-  showCallCounts?: boolean;   // Show tool/agent/skill call counts on the right of the status line (default: true)
-  maxOutputLines: number;     // Max total output lines to prevent input field shrinkage
-  safeMode: boolean;          // Strip ANSI codes and use ASCII-only output to prevent terminal rendering corruption (Issue #346)
+  permissionStatus: boolean; // Show pending permission indicator
+  thinking: boolean; // Show extended thinking indicator
+  thinkingFormat: ThinkingFormat; // Thinking indicator format
+  promptTime: boolean; // Show last prompt submission time (HH:MM:SS)
+  sessionHealth: boolean; // Show session health/duration
+  showSessionDuration?: boolean; // Show session:19m duration display (default: true if sessionHealth is true)
+  showHealthIndicator?: boolean; // Show 🟢/🟡/🔴 health indicator (default: true if sessionHealth is true)
+  showTokens?: boolean; // Show token count like 79.3k (default: true if sessionHealth is true)
+  useBars: boolean; // Show visual progress bars instead of/alongside percentages
+  showCallCounts?: boolean; // Show tool/agent/skill call counts on the right of the status line (default: true)
+  maxOutputLines: number; // Max total output lines to prevent input field shrinkage
+  safeMode: boolean; // Strip ANSI codes and use ASCII-only output to prevent terminal rendering corruption (Issue #346)
 }
 
 export interface HudThresholds {
@@ -419,14 +418,14 @@ export interface HudConfig {
 export const DEFAULT_HUD_CONFIG: HudConfig = {
   preset: 'focused',
   elements: {
-    cwd: false,               // Disabled by default for backward compatibility
+    cwd: false, // Disabled by default for backward compatibility
     cwdFormat: 'relative',
-    gitRepo: false,           // Disabled by default for backward compatibility
-    gitBranch: false,         // Disabled by default for backward compatibility
-    model: false,             // Disabled by default for backward compatibility
-    modelFormat: 'short',     // Short names by default for backward compatibility
+    gitRepo: false, // Disabled by default for backward compatibility
+    gitBranch: false, // Disabled by default for backward compatibility
+    model: false, // Disabled by default for backward compatibility
+    modelFormat: 'short', // Short names by default for backward compatibility
     omcLabel: true,
-    rateLimits: true,  // Show rate limits by default
+    rateLimits: true, // Show rate limits by default
     ralph: true,
     autopilot: true,
     prdStory: true,
@@ -438,15 +437,15 @@ export const DEFAULT_HUD_CONFIG: HudConfig = {
     backgroundTasks: true,
     todos: true,
     lastSkill: true,
-    permissionStatus: false,  // Disabled: heuristic-based, causes false positives
+    permissionStatus: false, // Disabled: heuristic-based, causes false positives
     thinking: true,
-    thinkingFormat: 'text',   // Text format for backward compatibility
-    promptTime: true,  // Show last prompt time by default
+    thinkingFormat: 'text', // Text format for backward compatibility
+    promptTime: true, // Show last prompt time by default
     sessionHealth: true,
-    useBars: false,  // Disabled by default for backwards compatibility
-    showCallCounts: true,  // Show tool/agent/skill call counts by default (Issue #710)
+    useBars: false, // Disabled by default for backwards compatibility
+    showCallCounts: true, // Show tool/agent/skill call counts by default (Issue #710)
     maxOutputLines: 4,
-    safeMode: true,  // Enabled by default to prevent terminal rendering corruption (Issue #346)
+    safeMode: true, // Enabled by default to prevent terminal rendering corruption (Issue #346)
   },
   thresholds: {
     contextWarning: 70,

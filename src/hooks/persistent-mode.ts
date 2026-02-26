@@ -16,12 +16,12 @@
  */
 
 import type { HookInput, HookOutput } from '../types';
-import { isModeActive } from './mode-registry';
-import type { ExecutionMode } from './mode-registry';
-import { processRalphStop } from './ralph';
 import { processAutopilotStop } from './autopilot';
-import { checkIncompleteTodos } from './todo-continuation';
+import type { ExecutionMode } from './mode-registry';
+import { isModeActive } from './mode-registry';
+import { processRalphStop } from './ralph';
 import { checkSkillActiveState } from './skill-state';
+import { checkIncompleteTodos } from './todo-continuation';
 
 // ---------------------------------------------------------------------------
 // Stop-type detectors

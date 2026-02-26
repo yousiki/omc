@@ -5,8 +5,8 @@
  * and custom rate limit buckets from the rateLimitsProvider command.
  */
 
-import type { RateLimits, CustomProviderResult, CustomBucketUsage } from '../types.js';
 import { RESET } from '../colors.js';
+import type { CustomBucketUsage, CustomProviderResult, RateLimits } from '../types.js';
 
 const GREEN = '\x1b[32m';
 const YELLOW = '\x1b[33m';
@@ -133,10 +133,7 @@ export function renderRateLimitsCompact(limits: RateLimits | null): string | nul
  *
  * Format: 5h:[████░░░░░░]45%(3h42m) wk:[█░░░░░░░░░]12%(2d5h) mo:[░░░░░░░░░░]8%(15d3h)
  */
-export function renderRateLimitsWithBar(
-  limits: RateLimits | null,
-  barWidth: number = 8
-): string | null {
+export function renderRateLimitsWithBar(limits: RateLimits | null, barWidth: number = 8): string | null {
   if (!limits) return null;
 
   const fiveHour = Math.min(100, Math.max(0, Math.round(limits.fiveHourPercent)));
@@ -220,10 +217,7 @@ function renderBucketUsageValue(usage: CustomBucketUsage): string {
  *
  * resetsAt is shown only when usage exceeds thresholdPercent (default 85).
  */
-export function renderCustomBuckets(
-  result: CustomProviderResult,
-  thresholdPercent: number = 85,
-): string | null {
+export function renderCustomBuckets(result: CustomProviderResult, thresholdPercent: number = 85): string | null {
   if (result.error && result.buckets.length === 0) {
     return `${YELLOW}[cmd:err]${RESET}`;
   }
@@ -241,7 +235,7 @@ export function renderCustomBuckets(
     let resetPart = '';
     if (bucket.resetsAt && pct != null && pct >= thresholdPercent) {
       const d = new Date(bucket.resetsAt);
-      if (!isNaN(d.getTime())) {
+      if (!Number.isNaN(d.getTime())) {
         const str = formatResetTime(d);
         if (str) resetPart = `${DIM}(${str})${RESET}`;
       }

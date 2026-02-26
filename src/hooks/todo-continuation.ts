@@ -10,10 +10,10 @@
  * - Pure JSON file-based state in `.omc/state/todo-continuation.json`
  */
 
-import { existsSync, readFileSync } from 'fs';
-import { join } from 'path';
-import { readJsonFile, writeJsonFile } from '../utils';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import type { HookInput, HookOutput } from '../types';
+import { readJsonFile, writeJsonFile } from '../utils';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -68,19 +68,15 @@ function parseTodoFile(filePath: string): TodoItem[] {
 
     // Handle array format
     if (Array.isArray(data)) {
-      return data.filter(
-        (item) => item && typeof item.content === 'string' && typeof item.status === 'string',
-      );
+      return data.filter((item) => item && typeof item.content === 'string' && typeof item.status === 'string');
     }
 
     // Handle object format with todos array
     if (data.todos && Array.isArray(data.todos)) {
-      return data.todos.filter(
-        (item: unknown) => {
-          const todo = item as Record<string, unknown>;
-          return todo && typeof todo.content === 'string' && typeof todo.status === 'string';
-        },
-      ) as TodoItem[];
+      return data.todos.filter((item: unknown) => {
+        const todo = item as Record<string, unknown>;
+        return todo && typeof todo.content === 'string' && typeof todo.status === 'string';
+      }) as TodoItem[];
     }
 
     return [];
@@ -98,10 +94,7 @@ function isIncomplete(todo: TodoItem): boolean {
 // ---------------------------------------------------------------------------
 
 function countIncompleteTodos(directory: string): number {
-  const paths = [
-    join(directory, '.omc', 'todos.json'),
-    join(directory, '.claude', 'todos.json'),
-  ];
+  const paths = [join(directory, '.omc', 'todos.json'), join(directory, '.claude', 'todos.json')];
 
   const seen = new Set<string>();
   let count = 0;

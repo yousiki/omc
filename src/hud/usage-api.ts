@@ -12,11 +12,11 @@
  * Response: { five_hour: { utilization }, seven_day: { utilization } }
  */
 
-import { existsSync, readFileSync, writeFileSync, renameSync, unlinkSync, mkdirSync } from 'fs';
-import { join, dirname } from 'path';
-import { homedir } from 'os';
-import { execSync } from 'child_process';
-import https from 'https';
+import { execSync } from 'node:child_process';
+import { existsSync, mkdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from 'node:fs';
+import https from 'node:https';
+import { homedir } from 'node:os';
+import { dirname, join } from 'node:path';
 import type { RateLimits } from './types.js';
 
 // Cache configuration
@@ -67,8 +67,8 @@ interface UsageApiResponse {
 interface ZaiQuotaResponse {
   data?: {
     limits?: Array<{
-      type: string;           // 'TOKENS_LIMIT' | 'TIME_LIMIT'
-      percentage: number;     // 0-100
+      type: string; // 'TOKENS_LIMIT' | 'TIME_LIMIT'
+      percentage: number; // 0-100
       remain_count?: number;
       quota_count?: number;
       currentValue?: number;
@@ -174,10 +174,10 @@ function readKeychainCredentials(): OAuthCredentials | null {
   if (process.platform !== 'darwin') return null;
 
   try {
-    const result = execSync(
-      '/usr/bin/security find-generic-password -s "Claude Code-credentials" -w 2>/dev/null',
-      { encoding: 'utf-8', timeout: 2000 }
-    ).trim();
+    const result = execSync('/usr/bin/security find-generic-password -s "Claude Code-credentials" -w 2>/dev/null', {
+      encoding: 'utf-8',
+      timeout: 2000,
+    }).trim();
 
     if (!result) return null;
 
@@ -282,7 +282,9 @@ function refreshAccessToken(refreshToken: string): Promise<OAuthCredentials | nu
       },
       (res) => {
         let data = '';
-        res.on('data', (chunk) => { data += chunk; });
+        res.on('data', (chunk) => {
+          data += chunk;
+        });
         res.on('end', () => {
           if (res.statusCode === 200) {
             try {
@@ -291,9 +293,7 @@ function refreshAccessToken(refreshToken: string): Promise<OAuthCredentials | nu
                 resolve({
                   accessToken: parsed.access_token,
                   refreshToken: parsed.refresh_token || refreshToken,
-                  expiresAt: parsed.expires_in
-                    ? Date.now() + parsed.expires_in * 1000
-                    : parsed.expires_at,
+                  expiresAt: parsed.expires_in ? Date.now() + parsed.expires_in * 1000 : parsed.expires_at,
                 });
                 return;
               }
@@ -306,11 +306,14 @@ function refreshAccessToken(refreshToken: string): Promise<OAuthCredentials | nu
           }
           resolve(null);
         });
-      }
+      },
     );
 
     req.on('error', () => resolve(null));
-    req.on('timeout', () => { req.destroy(); resolve(null); });
+    req.on('timeout', () => {
+      req.destroy();
+      resolve(null);
+    });
     req.end(body);
   });
 }
@@ -326,7 +329,7 @@ function fetchUsageFromApi(accessToken: string): Promise<UsageApiResponse | null
         path: '/api/oauth/usage',
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
           'anthropic-beta': 'oauth-2025-04-20',
           'Content-Type': 'application/json',
         },
@@ -350,7 +353,7 @@ function fetchUsageFromApi(accessToken: string): Promise<UsageApiResponse | null
             resolve(null);
           }
         });
-      }
+      },
     );
 
     req.on('error', () => resolve(null));
@@ -388,7 +391,7 @@ function fetchUsageFromZai(): Promise<ZaiQuotaResponse | null> {
           path: urlObj.pathname,
           method: 'GET',
           headers: {
-            'Authorization': authToken,
+            Authorization: authToken,
             'Content-Type': 'application/json',
             'Accept-Language': 'en-US,en',
           },
@@ -396,7 +399,9 @@ function fetchUsageFromZai(): Promise<ZaiQuotaResponse | null> {
         },
         (res) => {
           let data = '';
-          res.on('data', (chunk) => { data += chunk; });
+          res.on('data', (chunk) => {
+            data += chunk;
+          });
           res.on('end', () => {
             if (res.statusCode === 200) {
               try {
@@ -408,11 +413,14 @@ function fetchUsageFromZai(): Promise<ZaiQuotaResponse | null> {
               resolve(null);
             }
           });
-        }
+        },
       );
 
       req.on('error', () => resolve(null));
-      req.on('timeout', () => { req.destroy(); resolve(null); });
+      req.on('timeout', () => {
+        req.destroy();
+        resolve(null);
+      });
       req.end();
     } catch {
       resolve(null);
@@ -481,7 +489,7 @@ function writeBackCredentials(creds: OAuthCredentials): void {
  * Clamp values to 0-100 and filter invalid
  */
 function clamp(v: number | undefined): number {
-  if (v == null || !isFinite(v)) return 0;
+  if (v == null || !Number.isFinite(v)) return 0;
   return Math.max(0, Math.min(100, v));
 }
 
@@ -500,7 +508,7 @@ function parseUsageResponse(response: UsageApiResponse): RateLimits | null {
     if (!dateStr) return null;
     try {
       const date = new Date(dateStr);
-      return isNaN(date.getTime()) ? null : date;
+      return Number.isNaN(date.getTime()) ? null : date;
     } catch {
       return null;
     }
@@ -542,8 +550,8 @@ export function parseZaiResponse(response: ZaiQuotaResponse): RateLimits | null 
   const limits = response.data?.limits;
   if (!limits || limits.length === 0) return null;
 
-  const tokensLimit = limits.find(l => l.type === 'TOKENS_LIMIT');
-  const timeLimit = limits.find(l => l.type === 'TIME_LIMIT');
+  const tokensLimit = limits.find((l) => l.type === 'TOKENS_LIMIT');
+  const timeLimit = limits.find((l) => l.type === 'TIME_LIMIT');
 
   if (!tokensLimit && !timeLimit) return null;
 
@@ -552,7 +560,7 @@ export function parseZaiResponse(response: ZaiQuotaResponse): RateLimits | null 
     if (!timestamp) return null;
     try {
       const date = new Date(timestamp);
-      return isNaN(date.getTime()) ? null : date;
+      return Number.isNaN(date.getTime()) ? null : date;
     } catch {
       return null;
     }

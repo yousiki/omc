@@ -4,27 +4,27 @@
  * Composes statusline output from render context.
  */
 
-import type { HudRenderContext, HudConfig } from './types.js';
-import { DEFAULT_HUD_CONFIG } from './types.js';
 import { bold, dim } from './colors.js';
-import { renderRalph } from './elements/ralph.js';
 import { renderAgentsByFormat, renderAgentsMultiLine } from './elements/agents.js';
-import { renderTodosWithCurrent } from './elements/todos.js';
-import { renderSkills, renderLastSkill } from './elements/skills.js';
-import { renderContext, renderContextWithBar } from './elements/context.js';
-import { renderBackground } from './elements/background.js';
-import { renderPrd } from './elements/prd.js';
-import { renderRateLimits, renderRateLimitsWithBar, renderCustomBuckets } from './elements/limits.js';
-import { renderPermission } from './elements/permission.js';
-import { renderThinking } from './elements/thinking.js';
-import { renderSession } from './elements/session.js';
-import { renderPromptTime } from './elements/prompt-time.js';
 import { renderAutopilot } from './elements/autopilot.js';
-import { renderCwd } from './elements/cwd.js';
-import { renderGitRepo, renderGitBranch } from './elements/git.js';
-import { renderModel } from './elements/model.js';
+import { renderBackground } from './elements/background.js';
 import { renderCallCounts } from './elements/call-counts.js';
+import { renderContext, renderContextWithBar } from './elements/context.js';
 import { renderContextLimitWarning } from './elements/context-warning.js';
+import { renderCwd } from './elements/cwd.js';
+import { renderGitBranch, renderGitRepo } from './elements/git.js';
+import { renderCustomBuckets, renderRateLimits, renderRateLimitsWithBar } from './elements/limits.js';
+import { renderModel } from './elements/model.js';
+import { renderPermission } from './elements/permission.js';
+import { renderPrd } from './elements/prd.js';
+import { renderPromptTime } from './elements/prompt-time.js';
+import { renderRalph } from './elements/ralph.js';
+import { renderSession } from './elements/session.js';
+import { renderLastSkill, renderSkills } from './elements/skills.js';
+import { renderThinking } from './elements/thinking.js';
+import { renderTodosWithCurrent } from './elements/todos.js';
+import type { HudConfig, HudRenderContext } from './types.js';
+import { DEFAULT_HUD_CONFIG } from './types.js';
 
 /**
  * Limit output lines to prevent input field shrinkage (Issue #222).
@@ -155,7 +155,7 @@ export async function render(context: HudRenderContext, config: HudConfig): Prom
     const skills = renderSkills(
       context.ultrawork,
       context.ralph,
-      (enabledElements.lastSkill ?? true) ? context.lastSkill : null
+      (enabledElements.lastSkill ?? true) ? context.lastSkill : null,
     );
     if (skills) elements.push(skills);
   }
@@ -201,11 +201,7 @@ export async function render(context: HudRenderContext, config: HudConfig): Prom
   // Controlled by showCallCounts config option (default: true)
   const showCounts = enabledElements.showCallCounts ?? true;
   if (showCounts) {
-    const counts = renderCallCounts(
-      context.toolCallCount,
-      context.agentCallCount,
-      context.skillCallCount,
-    );
+    const counts = renderCallCounts(context.toolCallCount, context.agentCallCount, context.skillCallCount);
     if (counts) elements.push(counts);
   }
 
@@ -213,7 +209,7 @@ export async function render(context: HudRenderContext, config: HudConfig): Prom
   const ctxWarning = renderContextLimitWarning(
     context.contextPercent,
     config.contextLimitWarning.threshold,
-    config.contextLimitWarning.autoCompact
+    config.contextLimitWarning.autoCompact,
   );
   if (ctxWarning) detailLines.push(ctxWarning);
 

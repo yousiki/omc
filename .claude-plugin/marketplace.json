@@ -1,5 +1,4 @@
 {
-  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "omc",
   "description": "Claude Code multi-agent orchestration - 21 agents, 28 skills, bun-native",
   "owner": {
@@ -16,12 +15,7 @@
       "source": "./",
       "category": "productivity",
       "homepage": "https://github.com/yousiki/oh-my-claudecode",
-      "tags": [
-        "multi-agent",
-        "orchestration",
-        "delegation",
-        "ultrawork"
-      ]
+      "tags": ["multi-agent", "orchestration", "delegation", "ultrawork"]
     }
   ],
   "version": "5.0.0"

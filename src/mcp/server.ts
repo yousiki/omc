@@ -5,20 +5,14 @@
  * Tools are available as mcp__t__<tool_name>.
  */
 
+import { existsSync, mkdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
-import { join, dirname } from 'path';
-import { existsSync, readFileSync, writeFileSync, mkdirSync, unlinkSync, statSync } from 'fs';
-
-import {
-  isModeActive,
-  startMode,
-  stopMode,
-  getActiveModes,
-} from '../hooks/mode-registry';
 import type { ExecutionMode, ModeState } from '../hooks/mode-registry';
-import { readJsonFile, writeJsonFile, resolveWorktreeRoot } from '../utils';
+import { getActiveModes, isModeActive, startMode, stopMode } from '../hooks/mode-registry';
+import { readJsonFile, resolveWorktreeRoot, writeJsonFile } from '../utils';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -144,9 +138,7 @@ function saveProjectMemory(root: string, data: ProjectMemory): void {
 // Known execution modes
 // ---------------------------------------------------------------------------
 
-const EXECUTION_MODES: [string, ...string[]] = [
-  'ralph', 'autopilot', 'ultrawork', 'pipeline', 'ultraqa', 'tdd',
-];
+const EXECUTION_MODES: [string, ...string[]] = ['ralph', 'autopilot', 'ultrawork', 'pipeline', 'ultraqa', 'tdd'];
 
 // ---------------------------------------------------------------------------
 // Server setup
@@ -213,10 +205,7 @@ server.tool(
       if (active === true) {
         const started = startMode(mode as ExecutionMode, root);
         if (!started) {
-          return textResult(
-            `Cannot activate ${mode}: another exclusive mode is already active.`,
-            true,
-          );
+          return textResult(`Cannot activate ${mode}: another exclusive mode is already active.`, true);
         }
       } else if (active === false) {
         stopMode(mode as ExecutionMode, root);
@@ -234,7 +223,7 @@ server.tool(
         if (value !== undefined) updatedState[key] = value;
       }
       if (metadata) {
-        updatedState.metadata = { ...(existing.metadata as Record<string, unknown> ?? {}), ...metadata };
+        updatedState.metadata = { ...((existing.metadata as Record<string, unknown>) ?? {}), ...metadata };
       }
       updatedState.updatedAt = new Date().toISOString();
 
@@ -282,29 +271,21 @@ server.tool(
   },
 );
 
-server.tool(
-  'state_list_active',
-  'List all currently active execution modes.',
-  {},
-  async () => {
-    try {
-      const root = getRoot();
-      const active = getActiveModes(root);
+server.tool('state_list_active', 'List all currently active execution modes.', {}, async () => {
+  try {
+    const root = getRoot();
+    const active = getActiveModes(root);
 
-      if (active.length === 0) {
-        return textResult('## Active Modes\n\nNo modes are currently active.');
-      }
-
-      const modeList = active.map((m) => `- **${m}**`).join('\n');
-      return textResult(`## Active Modes (${active.length})\n\n${modeList}`);
-    } catch (error) {
-      return textResult(
-        `Error listing active modes: ${error instanceof Error ? error.message : String(error)}`,
-        true,
-      );
+    if (active.length === 0) {
+      return textResult('## Active Modes\n\nNo modes are currently active.');
     }
-  },
-);
+
+    const modeList = active.map((m) => `- **${m}**`).join('\n');
+    return textResult(`## Active Modes (${active.length})\n\n${modeList}`);
+  } catch (error) {
+    return textResult(`Error listing active modes: ${error instanceof Error ? error.message : String(error)}`, true);
+  }
+});
 
 server.tool(
   'state_get_status',
@@ -349,10 +330,7 @@ server.tool(
 
       return textResult(lines.join('\n'));
     } catch (error) {
-      return textResult(
-        `Error getting status: ${error instanceof Error ? error.message : String(error)}`,
-        true,
-      );
+      return textResult(`Error getting status: ${error instanceof Error ? error.message : String(error)}`, true);
     }
   },
 );
@@ -367,7 +345,10 @@ server.tool(
   'notepad_read',
   'Read the notepad content. Can read the full notepad or a specific section (priority, working, manual).',
   {
-    section: z.enum(NOTEPAD_SECTIONS).optional().describe('Section to read: "all" (default), "priority", "working", or "manual"'),
+    section: z
+      .enum(NOTEPAD_SECTIONS)
+      .optional()
+      .describe('Section to read: "all" (default), "priority", "working", or "manual"'),
   },
   async ({ section = 'all' }) => {
     try {
@@ -397,10 +378,7 @@ server.tool(
 
       return textResult(`## ${title}\n\n${content}`);
     } catch (error) {
-      return textResult(
-        `Error reading notepad: ${error instanceof Error ? error.message : String(error)}`,
-        true,
-      );
+      return textResult(`Error reading notepad: ${error instanceof Error ? error.message : String(error)}`, true);
     }
   },
 );
@@ -418,10 +396,7 @@ server.tool(
       let doc = readFileSync(path, 'utf-8');
 
       // Replace priority context section content
-      const replaced = doc.replace(
-        /(## Priority Context\n(?:<!--[\s\S]*?-->\n)?)[\s\S]*?(?=\n## )/,
-        `$1${content}\n`,
-      );
+      const replaced = doc.replace(/(## Priority Context\n(?:<!--[\s\S]*?-->\n)?)[\s\S]*?(?=\n## )/, `$1${content}\n`);
 
       if (replaced === doc && !doc.includes('## Priority Context')) {
         // Section header missing -- append it
@@ -464,7 +439,7 @@ server.tool(
       // Insert before MANUAL section
       const manualIdx = doc.indexOf('## MANUAL');
       if (manualIdx !== -1) {
-        doc = doc.slice(0, manualIdx) + entry + '\n' + doc.slice(manualIdx);
+        doc = `${doc.slice(0, manualIdx) + entry}\n${doc.slice(manualIdx)}`;
       } else {
         doc += entry;
       }
@@ -507,20 +482,17 @@ server.tool(
           doc = doc.slice(0, insertAt) + entry + doc.slice(insertAt);
         } else {
           const headerEnd = manualIdx + '## MANUAL'.length;
-          doc = doc.slice(0, headerEnd) + '\n' + entry + doc.slice(headerEnd);
+          doc = `${doc.slice(0, headerEnd)}\n${entry}${doc.slice(headerEnd)}`;
         }
       } else {
-        doc += '\n## MANUAL\n' + entry;
+        doc += `\n## MANUAL\n${entry}`;
       }
 
       writeFileSync(path, doc, 'utf-8');
 
       return textResult(`Successfully added entry to MANUAL section (${content.length} chars)`);
     } catch (error) {
-      return textResult(
-        `Error writing to MANUAL: ${error instanceof Error ? error.message : String(error)}`,
-        true,
-      );
+      return textResult(`Error writing to MANUAL: ${error instanceof Error ? error.message : String(error)}`, true);
     }
   },
 );
@@ -565,8 +537,8 @@ server.tool(
       let kept = '';
 
       for (const match of workingSection.matchAll(entryPattern)) {
-        const ts = new Date(match[1].replace(' ', 'T') + ':00Z').getTime();
-        if (isNaN(ts) || ts >= cutoff) {
+        const ts = new Date(`${match[1].replace(' ', 'T')}:00Z`).getTime();
+        if (Number.isNaN(ts) || ts >= cutoff) {
           kept += `\n### ${match[1]}\n${match[2].trimEnd()}\n`;
           remaining++;
         } else {
@@ -574,85 +546,80 @@ server.tool(
         }
       }
 
-      const newDoc = before + header + kept + '\n' + after;
+      const newDoc = `${before + header + kept}\n${after}`;
       writeFileSync(path, newDoc, 'utf-8');
 
       return textResult(
         `## Prune Results\n\n- Pruned: ${pruned} entries\n- Remaining: ${remaining} entries\n- Threshold: ${days} days`,
       );
     } catch (error) {
-      return textResult(
-        `Error pruning notepad: ${error instanceof Error ? error.message : String(error)}`,
-        true,
-      );
+      return textResult(`Error pruning notepad: ${error instanceof Error ? error.message : String(error)}`, true);
     }
   },
 );
 
-server.tool(
-  'notepad_stats',
-  'Get statistics about the notepad (size, entry count, oldest entry).',
-  {},
-  async () => {
-    try {
-      const root = getRoot();
-      const path = notepadPath(root);
+server.tool('notepad_stats', 'Get statistics about the notepad (size, entry count, oldest entry).', {}, async () => {
+  try {
+    const root = getRoot();
+    const path = notepadPath(root);
 
-      if (!existsSync(path)) {
-        return textResult('## Notepad Statistics\n\nNotepad does not exist yet.');
-      }
+    if (!existsSync(path)) {
+      return textResult('## Notepad Statistics\n\nNotepad does not exist yet.');
+    }
 
-      const doc = readFileSync(path, 'utf-8');
-      const stats = statSync(path);
+    const doc = readFileSync(path, 'utf-8');
+    const stats = statSync(path);
 
-      // Count working memory entries and find oldest
-      const entryPattern = /### (\d{4}-\d{2}-\d{2} \d{2}:\d{2})/g;
-      const workingStart = doc.indexOf('## Working Memory');
-      const manualStart = doc.indexOf('## MANUAL');
+    // Count working memory entries and find oldest
+    const entryPattern = /### (\d{4}-\d{2}-\d{2} \d{2}:\d{2})/g;
+    const workingStart = doc.indexOf('## Working Memory');
+    const manualStart = doc.indexOf('## MANUAL');
 
-      let workingEntries = 0;
-      let oldestEntry: string | null = null;
+    let workingEntries = 0;
+    let oldestEntry: string | null = null;
 
-      if (workingStart !== -1) {
-        const sectionEnd = manualStart !== -1 ? manualStart : doc.length;
-        const section = doc.slice(workingStart, sectionEnd);
+    if (workingStart !== -1) {
+      const sectionEnd = manualStart !== -1 ? manualStart : doc.length;
+      const section = doc.slice(workingStart, sectionEnd);
 
-        for (const match of section.matchAll(entryPattern)) {
-          workingEntries++;
-          if (!oldestEntry || match[1] < oldestEntry) {
-            oldestEntry = match[1];
-          }
+      for (const match of section.matchAll(entryPattern)) {
+        workingEntries++;
+        if (!oldestEntry || match[1] < oldestEntry) {
+          oldestEntry = match[1];
         }
       }
-
-      // Priority context size
-      const priorityContent = extractSection(doc, 'priority');
-
-      const lines = [
-        '## Notepad Statistics\n',
-        `- **Total Size:** ${stats.size} bytes`,
-        `- **Priority Context Size:** ${priorityContent.length} bytes`,
-        `- **Working Memory Entries:** ${workingEntries}`,
-        `- **Oldest Entry:** ${oldestEntry ?? 'None'}`,
-        `- **Path:** ${path}`,
-      ];
-
-      return textResult(lines.join('\n'));
-    } catch (error) {
-      return textResult(
-        `Error getting notepad stats: ${error instanceof Error ? error.message : String(error)}`,
-        true,
-      );
     }
-  },
-);
+
+    // Priority context size
+    const priorityContent = extractSection(doc, 'priority');
+
+    const lines = [
+      '## Notepad Statistics\n',
+      `- **Total Size:** ${stats.size} bytes`,
+      `- **Priority Context Size:** ${priorityContent.length} bytes`,
+      `- **Working Memory Entries:** ${workingEntries}`,
+      `- **Oldest Entry:** ${oldestEntry ?? 'None'}`,
+      `- **Path:** ${path}`,
+    ];
+
+    return textResult(lines.join('\n'));
+  } catch (error) {
+    return textResult(`Error getting notepad stats: ${error instanceof Error ? error.message : String(error)}`, true);
+  }
+});
 
 // ============================================================================
 // PROJECT MEMORY TOOLS
 // ============================================================================
 
 const MEMORY_SECTIONS: [string, ...string[]] = [
-  'all', 'techStack', 'build', 'conventions', 'structure', 'notes', 'directives',
+  'all',
+  'techStack',
+  'build',
+  'conventions',
+  'structure',
+  'notes',
+  'directives',
 ];
 
 server.tool(
@@ -731,9 +698,7 @@ server.tool(
 
       saveProjectMemory(root, finalMemory);
 
-      return textResult(
-        `Successfully ${merge ? 'merged' : 'wrote'} project memory.\nPath: ${projectMemoryPath(root)}`,
-      );
+      return textResult(`Successfully ${merge ? 'merged' : 'wrote'} project memory.\nPath: ${projectMemoryPath(root)}`);
     } catch (error) {
       return textResult(
         `Error writing project memory: ${error instanceof Error ? error.message : String(error)}`,
@@ -756,10 +721,7 @@ server.tool(
       const memory = loadProjectMemory(root);
 
       if (!memory) {
-        return textResult(
-          'Project memory does not exist. Use project_memory_write to create it first.',
-          true,
-        );
+        return textResult('Project memory does not exist. Use project_memory_write to create it first.', true);
       }
 
       if (!memory.customNotes) {
@@ -778,10 +740,7 @@ server.tool(
         `Successfully added note to project memory.\n\n- **Category:** ${category}\n- **Content:** ${content}`,
       );
     } catch (error) {
-      return textResult(
-        `Error adding note: ${error instanceof Error ? error.message : String(error)}`,
-        true,
-      );
+      return textResult(`Error adding note: ${error instanceof Error ? error.message : String(error)}`, true);
     }
   },
 );
@@ -799,10 +758,7 @@ server.tool(
       const memory = loadProjectMemory(root);
 
       if (!memory) {
-        return textResult(
-          'Project memory does not exist. Use project_memory_write to create it first.',
-          true,
-        );
+        return textResult('Project memory does not exist. Use project_memory_write to create it first.', true);
       }
 
       if (!memory.userDirectives) {
@@ -822,10 +778,7 @@ server.tool(
         `Successfully added directive to project memory.\n\n- **Directive:** ${content}\n- **Priority:** ${priority}`,
       );
     } catch (error) {
-      return textResult(
-        `Error adding directive: ${error instanceof Error ? error.message : String(error)}`,
-        true,
-      );
+      return textResult(`Error adding directive: ${error instanceof Error ? error.message : String(error)}`, true);
     }
   },
 );

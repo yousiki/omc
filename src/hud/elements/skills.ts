@@ -4,8 +4,8 @@
  * Renders active skills badge (ultrawork, ralph mode indicators).
  */
 
-import type { UltraworkStateForHud, RalphStateForHud, SkillInvocation } from '../types.js';
-import { RESET, cyan } from '../colors.js';
+import { cyan, RESET } from '../colors.js';
+import type { RalphStateForHud, SkillInvocation, UltraworkStateForHud } from '../types.js';
 
 const MAGENTA = '\x1b[35m';
 const BRIGHT_MAGENTA = '\x1b[95m';
@@ -118,7 +118,7 @@ function getSkillDisplayName(skillName: string): string {
 function isActiveMode(
   skillName: string,
   ultrawork: UltraworkStateForHud | null,
-  ralph: RalphStateForHud | null
+  ralph: RalphStateForHud | null,
 ): boolean {
   if (skillName === 'ultrawork' && ultrawork?.active) return true;
   if (skillName === 'ralph' && ralph?.active) return true;
@@ -135,7 +135,7 @@ function isActiveMode(
 export function renderSkills(
   ultrawork: UltraworkStateForHud | null,
   ralph: RalphStateForHud | null,
-  lastSkill?: SkillInvocation | null
+  lastSkill?: SkillInvocation | null,
 ): string | null {
   const parts: string[] = [];
 
@@ -159,9 +159,7 @@ export function renderSkills(
 /**
  * Render last skill standalone (when activeSkills is disabled but lastSkill is enabled).
  */
-export function renderLastSkill(
-  lastSkill: SkillInvocation | null
-): string | null {
+export function renderLastSkill(lastSkill: SkillInvocation | null): string | null {
   if (!lastSkill) return null;
 
   const argsDisplay = lastSkill.args ? `(${truncate(lastSkill.args, 15)})` : '';
@@ -176,7 +174,7 @@ export function renderLastSkill(
  */
 export function renderSkillsWithReinforcement(
   ultrawork: UltraworkStateForHud | null,
-  ralph: RalphStateForHud | null
+  ralph: RalphStateForHud | null,
 ): string | null {
   if (!ultrawork?.active && !ralph?.active) {
     return null;
@@ -185,8 +183,7 @@ export function renderSkillsWithReinforcement(
   const parts: string[] = [];
 
   if (ultrawork?.active) {
-    const reinforcement =
-      ultrawork.reinforcementCount > 0 ? `(r${ultrawork.reinforcementCount})` : '';
+    const reinforcement = ultrawork.reinforcementCount > 0 ? `(r${ultrawork.reinforcementCount})` : '';
     parts.push(`ultrawork${reinforcement}`);
   }
 

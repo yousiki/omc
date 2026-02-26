@@ -10,8 +10,8 @@
  * rust, java, kotlin, swift, c, cpp, csharp, html, css, json, yaml.
  */
 
-import { readFileSync, readdirSync, statSync, writeFileSync } from 'fs';
-import { join, extname, resolve } from 'path';
+import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { extname, join, resolve } from 'node:path';
 
 // ---------------------------------------------------------------------------
 // Tool definition type (matches MCP server registration)
@@ -54,9 +54,23 @@ async function getSgModule(): Promise<typeof import('@ast-grep/napi') | null> {
 // ---------------------------------------------------------------------------
 
 const SUPPORTED_LANGUAGES = [
-  'javascript', 'typescript', 'tsx', 'python', 'ruby', 'go', 'rust',
-  'java', 'kotlin', 'swift', 'c', 'cpp', 'csharp', 'html', 'css',
-  'json', 'yaml',
+  'javascript',
+  'typescript',
+  'tsx',
+  'python',
+  'ruby',
+  'go',
+  'rust',
+  'java',
+  'kotlin',
+  'swift',
+  'c',
+  'cpp',
+  'csharp',
+  'html',
+  'css',
+  'json',
+  'yaml',
 ] as const;
 
 type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
@@ -64,10 +78,7 @@ type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 /**
  * Convert lowercase language string to ast-grep Lang enum value.
  */
-function toLangEnum(
-  sg: typeof import('@ast-grep/napi'),
-  language: string,
-): import('@ast-grep/napi').Lang {
+function toLangEnum(sg: typeof import('@ast-grep/napi'), language: string): import('@ast-grep/napi').Lang {
   const langMap: Record<string, import('@ast-grep/napi').Lang> = {
     javascript: sg.Lang.JavaScript,
     typescript: sg.Lang.TypeScript,
@@ -130,9 +141,7 @@ const EXT_TO_LANG: Record<string, SupportedLanguage> = {
 };
 
 // Directories to skip during file discovery
-const SKIP_DIRS = new Set([
-  'node_modules', '.git', 'dist', 'build', '__pycache__', '.venv', 'venv',
-]);
+const SKIP_DIRS = new Set(['node_modules', '.git', 'dist', 'build', '__pycache__', '.venv', 'venv']);
 
 // ---------------------------------------------------------------------------
 // File discovery
@@ -141,11 +150,7 @@ const SKIP_DIRS = new Set([
 /**
  * Get files matching the language in a directory or single file.
  */
-function getFilesForLanguage(
-  dirPath: string,
-  language: string,
-  maxFiles = 1000,
-): string[] {
+function getFilesForLanguage(dirPath: string, language: string, maxFiles = 1000): string[] {
   const files: string[] = [];
   const extensions = Object.entries(EXT_TO_LANG)
     .filter(([, lang]) => lang === language)
@@ -227,8 +232,7 @@ function textResult(text: string, isError?: boolean) {
 
 function unavailableResult(): { content: Array<{ type: 'text'; text: string }>; isError: boolean } {
   return textResult(
-    '@ast-grep/napi is not available. Install it with: npm install @ast-grep/napi\n' +
-    `Error: ${sgLoadError}`,
+    `@ast-grep/napi is not available. Install it with: npm install @ast-grep/napi\nError: ${sgLoadError}`,
     true,
   );
 }
@@ -299,10 +303,7 @@ const astGrepSearchTool: AstToolDefinition = {
     }
 
     if (!SUPPORTED_LANGUAGES.includes(language as SupportedLanguage)) {
-      return textResult(
-        `Unsupported language: ${language}\nSupported: ${SUPPORTED_LANGUAGES.join(', ')}`,
-        true,
-      );
+      return textResult(`Unsupported language: ${language}\nSupported: ${SUPPORTED_LANGUAGES.join(', ')}`, true);
     }
 
     try {
@@ -333,9 +334,7 @@ const astGrepSearchTool: AstToolDefinition = {
             const startLine = range.start.line + 1;
             const endLine = range.end.line + 1;
 
-            results.push(
-              formatMatch(filePath, match.text(), startLine, endLine, context, content),
-            );
+            results.push(formatMatch(filePath, match.text(), startLine, endLine, context, content));
             totalMatches++;
           }
         } catch {
@@ -346,10 +345,10 @@ const astGrepSearchTool: AstToolDefinition = {
       if (results.length === 0) {
         return textResult(
           `No matches found for pattern: ${pattern}\n\n` +
-          `Searched ${files.length} ${language} file(s) in ${searchPath}\n\n` +
-          'Tip: Ensure the pattern is a valid AST node. For example:\n' +
-          '- Use "function $NAME" not just "$NAME"\n' +
-          '- Use "console.log($X)" not "console.log"',
+            `Searched ${files.length} ${language} file(s) in ${searchPath}\n\n` +
+            'Tip: Ensure the pattern is a valid AST node. For example:\n' +
+            '- Use "function $NAME" not just "$NAME"\n' +
+            '- Use "console.log($X)" not "console.log"',
         );
       }
 
@@ -358,10 +357,10 @@ const astGrepSearchTool: AstToolDefinition = {
     } catch (error) {
       return textResult(
         `Error in AST search: ${error instanceof Error ? error.message : String(error)}\n\n` +
-        'Common issues:\n' +
-        '- Pattern must be a complete AST node\n' +
-        '- Language must match file type\n' +
-        '- Check that @ast-grep/napi is installed',
+          'Common issues:\n' +
+          '- Pattern must be a complete AST node\n' +
+          '- Language must match file type\n' +
+          '- Check that @ast-grep/napi is installed',
         true,
       );
     }
@@ -404,7 +403,7 @@ const astGrepReplaceTool: AstToolDefinition = {
       },
       dryRun: {
         type: 'boolean',
-        description: 'Preview only, don\'t apply changes (default: true)',
+        description: "Preview only, don't apply changes (default: true)",
       },
     },
     required: ['pattern', 'replacement', 'language'],
@@ -422,10 +421,7 @@ const astGrepReplaceTool: AstToolDefinition = {
     }
 
     if (!SUPPORTED_LANGUAGES.includes(language as SupportedLanguage)) {
-      return textResult(
-        `Unsupported language: ${language}\nSupported: ${SUPPORTED_LANGUAGES.join(', ')}`,
-        true,
-      );
+      return textResult(`Unsupported language: ${language}\nSupported: ${SUPPORTED_LANGUAGES.join(', ')}`, true);
     }
 
     try {
@@ -494,10 +490,7 @@ const astGrepReplaceTool: AstToolDefinition = {
           let newContent = content;
           for (const edit of edits) {
             const before = newContent.slice(edit.start, edit.end);
-            newContent =
-              newContent.slice(0, edit.start) +
-              edit.replacement +
-              newContent.slice(edit.end);
+            newContent = newContent.slice(0, edit.start) + edit.replacement + newContent.slice(edit.end);
 
             changes.push({
               file: filePath,
@@ -519,7 +512,7 @@ const astGrepReplaceTool: AstToolDefinition = {
       if (changes.length === 0) {
         return textResult(
           `No matches found for pattern: ${pattern}\n\n` +
-          `Searched ${files.length} ${language} file(s) in ${searchPath}`,
+            `Searched ${files.length} ${language} file(s) in ${searchPath}`,
         );
       }
 
@@ -534,18 +527,13 @@ const astGrepReplaceTool: AstToolDefinition = {
         .map((c) => `${c.file}:${c.line}\n  - ${c.before}\n  + ${c.after}`)
         .join('\n\n');
 
-      const footer = changes.length > 50
-        ? `\n\n... and ${changes.length - 50} more changes`
-        : '';
+      const footer = changes.length > 50 ? `\n\n... and ${changes.length - 50} more changes` : '';
 
       const tip = dryRun ? '\n\nTo apply changes, run with dryRun: false' : '';
 
       return textResult(header + changeList + footer + tip);
     } catch (error) {
-      return textResult(
-        `Error in AST replace: ${error instanceof Error ? error.message : String(error)}`,
-        true,
-      );
+      return textResult(`Error in AST replace: ${error instanceof Error ? error.message : String(error)}`, true);
     }
   },
 };

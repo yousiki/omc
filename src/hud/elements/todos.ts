@@ -4,8 +4,8 @@
  * Renders todo progress display.
  */
 
-import type { TodoItem } from '../types.js';
 import { RESET } from '../colors.js';
+import type { TodoItem } from '../types.js';
 
 const GREEN = '\x1b[32m';
 const YELLOW = '\x1b[33m';

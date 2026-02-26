@@ -81,28 +81,17 @@ Domain Specialists:
 Coordination:
 - `critic` (opus): plan/design critical challenge
 
-Deprecated aliases (backward compatibility only): `researcher` -> `document-specialist`, `tdd-guide` -> `test-engineer`, `api-reviewer` -> `code-reviewer`, `performance-reviewer` -> `quality-reviewer`, `dependency-expert` -> `document-specialist`, `quality-strategist` -> `quality-reviewer`, `vision` -> `document-specialist`.
-
-Compatibility aliases may still be normalized during routing, but canonical runtime registry keys are defined in `src/agents/definitions.ts`.
+Canonical runtime registry keys are defined in `src/agents/definitions.ts`.
 </agent_catalog>
 
 ---
 
 <tools>
-External AI (tmux CLI workers):
-- For **Claude agents**: use `/team N:executor "task"` — spawns Claude Code agent teammates via `TeamCreate`/`Task`
-- For **Codex or Gemini CLI workers**: use `/omc-teams N:codex "task"` or `/omc-teams N:gemini "task"` — spawns CLI processes in tmux panes via `bridge/runtime-cli.cjs`
-- omc-teams MCP tools: `mcp__team__omc_run_team_start`, `mcp__team__omc_run_team_wait`, `mcp__team__omc_run_team_status`, `mcp__team__omc_run_team_cleanup`
-
 OMC State:
 - `state_read`, `state_write`, `state_clear`, `state_list_active`, `state_get_status`
 - State stored at `{worktree}/.omc/state/{mode}-state.json` (not in `~/.claude/`)
 - Session-scoped state: `.omc/state/sessions/{sessionId}/` when session id is available; legacy `.omc/state/{mode}-state.json` as fallback
-- Supported modes: autopilot, ultrapilot, team, pipeline, ralph, ultrawork, ultraqa
-
-Team Coordination (Claude Code native):
-- `TeamCreate`, `TeamDelete`, `SendMessage`, `TaskCreate`, `TaskList`, `TaskGet`, `TaskUpdate`
-- Lifecycle: `TeamCreate` -> `TaskCreate` x N -> `Task(team_name, name)` x N to spawn teammates -> teammates claim/complete tasks -> `SendMessage(shutdown_request)` -> `TeamDelete`
+- Supported modes: autopilot, ultrapilot, pipeline, ralph, ultrawork, ultraqa
 
 Notepad (session memory at `{worktree}/.omc/notepad.md`):
 - `notepad_read` (sections: all/priority/working/manual)
@@ -131,18 +120,13 @@ Workflow Skills:
 - `autopilot` ("autopilot", "build me", "I want a"): full autonomous execution from idea to working code
 - `ralph` ("ralph", "don't stop", "must complete"): self-referential loop with verifier verification; includes ultrawork
 - `ultrawork` ("ulw", "ultrawork"): maximum parallelism with parallel agent orchestration
-- `swarm` ("swarm"): **deprecated compatibility alias** over Team; use `/team` (still routes to Team staged pipeline for now)
-- `ultrapilot` ("ultrapilot", "parallel build"): compatibility facade over Team; maps onto Team's staged runtime
-- `team` ("team", "coordinated team", "team ralph"): N coordinated Claude agents using Claude Code native teams with stage-aware agent routing; supports `team ralph` for persistent team execution
-- `omc-teams` ("omc-teams", "codex", "gemini"): Spawn `claude`, `codex`, or `gemini` CLI workers in tmux panes via `bridge/runtime-cli.cjs`; use when you need CLI process workers rather than Claude Code native agents. Note: bare "codex" or "gemini" alone routes here; when all three ("claude codex gemini") appear together, `ccg` takes priority
-- `ccg` ("ccg", "tri-model", "claude codex gemini"): Fan out backend/analytical tasks to Codex + frontend/UI tasks to Gemini in parallel tmux panes, then Claude synthesizes; requires codex and gemini CLIs. Priority: matches when all three model names appear together, overriding bare "codex"/"gemini" routing to omc-teams
+- `ultrapilot` ("ultrapilot", "parallel build"): parallel autonomous execution
 - `pipeline` ("pipeline", "chain agents"): sequential agent chaining with data passing
 - `ultraqa` (activated by autopilot): QA cycling -- test, verify, fix, repeat
 - `plan` ("plan this", "plan the"): strategic planning; supports `--consensus` and `--review` modes, with RALPLAN-DR structured deliberation in consensus mode
 - `ralplan` ("ralplan", "consensus plan"): alias for `/plan --consensus` -- iterative planning with Planner, Architect, Critic until consensus; short deliberation by default, `--deliberate` for high-risk work (adds pre-mortem + expanded unit/integration/e2e/observability test planning)
 - `sciomc` ("sciomc"): parallel scientist agents for comprehensive analysis
 - `external-context`: invoke parallel document-specialist agents for web searches
-- `deepinit` ("deepinit"): deep codebase init with hierarchical AGENTS.md
 
 Agent Shortcuts (thin wrappers; call the agent directly with `model` for more control):
 - `analyze` -> `debugger`: "analyze", "debug", "investigate"
@@ -152,59 +136,10 @@ Agent Shortcuts (thin wrappers; call the agent directly with `model` for more co
 - `security-review` -> `security-reviewer`: "security review"
 - `review` -> `plan --review`: "review plan", "critique plan"
 
-Notifications: `configure-notifications` ("configure discord", "setup discord", "discord webhook", "configure telegram", "setup telegram", "telegram bot", "configure slack", "setup slack")
+Utilities: `cancel`, `note`, `learner`, `mcp-setup`, `hud`, `omc-doctor`, `omc-help`, `trace`, `skill`, `writer-memory`, `ralph-init`, `learn-about-omc`
 
-Utilities: `cancel`, `note`, `learner`, `omc-setup`, `mcp-setup`, `hud`, `omc-doctor`, `omc-help`, `trace`, `release`, `project-session-manager` (`psm` is deprecated alias), `skill`, `writer-memory`, `ralph-init`, `learn-about-omc`
-
-Conflict resolution: explicit mode keywords (`ulw`, `ultrawork`) override defaults. Generic "fast"/"parallel" reads `~/.claude/.omc-config.json` -> `defaultExecutionMode`. Ralph includes ultrawork (persistence wrapper). Autopilot can transition to ralph or ultraqa. Autopilot and ultrapilot are mutually exclusive. Keyword disambiguation: bare "codex" or "gemini" routes to `omc-teams`; the full phrase "claude codex gemini" routes to `ccg` (longest-match priority).
+Conflict resolution: explicit mode keywords (`ulw`, `ultrawork`) override defaults. Generic "fast"/"parallel" reads `~/.claude/.omc-config.json` -> `defaultExecutionMode`. Ralph includes ultrawork (persistence wrapper). Autopilot can transition to ralph or ultraqa. Autopilot and ultrapilot are mutually exclusive.
 </skills>
-
----
-
-<team_compositions>
-Common agent workflows for typical scenarios:
-
-Feature Development:
-  `analyst` -> `planner` -> `executor` -> `test-engineer` -> `quality-reviewer` -> `verifier`
-
-Bug Investigation:
-  `explore` + `debugger` + `executor` + `test-engineer` + `verifier`
-
-Code Review:
-  `quality-reviewer` + `security-reviewer` + `code-reviewer`
-</team_compositions>
-
-<team_pipeline>
-Team is the default multi-agent orchestrator. It uses a canonical staged pipeline:
-
-`team-plan -> team-prd -> team-exec -> team-verify -> team-fix (loop)`
-
-Stage Agent Routing (each stage uses specialized agents, not just executors):
-- `team-plan`: `explore` (haiku) + `planner` (opus), optionally `analyst`/`architect`
-- `team-prd`: `analyst` (opus), optionally `critic`
-- `team-exec`: `executor` (sonnet) + task-appropriate specialists (`designer`, `build-fixer`, `writer`, `test-engineer`, `deep-executor`)
-- `team-verify`: `verifier` (sonnet) + `security-reviewer`/`code-reviewer`/`quality-reviewer` as needed
-- `team-fix`: `executor`/`build-fixer`/`debugger` depending on defect type
-
-Stage transitions:
-- `team-plan` -> `team-prd`: planning/decomposition complete
-- `team-prd` -> `team-exec`: acceptance criteria and scope are explicit
-- `team-exec` -> `team-verify`: all execution tasks reach terminal states
-- `team-verify` -> `team-fix` | `complete` | `failed`: verification decides next step
-- `team-fix` -> `team-exec` | `team-verify` | `complete` | `failed`: fixes feed back into execution, re-verify, or terminate
-
-The `team-fix` loop is bounded by max attempts; exceeding the bound transitions to `failed`.
-
-Terminal states: `complete`, `failed`, `cancelled`.
-
-State persistence: Team writes state via `state_write(mode="team")` tracking `current_phase`, `team_name`, `fix_loop_count`, `linked_ralph`, and `stage_history`. Read with `state_read(mode="team")`.
-
-Resume: detect existing team state and resume from the last incomplete stage using staged state + live task status.
-
-Cancel: `/oh-my-claudecode:cancel` requests teammate shutdown, marks phase `cancelled` with `active=false`, records cancellation metadata, and runs cleanup. If linked to ralph, both modes are cancelled together.
-
-Team + Ralph composition: When both `team` and `ralph` keywords are detected (e.g., `/team ralph "task"`), team provides multi-agent orchestration while ralph provides the persistence loop. Both write linked state files (`linked_team`/`linked_ralph`). Cancel either mode cancels both.
-</team_pipeline>
 
 ---
 
@@ -227,7 +162,7 @@ Parallelization:
 - Run 2+ independent tasks in parallel when each takes >30s.
 - Run dependent tasks sequentially.
 - Use `run_in_background: true` for installs, builds, and tests (up to 20 concurrent).
-- Prefer Team mode as the primary parallel execution surface. Use ad hoc parallelism (`run_in_background`) only when Team overhead is disproportionate to the task.
+- Prefer ultrawork mode for parallel execution. Use ad hoc parallelism (`run_in_background`) for lightweight tasks where agent overhead is disproportionate.
 
 Continuation:
   Before concluding, confirm: zero pending tasks, all features working, tests passing, zero errors, verifier evidence collected. If any item is unchecked, continue working.

@@ -3,57 +3,53 @@
  * Multi-agent orchestration system for Claude Code.
  */
 
-// Core types
-export type { AgentConfig, ModelType, HookInput, HookOutput, PluginConfig } from './types';
-
 // Agent system
 export { getAgentDefinitions, omcSystemPrompt } from './agents/definitions';
 export { loadAgentPrompt } from './agents/prompt';
-
-// Utilities
-export {
-  resolveWorktreeRoot,
-  readJsonFile,
-  writeJsonFile,
-  MODE_NAMES,
-  readStdin,
-  removeCodeBlocks,
-  escapeRegex,
-} from './utils';
-
-// Hook system
-export { processHook, normalizeHookInput } from './hooks/bridge';
-export { processKeywordDetector, detectKeywords, getPrimaryKeyword } from './hooks/keyword-detector';
-export { processPreTool, processPostTool } from './hooks/orchestrator';
-export { checkPersistentModes } from './hooks/persistent-mode';
-export { processSetup } from './hooks/setup';
-export { processPermissionRequest } from './hooks/permission-handler';
-export { processRecovery } from './hooks/recovery';
-
-// Features
-export { applyMagicKeywords, detectMagicKeywords, BUILTIN_MAGIC_KEYWORDS } from './features/magic-keywords';
-export { readBoulderState, getPlanProgress, checkBoulderContinuation } from './features/boulder-state';
-export { enforceModel, resolveDelegation } from './features/delegation';
-export { routeModel, analyzeComplexity } from './features/model-routing';
 export {
   BackgroundManager,
   ConcurrencyManager,
   getBackgroundManager,
-  shouldRunInBackground,
   getBackgroundTaskGuidance,
+  shouldRunInBackground,
 } from './features/background';
+export { checkBoulderContinuation, getPlanProgress, readBoulderState } from './features/boulder-state';
 export {
   ContextCollector,
   contextCollector,
-  injectPendingContext,
-  injectContextIntoText,
   createContextInjectorHook,
+  injectContextIntoText,
+  injectPendingContext,
 } from './features/context';
+export { enforceModel, resolveDelegation } from './features/delegation';
+// Features
+export { applyMagicKeywords, BUILTIN_MAGIC_KEYWORDS, detectMagicKeywords } from './features/magic-keywords';
+export { analyzeComplexity, routeModel } from './features/model-routing';
+// Hook system
+export { normalizeHookInput, processHook } from './hooks/bridge';
+export { detectKeywords, getPrimaryKeyword, processKeywordDetector } from './hooks/keyword-detector';
+export { processPostTool, processPreTool } from './hooks/orchestrator';
+export { processPermissionRequest } from './hooks/permission-handler';
+export { checkPersistentModes } from './hooks/persistent-mode';
+export { processRecovery } from './hooks/recovery';
+export { processSetup } from './hooks/setup';
+// Core types
+export type { AgentConfig, HookInput, HookOutput, ModelType, PluginConfig } from './types';
+// Utilities
+export {
+  escapeRegex,
+  MODE_NAMES,
+  readJsonFile,
+  readStdin,
+  removeCodeBlocks,
+  resolveWorktreeRoot,
+  writeJsonFile,
+} from './utils';
 
 // Config loading
-import { existsSync, readFileSync } from 'fs';
-import { join } from 'path';
-import { homedir } from 'os';
+import { existsSync, readFileSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
 import type { PluginConfig } from './types';
 import { resolveWorktreeRoot } from './utils';
 

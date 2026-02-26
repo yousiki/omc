@@ -19,16 +19,11 @@
  * cache is returned (stale: true); if no cache exists, error is set.
  */
 
-import { spawn } from 'child_process';
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
-import { join, dirname } from 'path';
-import { homedir } from 'os';
-import type {
-  RateLimitsProviderConfig,
-  CustomBucket,
-  CustomProviderOutput,
-  CustomProviderResult,
-} from './types.js';
+import { spawn } from 'node:child_process';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { dirname, join } from 'node:path';
+import type { CustomBucket, CustomProviderOutput, CustomProviderResult, RateLimitsProviderConfig } from './types.js';
 
 const CACHE_TTL_MS = 30_000;
 const DEFAULT_TIMEOUT_MS = 800;
@@ -49,12 +44,7 @@ interface CustomProviderCache {
 }
 
 function getCachePath(): string {
-  return join(
-    getClaudeConfigDir(),
-    'plugins',
-    'oh-my-claudecode',
-    '.custom-rate-cache.json',
-  );
+  return join(getClaudeConfigDir(), 'plugins', 'oh-my-claudecode', '.custom-rate-cache.json');
 }
 
 function readCache(): CustomProviderCache | null {
@@ -91,9 +81,7 @@ function isCacheValid(cache: CustomProviderCache): boolean {
  */
 function spawnWithTimeout(cmd: string | string[], timeoutMs: number): Promise<string> {
   return new Promise((resolve, reject) => {
-    const [executable, ...args] = Array.isArray(cmd)
-      ? cmd
-      : (['sh', '-c', cmd] as string[]);
+    const [executable, ...args] = Array.isArray(cmd) ? cmd : (['sh', '-c', cmd] as string[]);
 
     const child = spawn(executable, args, { stdio: ['ignore', 'pipe', 'pipe'] });
 
@@ -161,10 +149,7 @@ function parseOutput(raw: string, periods?: string[]): CustomBucket[] | null {
     const u = b.usage;
     if (u.type === 'percent') return typeof (u as { value: unknown }).value === 'number';
     if (u.type === 'credit') {
-      return (
-        typeof (u as { used: unknown }).used === 'number' &&
-        typeof (u as { limit: unknown }).limit === 'number'
-      );
+      return typeof (u as { used: unknown }).used === 'number' && typeof (u as { limit: unknown }).limit === 'number';
     }
     if (u.type === 'string') return typeof (u as { value: unknown }).value === 'string';
     return false;
@@ -187,9 +172,7 @@ function parseOutput(raw: string, periods?: string[]): CustomBucket[] | null {
  * - On failure, returns last-good cache as {buckets, stale: true}.
  * - If no cache exists, returns {buckets: [], error: 'command failed'}.
  */
-export async function executeCustomProvider(
-  config: RateLimitsProviderConfig,
-): Promise<CustomProviderResult> {
+export async function executeCustomProvider(config: RateLimitsProviderConfig): Promise<CustomProviderResult> {
   const cache = readCache();
 
   // Return fresh cache
@@ -215,10 +198,7 @@ export async function executeCustomProvider(
     return { buckets, stale: false };
   } catch (err) {
     if (process.env.OMC_DEBUG) {
-      console.error(
-        '[custom-rate-provider] Command failed:',
-        err instanceof Error ? err.message : err,
-      );
+      console.error('[custom-rate-provider] Command failed:', err instanceof Error ? err.message : err);
     }
     if (cache) return { buckets: cache.buckets, stale: true };
     return { buckets: [], stale: false, error: 'command failed' };

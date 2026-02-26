@@ -5,14 +5,10 @@
  * These are read-only functions that don't modify the state files.
  */
 
-import { existsSync, readFileSync, statSync, readdirSync } from 'fs';
-import { join } from 'path';
-import type {
-  RalphStateForHud,
-  UltraworkStateForHud,
-  PrdStateForHud,
-} from './types.js';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { join } from 'node:path';
 import type { AutopilotStateForHud } from './elements/autopilot.js';
+import type { PrdStateForHud, RalphStateForHud, UltraworkStateForHud } from './types.js';
 
 /**
  * Maximum age for state files to be considered "active".
@@ -162,9 +158,7 @@ interface UltraworkState {
  * Read Ultrawork state for HUD display.
  * Checks only local .omc/state location.
  */
-export function readUltraworkStateForHud(
-  directory: string
-): UltraworkStateForHud | null {
+export function readUltraworkStateForHud(directory: string): UltraworkStateForHud | null {
   // Check local state only (with new path fallback)
   const localFile = resolveStatePath(directory, 'ultrawork-state.json');
 
@@ -233,9 +227,7 @@ export function readPrdStateForHud(directory: string): PrdStateForHud | null {
     const total = stories.length;
 
     // Find current story (first incomplete, sorted by priority)
-    const incomplete = stories
-      .filter((s) => !s.passes)
-      .sort((a, b) => a.priority - b.priority);
+    const incomplete = stories.filter((s) => !s.passes).sort((a, b) => a.priority - b.priority);
 
     return {
       currentStoryId: incomplete[0]?.id || null,
@@ -294,7 +286,7 @@ export function readAutopilotStateForHud(directory: string): AutopilotStateForHu
       maxIterations: state.max_iterations,
       tasksCompleted: state.execution?.tasks_completed,
       tasksTotal: state.execution?.tasks_total,
-      filesCreated: state.execution?.files_created?.length
+      filesCreated: state.execution?.files_created?.length,
     };
   } catch {
     return null;

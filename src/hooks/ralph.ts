@@ -11,13 +11,13 @@
  * State is stored via mode-registry at `.omc/state/ralph-state.json`.
  */
 
-import { existsSync, readFileSync, readdirSync } from 'fs';
-import { join } from 'path';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { getPlanProgress, readBoulderState } from '../features/boulder-state';
 import type { HookOutput } from '../types';
+import { readJsonFile, writeJsonFile } from '../utils';
 import type { ModeState } from './mode-registry';
 import { isModeActive, startMode, stopMode } from './mode-registry';
-import { readJsonFile, writeJsonFile } from '../utils';
-import { readBoulderState, getPlanProgress } from '../features/boulder-state';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -82,11 +82,7 @@ export function isRalphActive(directory: string): boolean {
 // ---------------------------------------------------------------------------
 
 /** Start ralph mode */
-export function startRalph(
-  directory: string,
-  sessionId?: string,
-  prdPath?: string,
-): boolean {
+export function startRalph(directory: string, sessionId?: string, prdPath?: string): boolean {
   const ok = startMode('ralph', directory, sessionId);
   if (!ok) {
     return false;

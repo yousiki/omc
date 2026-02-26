@@ -8,12 +8,7 @@
   "repository": "https://github.com/yousiki/oh-my-claudecode",
   "homepage": "https://github.com/yousiki/oh-my-claudecode",
   "license": "MIT",
-  "keywords": [
-    "claude-code",
-    "plugin",
-    "multi-agent",
-    "orchestration"
-  ],
+  "keywords": ["claude-code", "plugin", "multi-agent", "orchestration"],
   "skills": "./skills/",
   "mcpServers": "./.mcp.json"
 }

@@ -5,11 +5,11 @@
  * and enriches post-tool context (remember tags, boulder progress).
  */
 
-import { existsSync, readFileSync, mkdirSync, appendFileSync, writeFileSync } from 'fs';
-import { join, extname, normalize, relative, isAbsolute, dirname } from 'path';
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname, extname, isAbsolute, join, normalize, relative } from 'node:path';
+import { getPlanProgress, readBoulderState } from '../features/boulder-state';
 import type { HookInput, HookOutput } from '../types';
 import { resolveWorktreeRoot } from '../utils';
-import { readBoulderState, getPlanProgress } from '../features/boulder-state';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -26,8 +26,25 @@ const ALLOWED_PATH_PATTERNS: RegExp[] = [
 
 /** Source file extensions that trigger the delegation reminder. */
 const SOURCE_EXTENSIONS = new Set([
-  '.ts', '.tsx', '.js', '.jsx', '.py', '.go', '.rs', '.java', '.c', '.cpp',
-  '.svelte', '.vue', '.rb', '.php', '.swift', '.kt', '.scala', '.sh', '.bash',
+  '.ts',
+  '.tsx',
+  '.js',
+  '.jsx',
+  '.py',
+  '.go',
+  '.rs',
+  '.java',
+  '.c',
+  '.cpp',
+  '.svelte',
+  '.vue',
+  '.rb',
+  '.php',
+  '.swift',
+  '.kt',
+  '.scala',
+  '.sh',
+  '.bash',
 ]);
 
 /** Tools that perform file writes. */
@@ -113,10 +130,7 @@ function processRememberTags(output: string, directory: string): void {
     // Apply priority tags (last one wins — overwrites the section)
     if (priorityTags.length > 0) {
       const combined = priorityTags.join('\n');
-      doc = doc.replace(
-        /(## Priority Context\n(?:<!--[\s\S]*?-->\n)?)[\s\S]*?(?=\n## )/,
-        `$1${combined}\n`,
-      );
+      doc = doc.replace(/(## Priority Context\n(?:<!--[\s\S]*?-->\n)?)[\s\S]*?(?=\n## )/, `$1${combined}\n`);
     }
 
     // Append regular tags before MANUAL section
@@ -125,7 +139,7 @@ function processRememberTags(output: string, directory: string): void {
       const entries = regularTags.map((c) => `\n### ${timestamp}\n${c}\n`).join('');
       const manualIdx = doc.indexOf('## MANUAL');
       if (manualIdx !== -1) {
-        doc = doc.slice(0, manualIdx) + entries + '\n' + doc.slice(manualIdx);
+        doc = `${doc.slice(0, manualIdx) + entries}\n${doc.slice(manualIdx)}`;
       } else {
         doc += entries;
       }
@@ -158,7 +172,7 @@ function logAudit(directory: string, entry: Record<string, unknown>): void {
     const logDir = join(directory, '.omc', 'logs');
     if (!existsSync(logDir)) mkdirSync(logDir, { recursive: true });
     const logPath = join(logDir, 'orchestrator-audit.jsonl');
-    appendFileSync(logPath, JSON.stringify({ ...entry, timestamp: new Date().toISOString() }) + '\n');
+    appendFileSync(logPath, `${JSON.stringify({ ...entry, timestamp: new Date().toISOString() })}\n`);
   } catch {
     // Audit logging must never break the hook
   }

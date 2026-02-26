@@ -4,8 +4,8 @@
  * Renders Ralph loop iteration display.
  */
 
-import type { RalphStateForHud, HudThresholds } from '../types.js';
 import { RESET } from '../colors.js';
+import type { HudThresholds, RalphStateForHud } from '../types.js';
 
 const RED = '\x1b[31m';
 const YELLOW = '\x1b[33m';
@@ -17,10 +17,7 @@ const GREEN = '\x1b[32m';
  *
  * Format: ralph:3/10
  */
-export function renderRalph(
-  state: RalphStateForHud | null,
-  thresholds: HudThresholds
-): string | null {
+export function renderRalph(state: RalphStateForHud | null, thresholds: HudThresholds): string | null {
   if (!state?.active) {
     return null;
   }

@@ -293,7 +293,7 @@ export function injectPendingContext(
   collector: ContextCollector,
   sessionId: string,
   parts: OutputPart[],
-  strategy: InjectionStrategy = 'prepend'
+  strategy: InjectionStrategy = 'prepend',
 ): InjectionResult {
   if (!collector.hasPending(sessionId)) {
     return { injected: false, contextLength: 0, entryCount: 0 };
@@ -337,7 +337,7 @@ export function injectContextIntoText(
   collector: ContextCollector,
   sessionId: string,
   text: string,
-  strategy: InjectionStrategy = 'prepend'
+  strategy: InjectionStrategy = 'prepend',
 ): { result: string; injectionResult: InjectionResult } {
   if (!collector.hasPending(sessionId)) {
     return {
@@ -386,10 +386,7 @@ export function createContextInjectorHook(collector: ContextCollector) {
     /**
      * Process a user message and inject any pending context.
      */
-    processUserMessage: (
-      sessionId: string,
-      message: string
-    ): { message: string; injected: boolean } => {
+    processUserMessage: (sessionId: string, message: string): { message: string; injected: boolean } => {
       if (!collector.hasPending(sessionId)) {
         return { message, injected: false };
       }

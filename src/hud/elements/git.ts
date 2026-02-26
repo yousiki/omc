@@ -5,7 +5,7 @@
  */
 
 import { execSync } from 'node:child_process';
-import { dim, cyan } from '../colors.js';
+import { cyan, dim } from '../colors.js';
 
 /**
  * Get git repository name from remote URL.

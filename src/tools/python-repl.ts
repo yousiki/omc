@@ -11,18 +11,22 @@
  * - Session locking: File-based lock to prevent concurrent access
  */
 
-import { spawn } from 'child_process';
-import { createConnection } from 'net';
+import type { ChildProcess } from 'node:child_process';
+import { spawn } from 'node:child_process';
+import { createHash, randomUUID } from 'node:crypto';
 import {
-  existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync,
-  lstatSync, constants as fsConstants,
-} from 'fs';
-import { open, unlink } from 'fs/promises';
-import { join, dirname, resolve } from 'path';
-import { randomUUID, createHash } from 'crypto';
-import { hostname } from 'os';
-import { tmpdir, homedir, platform as osPlatform } from 'os';
-import type { ChildProcess } from 'child_process';
+  existsSync,
+  constants as fsConstants,
+  lstatSync,
+  mkdirSync,
+  readFileSync,
+  unlinkSync,
+  writeFileSync,
+} from 'node:fs';
+import { open, unlink } from 'node:fs/promises';
+import { createConnection } from 'node:net';
+import { homedir, hostname, platform as osPlatform, tmpdir } from 'node:os';
+import { dirname, join, resolve } from 'node:path';
 
 // ---------------------------------------------------------------------------
 // Tool definition type (matches MCP server registration)
@@ -160,10 +164,7 @@ function findBridgeScript(): string {
     if (existsSync(candidate)) return candidate;
   }
 
-  throw new Error(
-    'gyoshu_bridge.py not found. Searched:\n' +
-    candidates.map((c) => `  - ${c}`).join('\n'),
-  );
+  throw new Error(`gyoshu_bridge.py not found. Searched:\n${candidates.map((c) => `  - ${c}`).join('\n')}`);
 }
 
 // ---------------------------------------------------------------------------
@@ -179,17 +180,14 @@ function findPython(projectDir: string): string {
 
   // Fallback to system python3
   try {
-    const { spawnSync } = require('child_process');
+    const { spawnSync } = require('node:child_process');
     const result = spawnSync('python3', ['--version'], { timeout: 5000 });
     if (result.status === 0) return 'python3';
   } catch {
     // not available
   }
 
-  throw new Error(
-    'No Python environment found. Create a virtual environment first:\n' +
-    '  python -m venv .venv',
-  );
+  throw new Error('No Python environment found. Create a virtual environment first:\n' + '  python -m venv .venv');
 }
 
 // ---------------------------------------------------------------------------
@@ -197,21 +195,31 @@ function findPython(projectDir: string): string {
 // ---------------------------------------------------------------------------
 
 class SocketConnectionError extends Error {
-  constructor(message: string, public readonly socketPath: string) {
+  constructor(
+    message: string,
+    public readonly socketPath: string,
+  ) {
     super(message);
     this.name = 'SocketConnectionError';
   }
 }
 
 class SocketTimeoutError extends Error {
-  constructor(message: string, public readonly timeoutMs: number) {
+  constructor(
+    message: string,
+    public readonly timeoutMs: number,
+  ) {
     super(message);
     this.name = 'SocketTimeoutError';
   }
 }
 
 class JsonRpcError extends Error {
-  constructor(message: string, public readonly code: number, public readonly data?: unknown) {
+  constructor(
+    message: string,
+    public readonly code: number,
+    public readonly data?: unknown,
+  ) {
     super(message);
     this.name = 'JsonRpcError';
   }
@@ -226,7 +234,7 @@ function sendSocketRequest<T>(
   return new Promise((resolve, reject) => {
     const id = randomUUID();
     const request = { jsonrpc: '2.0', id, method, params };
-    const requestLine = JSON.stringify(request) + '\n';
+    const requestLine = `${JSON.stringify(request)}\n`;
 
     let responseBuffer = '';
     let timedOut = false;
@@ -235,10 +243,7 @@ function sendSocketRequest<T>(
     const timer = setTimeout(() => {
       timedOut = true;
       socket.destroy();
-      reject(new SocketTimeoutError(
-        `Request timeout after ${timeout}ms for method "${method}"`,
-        timeout,
-      ));
+      reject(new SocketTimeoutError(`Request timeout after ${timeout}ms for method "${method}"`, timeout));
     }, timeout);
 
     const cleanup = () => {
@@ -343,7 +348,11 @@ class SessionLock {
         const age = Date.now() - new Date(lockInfo.acquiredAt).getTime();
         if (age > 60_000) {
           // Stale lock, try to break it
-          try { unlinkSync(this.lockPath); } catch { /* ignore */ }
+          try {
+            unlinkSync(this.lockPath);
+          } catch {
+            /* ignore */
+          }
         } else {
           // Lock is fresh, check if holding process is alive
           try {
@@ -353,7 +362,11 @@ class SessionLock {
             continue;
           } catch {
             // Process dead, break lock
-            try { unlinkSync(this.lockPath); } catch { /* ignore */ }
+            try {
+              unlinkSync(this.lockPath);
+            } catch {
+              /* ignore */
+            }
           }
         }
       } catch {
@@ -435,7 +448,11 @@ function isProcessAlive(pid: number): boolean {
 }
 
 function safeUnlink(p: string): void {
-  try { unlinkSync(p); } catch { /* ignore */ }
+  try {
+    unlinkSync(p);
+  } catch {
+    /* ignore */
+  }
 }
 
 async function spawnBridge(sessionId: string, projectDir?: string): Promise<BridgeMeta> {
@@ -469,7 +486,9 @@ async function spawnBridge(sessionId: string, projectDir?: string): Promise<Brid
 
   // Track early exit
   let exitCode: number | null = null;
-  proc.on('exit', (code) => { exitCode = code ?? 1; });
+  proc.on('exit', (code) => {
+    exitCode = code ?? 1;
+  });
 
   // Wait for socket to appear
   const startTime = Date.now();
@@ -481,8 +500,14 @@ async function spawnBridge(sessionId: string, projectDir?: string): Promise<Brid
     }
     if (Date.now() - startTime > BRIDGE_SPAWN_TIMEOUT_MS) {
       if (proc.pid) {
-        try { process.kill(-proc.pid, 'SIGKILL'); } catch {
-          try { process.kill(proc.pid, 'SIGKILL'); } catch { /* */ }
+        try {
+          process.kill(-proc.pid, 'SIGKILL');
+        } catch {
+          try {
+            process.kill(proc.pid, 'SIGKILL');
+          } catch {
+            /* */
+          }
         }
       }
       throw new Error(
@@ -524,11 +549,7 @@ async function ensureBridge(sessionId: string, projectDir?: string): Promise<Bri
     const metaPath = getMetaPath(sessionId);
     if (existsSync(metaPath)) {
       const raw = JSON.parse(readFileSync(metaPath, 'utf-8')) as BridgeMeta;
-      if (
-        raw.sessionId === sessionId &&
-        isProcessAlive(raw.pid) &&
-        isSocketFile(raw.socketPath)
-      ) {
+      if (raw.sessionId === sessionId && isProcessAlive(raw.pid) && isSocketFile(raw.socketPath)) {
         bridges.set(sessionId, raw);
         return raw;
       }
@@ -546,14 +567,26 @@ function killBridge(sessionId: string): void {
 
   try {
     // Try process group kill
-    try { process.kill(-meta.pid, 'SIGTERM'); } catch {
-      try { process.kill(meta.pid, 'SIGTERM'); } catch { /* */ }
+    try {
+      process.kill(-meta.pid, 'SIGTERM');
+    } catch {
+      try {
+        process.kill(meta.pid, 'SIGTERM');
+      } catch {
+        /* */
+      }
     }
 
     // Escalate to SIGKILL after a brief delay
     setTimeout(() => {
-      try { process.kill(-meta.pid, 'SIGKILL'); } catch {
-        try { process.kill(meta.pid, 'SIGKILL'); } catch { /* */ }
+      try {
+        process.kill(-meta.pid, 'SIGKILL');
+      } catch {
+        try {
+          process.kill(meta.pid, 'SIGKILL');
+        } catch {
+          /* */
+        }
       }
     }, 2500);
   } catch {
@@ -561,7 +594,11 @@ function killBridge(sessionId: string): void {
   }
 
   safeUnlink(meta.socketPath);
-  try { unlinkSync(getMetaPath(sessionId)); } catch { /* */ }
+  try {
+    unlinkSync(getMetaPath(sessionId));
+  } catch {
+    /* */
+  }
   bridges.delete(sessionId);
 }
 
@@ -607,7 +644,12 @@ function formatExecuteResult(result: ExecuteResult, sessionId: string, label?: s
     lines.push('--- Timing ---', `Duration: ${sec}s`, `Started: ${result.timing.started_at}`, '');
   }
   if (result.memory) {
-    lines.push('--- Memory ---', `RSS: ${result.memory.rss_mb.toFixed(1)} MB`, `VMS: ${result.memory.vms_mb.toFixed(1)} MB`, '');
+    lines.push(
+      '--- Memory ---',
+      `RSS: ${result.memory.rss_mb.toFixed(1)} MB`,
+      `VMS: ${result.memory.vms_mb.toFixed(1)} MB`,
+      '',
+    );
   }
   if (result.error) {
     lines.push('=== Execution Failed ===');
@@ -622,9 +664,15 @@ function formatExecuteResult(result: ExecuteResult, sessionId: string, label?: s
 
 function formatStateResult(result: StateResult, sessionId: string): string {
   const lines = [
-    '=== Python REPL State ===', `Session: ${sessionId}`, '',
-    '--- Memory ---', `RSS: ${result.memory.rss_mb.toFixed(1)} MB`, `VMS: ${result.memory.vms_mb.toFixed(1)} MB`, '',
-    '--- Variables ---', `Count: ${result.variable_count}`,
+    '=== Python REPL State ===',
+    `Session: ${sessionId}`,
+    '',
+    '--- Memory ---',
+    `RSS: ${result.memory.rss_mb.toFixed(1)} MB`,
+    `VMS: ${result.memory.vms_mb.toFixed(1)} MB`,
+    '',
+    '--- Variables ---',
+    `Count: ${result.variable_count}`,
   ];
   if (result.variables.length > 0) {
     lines.push('');
@@ -640,8 +688,14 @@ function formatStateResult(result: StateResult, sessionId: string): string {
 
 function formatResetResult(result: ResetResult, sessionId: string): string {
   return [
-    '=== Python REPL Reset ===', `Session: ${sessionId}`, `Status: ${result.status}`, '',
-    '--- Memory After Reset ---', `RSS: ${result.memory.rss_mb.toFixed(1)} MB`, `VMS: ${result.memory.vms_mb.toFixed(1)} MB`, '',
+    '=== Python REPL Reset ===',
+    `Session: ${sessionId}`,
+    `Status: ${result.status}`,
+    '',
+    '--- Memory After Reset ---',
+    `RSS: ${result.memory.rss_mb.toFixed(1)} MB`,
+    `VMS: ${result.memory.vms_mb.toFixed(1)} MB`,
+    '',
     '=== Namespace Cleared ===',
   ].join('\n');
 }
@@ -673,7 +727,8 @@ async function handleExecute(
 
   try {
     const result = await sendSocketRequest<ExecuteResult>(
-      socketPath, 'execute',
+      socketPath,
+      'execute',
       { code, timeout: executionTimeout / 1000 },
       executionTimeout + 10_000,
     );
@@ -683,8 +738,11 @@ async function handleExecute(
 
     if (error instanceof SocketTimeoutError) {
       return [
-        '=== Execution Timeout ===', `Session: ${sessionId}`, '',
-        `The code execution exceeded the timeout of ${executionTimeout / 1000} seconds.`, '',
+        '=== Execution Timeout ===',
+        `Session: ${sessionId}`,
+        '',
+        `The code execution exceeded the timeout of ${executionTimeout / 1000} seconds.`,
+        '',
         'The execution is still running in the background.',
         'Use the "interrupt" action to stop it.',
       ].join('\n');
@@ -692,8 +750,11 @@ async function handleExecute(
 
     if (error instanceof JsonRpcError) {
       return [
-        '=== Execution Failed ===', `Session: ${sessionId}`, '',
-        `Error Code: ${error.code}`, `Message: ${error.message}`,
+        '=== Execution Failed ===',
+        `Session: ${sessionId}`,
+        '',
+        `Error Code: ${error.code}`,
+        `Message: ${error.message}`,
         ...(error.data ? [`Data: ${JSON.stringify(error.data, null, 2)}`] : []),
       ].join('\n');
     }
@@ -709,9 +770,12 @@ async function handleReset(sessionId: string, socketPath: string): Promise<strin
   } catch {
     killBridge(sessionId);
     return [
-      '=== Bridge Restarted ===', `Session: ${sessionId}`, '',
+      '=== Bridge Restarted ===',
+      `Session: ${sessionId}`,
+      '',
       'The bridge was unresponsive and has been terminated.',
-      'A new bridge will be spawned on the next request.', '',
+      'A new bridge will be spawned on the next request.',
+      '',
       'Memory has been cleared.',
     ].join('\n');
   }
@@ -726,7 +790,9 @@ async function handleGetState(sessionId: string, socketPath: string): Promise<st
 
     if (error instanceof SocketTimeoutError) {
       return [
-        '=== State Retrieval Timeout ===', `Session: ${sessionId}`, '',
+        '=== State Retrieval Timeout ===',
+        `Session: ${sessionId}`,
+        '',
         'Could not retrieve state within timeout.',
         'The bridge may be busy with a long-running execution.',
       ].join('\n');
@@ -738,20 +804,23 @@ async function handleGetState(sessionId: string, socketPath: string): Promise<st
 
 async function handleInterrupt(sessionId: string, socketPath: string): Promise<string> {
   try {
-    const result = await sendSocketRequest<InterruptResult>(
-      socketPath, 'interrupt', {},
-      5_000,
-    );
+    const result = await sendSocketRequest<InterruptResult>(socketPath, 'interrupt', {}, 5_000);
     return [
-      '=== Python REPL Interrupt ===', `Session: ${sessionId}`,
-      `Status: ${result.status || 'interrupted'}`, 'Terminated By: graceful', '',
+      '=== Python REPL Interrupt ===',
+      `Session: ${sessionId}`,
+      `Status: ${result.status || 'interrupted'}`,
+      'Terminated By: graceful',
+      '',
       '=== Execution Interrupted ===',
     ].join('\n');
   } catch {
     killBridge(sessionId);
     return [
-      '=== Python REPL Interrupt ===', `Session: ${sessionId}`,
-      'Status: force_killed', 'Terminated By: SIGKILL', '',
+      '=== Python REPL Interrupt ===',
+      `Session: ${sessionId}`,
+      'Status: force_killed',
+      'Terminated By: SIGKILL',
+      '',
       '=== Execution Interrupted ===',
     ].join('\n');
   }
@@ -775,17 +844,14 @@ async function pythonReplHandler(args: Record<string, unknown>): Promise<{
   // Validate action
   const validActions = ['execute', 'interrupt', 'reset', 'get_state'];
   if (!validActions.includes(action)) {
-    return textResult(
-      `Unknown action: ${action}\n\nValid actions: ${validActions.join(', ')}`,
-      true,
-    );
+    return textResult(`Unknown action: ${action}\n\nValid actions: ${validActions.join(', ')}`, true);
   }
 
   // Validate execute requires code
   if (action === 'execute' && !code) {
     return textResult(
       'The "execute" action requires the "code" parameter.\n\n' +
-      'Example:\n  action: "execute"\n  code: "print(\'Hello!\')"',
+        'Example:\n  action: "execute"\n  code: "print(\'Hello!\')"',
       true,
     );
   }
@@ -797,8 +863,8 @@ async function pythonReplHandler(args: Record<string, unknown>): Promise<{
   } catch (error) {
     return textResult(
       `=== Session Busy ===\nSession: ${sessionId}\n\n` +
-      `Could not acquire session lock: ${(error as Error).message}\n\n` +
-      'Suggestions:\n  1. Wait and retry later\n  2. Use "interrupt" to stop current execution\n  3. Use "reset" to clear the session',
+        `Could not acquire session lock: ${(error as Error).message}\n\n` +
+        'Suggestions:\n  1. Wait and retry later\n  2. Use "interrupt" to stop current execution\n  3. Use "reset" to clear the session',
       true,
     );
   }
@@ -811,8 +877,8 @@ async function pythonReplHandler(args: Record<string, unknown>): Promise<{
     } catch (error) {
       return textResult(
         `=== Bridge Startup Failed ===\nSession: ${sessionId}\n\n` +
-        `Error: ${(error as Error).message}\n\n` +
-        'Ensure you have Python available:\n  python -m venv .venv',
+          `Error: ${(error as Error).message}\n\n` +
+          'Ensure you have Python available:\n  python -m venv .venv',
         true,
       );
     }
@@ -833,8 +899,8 @@ async function pythonReplHandler(args: Record<string, unknown>): Promise<{
             } catch (retryError) {
               return textResult(
                 `=== Connection Error ===\nSession: ${sessionId}\n\n` +
-                `Error: ${(retryError as Error).message}\n\n` +
-                'The bridge process may have crashed. Retry will auto-restart.',
+                  `Error: ${(retryError as Error).message}\n\n` +
+                  'The bridge process may have crashed. Retry will auto-restart.',
                 true,
               );
             }
@@ -858,8 +924,7 @@ async function pythonReplHandler(args: Record<string, unknown>): Promise<{
         } catch (error) {
           if (error instanceof SocketConnectionError) {
             return textResult(
-              `=== Connection Error ===\nSession: ${sessionId}\n\n` +
-              `Error: ${(error as Error).message}`,
+              `=== Connection Error ===\nSession: ${sessionId}\n\n` + `Error: ${(error as Error).message}`,
               true,
             );
           }

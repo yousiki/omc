@@ -149,9 +149,7 @@ export function getDurationColor(durationMs: number): string {
  */
 export function coloredBar(percent: number, width: number = 10): string {
   const safeWidth = Number.isFinite(width) ? Math.max(0, Math.round(width)) : 0;
-  const safePercent = Number.isFinite(percent)
-    ? Math.min(100, Math.max(0, percent))
-    : 0;
+  const safePercent = Number.isFinite(percent) ? Math.min(100, Math.max(0, percent)) : 0;
 
   const filled = Math.round((safePercent / 100) * safeWidth);
   const empty = safeWidth - filled;
@@ -163,11 +161,7 @@ export function coloredBar(percent: number, width: number = 10): string {
 /**
  * Create a simple numeric display with color.
  */
-export function coloredValue(
-  value: number,
-  total: number,
-  getColor: (value: number, total: number) => string
-): string {
+export function coloredValue(value: number, total: number, getColor: (value: number, total: number) => string): string {
   const color = getColor(value, total);
   return `${color}${value}/${total}${RESET}`;
 }

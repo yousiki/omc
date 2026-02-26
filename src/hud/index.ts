@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+
 /**
  * OMC HUD - Main Entry Point
  *
@@ -6,33 +7,24 @@
  * Receives stdin JSON from Claude Code and outputs formatted statusline.
  */
 
-import { readStdin, writeStdinCache, readStdinCache, getContextPercent, getModelName } from "./stdin.js";
-import { parseTranscript } from "./transcript.js";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { executeCustomProvider } from './custom-rate-provider.js';
 import {
-  readHudState,
-  readHudConfig,
-  getRunningTasks,
-  writeHudState,
-  initializeHUDState,
-} from "./state.js";
-import {
+  readAutopilotStateForHud,
+  readPrdStateForHud,
   readRalphStateForHud,
   readUltraworkStateForHud,
-  readPrdStateForHud,
-  readAutopilotStateForHud,
-} from "./omc-state.js";
-import { getUsage } from "./usage-api.js";
-import { executeCustomProvider } from "./custom-rate-provider.js";
-import { render } from "./render.js";
-import { sanitizeOutput } from "./sanitize.js";
-import type {
-  HudRenderContext,
-  SessionHealth,
-} from "./types.js";
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from "fs";
-import { join, dirname } from "path";
-import { homedir } from "os";
-import { fileURLToPath } from "url";
+} from './omc-state.js';
+import { render } from './render.js';
+import { sanitizeOutput } from './sanitize.js';
+import { getRunningTasks, initializeHUDState, readHudConfig, readHudState, writeHudState } from './state.js';
+import { getContextPercent, getModelName, readStdin, readStdinCache, writeStdinCache } from './stdin.js';
+import { parseTranscript } from './transcript.js';
+import type { HudRenderContext, SessionHealth } from './types.js';
+import { getUsage } from './usage-api.js';
 
 // ============================================================================
 // Inlined utilities (avoiding imports from src/)
@@ -52,9 +44,7 @@ function getRuntimePackageVersion(): string {
         if (pkg.name && pkg.version) {
           return pkg.version;
         }
-      } catch {
-        continue;
-      }
+      } catch {}
     }
   } catch {
     // Fallback
@@ -70,8 +60,8 @@ function compareVersions(a: string, b: string): number {
   const cleanA = a.replace(/^v/, '');
   const cleanB = b.replace(/^v/, '');
 
-  const partsA = cleanA.split('.').map(n => parseInt(n, 10) || 0);
-  const partsB = cleanB.split('.').map(n => parseInt(n, 10) || 0);
+  const partsA = cleanA.split('.').map((n) => parseInt(n, 10) || 0);
+  const partsB = cleanB.split('.').map((n) => parseInt(n, 10) || 0);
 
   const maxLength = Math.max(partsA.length, partsB.length);
 
@@ -98,7 +88,6 @@ function extractSessionIdFromPath(transcriptPath: string): string | null {
   const match = transcriptPath.match(/([0-9a-f-]{36})(?:\.jsonl)?$/i);
   return match ? match[1] : null;
 }
-
 
 /**
  * Calculate session health from session start time and context usage.
@@ -135,12 +124,12 @@ async function main(watchMode = false): Promise<void> {
       stdin = readStdinCache();
       if (!stdin) {
         // Cache not yet populated (first poll before statusline fires)
-        console.log("[OMC] Starting...");
+        console.log('[OMC] Starting...');
         return;
       }
     } else {
       // Non-watch invocation with no stdin - suggest setup
-      console.log("[OMC] run /omc-setup to install properly");
+      console.log('[OMC] run /omc-setup to install properly');
       return;
     }
 
@@ -175,7 +164,7 @@ async function main(watchMode = false): Promise<void> {
     if (sameSession && hudState?.sessionStartTimestamp) {
       // Use persisted value (the real session start) - but validate first
       const persisted = new Date(hudState.sessionStartTimestamp);
-      if (!isNaN(persisted.getTime())) {
+      if (!Number.isNaN(persisted.getTime())) {
         sessionStart = persisted;
       }
       // If invalid, fall through to transcript-derived sessionStart
@@ -189,14 +178,11 @@ async function main(watchMode = false): Promise<void> {
     }
 
     // Fetch rate limits from OAuth API (if available)
-    const rateLimits =
-      config.elements.rateLimits !== false ? await getUsage() : null;
+    const rateLimits = config.elements.rateLimits !== false ? await getUsage() : null;
 
     // Fetch custom rate limit buckets (if configured)
     const customBuckets =
-      config.rateLimitsProvider?.type === 'custom'
-        ? await executeCustomProvider(config.rateLimitsProvider)
-        : null;
+      config.rateLimitsProvider?.type === 'custom' ? await executeCustomProvider(config.rateLimitsProvider) : null;
 
     // Read OMC version and update check cache
     let omcVersion: string | null = null;
@@ -227,7 +213,7 @@ async function main(watchMode = false): Promise<void> {
       ultrawork,
       prd,
       autopilot,
-      activeAgents: transcriptData.agents.filter((a) => a.status === "running"),
+      activeAgents: transcriptData.agents.filter((a) => a.status === 'running'),
       todos: transcriptData.todos,
       backgroundTasks: getRunningTasks(hudState),
       cwd,
@@ -236,38 +222,24 @@ async function main(watchMode = false): Promise<void> {
       customBuckets,
       pendingPermission: transcriptData.pendingPermission || null,
       thinkingState: transcriptData.thinkingState || null,
-      sessionHealth: await calculateSessionHealth(
-        sessionStart,
-        getContextPercent(stdin),
-      ),
+      sessionHealth: await calculateSessionHealth(sessionStart, getContextPercent(stdin)),
       omcVersion,
       updateAvailable,
       toolCallCount: transcriptData.toolCallCount,
       agentCallCount: transcriptData.agentCallCount,
       skillCallCount: transcriptData.skillCallCount,
-      promptTime: hudState?.lastPromptTimestamp
-        ? new Date(hudState.lastPromptTimestamp)
-        : null,
+      promptTime: hudState?.lastPromptTimestamp ? new Date(hudState.lastPromptTimestamp) : null,
     };
 
     // Debug: log data if OMC_DEBUG is set
     if (process.env.OMC_DEBUG) {
-      console.error(
-        "[HUD DEBUG] stdin.context_window:",
-        JSON.stringify(stdin.context_window),
-      );
-      console.error(
-        "[HUD DEBUG] sessionHealth:",
-        JSON.stringify(context.sessionHealth),
-      );
+      console.error('[HUD DEBUG] stdin.context_window:', JSON.stringify(stdin.context_window));
+      console.error('[HUD DEBUG] sessionHealth:', JSON.stringify(context.sessionHealth));
     }
 
     // autoCompact: write trigger file when context exceeds threshold
     // A companion hook can read this file to inject a /compact suggestion.
-    if (
-      config.contextLimitWarning.autoCompact &&
-      context.contextPercent >= config.contextLimitWarning.threshold
-    ) {
+    if (config.contextLimitWarning.autoCompact && context.contextPercent >= config.contextLimitWarning.threshold) {
       try {
         const omcStateDir = join(cwd, '.omc', 'state');
         if (!existsSync(omcStateDir)) {
@@ -303,27 +275,24 @@ async function main(watchMode = false): Promise<void> {
       console.log(output);
     } else {
       // Replace spaces with non-breaking spaces for terminal alignment
-      const formattedOutput = output.replace(/ /g, "\u00A0");
+      const formattedOutput = output.replace(/ /g, '\u00A0');
       console.log(formattedOutput);
     }
   } catch (error) {
     // Distinguish installation errors from runtime errors
     const isInstallError =
       error instanceof Error &&
-      (error.message.includes("ENOENT") ||
-        error.message.includes("MODULE_NOT_FOUND") ||
-        error.message.includes("Cannot find module"));
+      (error.message.includes('ENOENT') ||
+        error.message.includes('MODULE_NOT_FOUND') ||
+        error.message.includes('Cannot find module'));
 
     if (isInstallError) {
-      console.log("[OMC] run /omc-setup to install properly");
+      console.log('[OMC] run /omc-setup to install properly');
     } else {
       // Output fallback message to stdout for status line visibility
-      console.log("[OMC] HUD error - check stderr");
+      console.log('[OMC] HUD error - check stderr');
       // Log actual runtime errors to stderr for debugging
-      console.error(
-        "[OMC HUD Error]",
-        error instanceof Error ? error.message : error,
-      );
+      console.error('[OMC HUD Error]', error instanceof Error ? error.message : error);
     }
   }
 }

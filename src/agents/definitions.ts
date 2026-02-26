@@ -7,7 +7,7 @@
  * 3. omcSystemPrompt for the main orchestrator
  */
 
-import type { AgentConfig, ModelType } from '../types';
+import type { AgentConfig } from '../types';
 import { loadAgentPrompt } from './prompt';
 
 // ============================================================
@@ -202,14 +202,14 @@ export const codeSimplifierAgent: AgentConfig = {
 export function getAgentDefinitions(): Record<string, AgentConfig> {
   return {
     // Build/Analysis Lane
-    'explore': exploreAgent,
-    'analyst': analystAgent,
-    'planner': plannerAgent,
-    'architect': architectAgent,
-    'debugger': debuggerAgent,
-    'executor': executorAgent,
+    explore: exploreAgent,
+    analyst: analystAgent,
+    planner: plannerAgent,
+    architect: architectAgent,
+    debugger: debuggerAgent,
+    executor: executorAgent,
     'deep-executor': deepExecutorAgent,
-    'verifier': verifierAgent,
+    verifier: verifierAgent,
     // Review Lane
     'quality-reviewer': qualityReviewerAgent,
     'security-reviewer': securityReviewerAgent,
@@ -217,14 +217,14 @@ export function getAgentDefinitions(): Record<string, AgentConfig> {
     // Domain Specialists
     'test-engineer': testEngineerAgent,
     'build-fixer': buildFixerAgent,
-    'designer': designerAgent,
-    'writer': writerAgent,
+    designer: designerAgent,
+    writer: writerAgent,
     'qa-tester': qaTesterAgent,
-    'scientist': scientistAgent,
+    scientist: scientistAgent,
     'git-master': gitMasterAgent,
     'document-specialist': documentSpecialistAgent,
     // Coordination
-    'critic': criticAgent,
+    critic: criticAgent,
     'code-simplifier': codeSimplifierAgent,
   };
 }

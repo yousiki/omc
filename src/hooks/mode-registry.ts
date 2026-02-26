@@ -7,7 +7,7 @@
  * - 6 modes kept (removed team/swarm/ultrapilot)
  */
 
-import { join } from 'path';
+import { join } from 'node:path';
 import { readJsonFile, writeJsonFile } from '../utils';
 
 // ---------------------------------------------------------------------------
@@ -18,9 +18,9 @@ export type ExecutionMode = 'ralph' | 'autopilot' | 'ultrawork' | 'pipeline' | '
 
 export interface ModeState {
   active: boolean;
-  startedAt: string;   // ISO timestamp
+  startedAt: string; // ISO timestamp
   sessionId?: string;
-  updatedAt: string;    // ISO timestamp
+  updatedAt: string; // ISO timestamp
   metadata?: Record<string, unknown>;
 }
 
@@ -57,10 +57,7 @@ export function isModeActive(mode: ExecutionMode, directory: string): boolean {
 }
 
 /** Check if a mode can be started (mutual exclusion for exclusive modes) */
-export function canStartMode(
-  mode: ExecutionMode,
-  directory: string,
-): { allowed: boolean; reason?: string } {
+export function canStartMode(mode: ExecutionMode, directory: string): { allowed: boolean; reason?: string } {
   if (EXCLUSIVE_MODES.includes(mode)) {
     for (const other of EXCLUSIVE_MODES) {
       if (other !== mode && isModeActive(other, directory)) {
@@ -75,11 +72,7 @@ export function canStartMode(
 }
 
 /** Start a mode -- writes state file after checking mutual exclusion */
-export function startMode(
-  mode: ExecutionMode,
-  directory: string,
-  sessionId?: string,
-): boolean {
+export function startMode(mode: ExecutionMode, directory: string, sessionId?: string): boolean {
   const check = canStartMode(mode, directory);
   if (!check.allowed) {
     return false;

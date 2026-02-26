@@ -5,9 +5,9 @@
  * mode message to inject into context.
  */
 
+import { applyMagicKeywords } from '../features/magic-keywords';
 import type { HookInput, HookOutput } from '../types';
 import { removeCodeBlocks } from '../utils';
-import { applyMagicKeywords } from '../features/magic-keywords';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -39,14 +39,20 @@ export interface DetectedKeyword {
 // ---------------------------------------------------------------------------
 
 const PRIORITY_ORDER: KeywordType[] = [
-  'cancel', 'ralph', 'autopilot', 'ultrawork', 'pipeline',
-  'ralplan', 'tdd', 'ultrathink', 'deepsearch', 'analyze',
+  'cancel',
+  'ralph',
+  'autopilot',
+  'ultrawork',
+  'pipeline',
+  'ralplan',
+  'tdd',
+  'ultrathink',
+  'deepsearch',
+  'analyze',
 ];
 
 /** Heavy orchestration modes suppressed for small tasks */
-const HEAVY_MODES = new Set<KeywordType>([
-  'ralph', 'autopilot', 'ultrawork', 'pipeline', 'ralplan',
-]);
+const HEAVY_MODES = new Set<KeywordType>(['ralph', 'autopilot', 'ultrawork', 'pipeline', 'ralplan']);
 
 // ---------------------------------------------------------------------------
 // Non-Latin script pattern (for multilingual prompt detection)
@@ -196,9 +202,7 @@ export function getPrimaryKeyword(text: string): DetectedKeyword | null {
 
   // Apply task-size filtering
   const size = classifyTaskSize(text);
-  const filtered = size === 'small'
-    ? prioritized.filter((k) => !HEAVY_MODES.has(k))
-    : prioritized;
+  const filtered = size === 'small' ? prioritized.filter((k) => !HEAVY_MODES.has(k)) : prioritized;
 
   if (filtered.length === 0) return null;
 

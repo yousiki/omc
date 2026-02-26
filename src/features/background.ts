@@ -18,9 +18,9 @@
  * - src/features/background-tasks.ts
  */
 
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync, unlinkSync } from 'fs';
-import { join } from 'path';
-import { readJsonFile, writeJsonFile } from '../utils';
+import { existsSync, mkdirSync, readdirSync, readFileSync, unlinkSync } from 'node:fs';
+import { join } from 'node:path';
+import { writeJsonFile } from '../utils';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -30,7 +30,7 @@ import { readJsonFile, writeJsonFile } from '../utils';
  * Status of a background task.
  */
 export type BackgroundTaskStatus =
-  | 'queued'     // Waiting for concurrency slot
+  | 'queued' // Waiting for concurrency slot
   | 'running'
   | 'completed'
   | 'error'
@@ -590,7 +590,7 @@ export class BackgroundManager {
       throw new Error(
         `Maximum tasks in flight (${maxTotal}) reached. ` +
           `Currently: ${runningTasks.length} running, ${queuedTasks.length} queued. ` +
-          `Wait for some tasks to complete.`
+          `Wait for some tasks to complete.`,
       );
     }
 
@@ -600,7 +600,7 @@ export class BackgroundManager {
       throw new Error(
         `Maximum queue size (${maxQueueSize}) reached. ` +
           `Currently: ${runningTasks.length} running, ${queuedTasks.length} queued. ` +
-          `Wait for some tasks to start or complete.`
+          `Wait for some tasks to start or complete.`,
       );
     }
 
@@ -715,12 +715,7 @@ export class BackgroundManager {
   /**
    * Update task status, optionally recording a result or error message.
    */
-  updateTaskStatus(
-    taskId: string,
-    status: BackgroundTaskStatus,
-    result?: string,
-    error?: string
-  ): void {
+  updateTaskStatus(taskId: string, status: BackgroundTaskStatus, result?: string, error?: string): void {
     const task = this.tasks.get(taskId);
     if (!task) return;
 
@@ -827,10 +822,7 @@ let instance: BackgroundManager | undefined;
  * @param directory - Project root directory; required on first call.
  * @param config    - Optional configuration; applied only on first call.
  */
-export function getBackgroundManager(
-  directory: string,
-  config?: BackgroundTaskConfig
-): BackgroundManager {
+export function getBackgroundManager(directory: string, config?: BackgroundTaskConfig): BackgroundManager {
   if (!instance) {
     instance = new BackgroundManager(directory, config);
   }
@@ -864,7 +856,7 @@ export function resetBackgroundManager(): void {
 export function shouldRunInBackground(
   command: string,
   currentBackgroundCount: number = 0,
-  maxBackgroundTasks: number = DEFAULT_MAX_BACKGROUND_TASKS
+  maxBackgroundTasks: number = DEFAULT_MAX_BACKGROUND_TASKS,
 ): TaskExecutionDecision {
   // Check if at capacity
   if (currentBackgroundCount >= maxBackgroundTasks) {
@@ -931,9 +923,7 @@ export function shouldRunInBackground(
  * Append this text to the system prompt to guide agents on when and how to
  * use background execution.
  */
-export function getBackgroundTaskGuidance(
-  maxBackgroundTasks: number = DEFAULT_MAX_BACKGROUND_TASKS
-): string {
+export function getBackgroundTaskGuidance(maxBackgroundTasks: number = DEFAULT_MAX_BACKGROUND_TASKS): string {
   return `
 ## Background Task Execution
 

@@ -4,8 +4,8 @@
  * Renders extended thinking mode indicator with configurable format.
  */
 
-import type { ThinkingState, ThinkingFormat } from '../types.js';
 import { RESET } from '../colors.js';
+import type { ThinkingFormat, ThinkingState } from '../types.js';
 
 const CYAN = '\x1b[36m';
 
@@ -16,10 +16,7 @@ const CYAN = '\x1b[36m';
  * @param format - Display format (bubble, brain, face, text)
  * @returns Formatted thinking indicator or null if not active
  */
-export function renderThinking(
-  state: ThinkingState | null,
-  format: ThinkingFormat = 'text'
-): string | null {
+export function renderThinking(state: ThinkingState | null, format: ThinkingFormat = 'text'): string | null {
   if (!state?.active) return null;
 
   switch (format) {

@@ -1,34 +1,29 @@
-English | [한국어](README.ko.md) | [中文](README.zh.md) | [日本語](README.ja.md) | [Español](README.es.md) | [Tiếng Việt](README.vi.md) | [Português](README.pt.md)
-
-# oh-my-claudecode
-
 [![npm version](https://img.shields.io/npm/v/oh-my-claude-sisyphus?color=cb3837)](https://www.npmjs.com/package/oh-my-claude-sisyphus)
 [![npm downloads](https://img.shields.io/npm/dm/oh-my-claude-sisyphus?color=blue)](https://www.npmjs.com/package/oh-my-claude-sisyphus)
 [![GitHub stars](https://img.shields.io/github/stars/Yeachan-Heo/oh-my-claudecode?style=flat&color=yellow)](https://github.com/Yeachan-Heo/oh-my-claudecode/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Sponsor](https://img.shields.io/badge/Sponsor-❤️-red?style=flat&logo=github)](https://github.com/sponsors/Yeachan-Heo)
+[![Sponsor](https://img.shields.io/badge/Sponsor-%E2%9D%A4%EF%B8%8F-red?style=flat&logo=github)](https://github.com/sponsors/Yeachan-Heo)
 
-> **For Codex users:** Check out [oh-my-codex](https://github.com/Yeachan-Heo/oh-my-codex) — the same orchestration experience for OpenAI Codex CLI.
+# oh-my-claudecode
 
 **Multi-agent orchestration for Claude Code. Zero learning curve.**
 
 *Don't learn Claude Code. Just use OMC.*
 
-[Get Started](#quick-start) • [Documentation](https://yeachan-heo.github.io/oh-my-claudecode-website) • [Migration Guide](docs/MIGRATION.md)
-
 ---
 
 ## Quick Start
 
-**Step 1: Install**
+**Step 1: Prerequisites**
+
+Install [bun](https://bun.sh):
 ```bash
-/plugin marketplace add https://github.com/Yeachan-Heo/oh-my-claudecode
-/plugin install oh-my-claudecode
+curl -fsSL https://bun.sh/install | bash
 ```
 
-**Step 2: Setup**
+**Step 2: Install**
 ```bash
-/omc-setup
+claude plugin add oh-my-claudecode
 ```
 
 **Step 3: Build something**
@@ -36,215 +31,130 @@ English | [한국어](README.ko.md) | [中文](README.zh.md) | [日本語](READM
 autopilot: build a REST API for managing tasks
 ```
 
+Or just say `ralph` to activate persistent execution mode.
+
 That's it. Everything else is automatic.
-
-## Team Mode (Recommended)
-
-Starting in **v4.1.7**, **Team** is the canonical orchestration surface in OMC. Legacy entrypoints like **swarm** and **ultrapilot** are still supported, but they now **route to Team under the hood**.
-
-```bash
-/team 3:executor "fix all TypeScript errors"
-```
-
-Team runs as a staged pipeline:
-
-`team-plan → team-prd → team-exec → team-verify → team-fix (loop)`
-
-Enable Claude Code native teams in `~/.claude/settings.json`:
-
-```json
-{
-  "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
-  }
-}
-```
-
-> If teams are disabled, OMC will warn you and fall back to non-team execution where possible.
-
-### tmux CLI Workers — Codex & Gemini (v4.4.0+)
-
-**v4.4.0 removes the Codex/Gemini MCP servers** (`x`, `g` providers). Use `/omc-teams` to spawn real CLI processes in tmux split-panes instead:
-
-```bash
-/omc-teams 2:codex   "review auth module for security issues"
-/omc-teams 2:gemini  "redesign UI components for accessibility"
-/omc-teams 1:claude  "implement the payment flow"
-```
-
-For mixed Codex + Gemini work in one command, use the **`/ccg`** skill:
-
-```bash
-/ccg Review this PR — architecture (Codex) and UI components (Gemini)
-```
-
-| Skill | Workers | Best For |
-|-------|---------|----------|
-| `/omc-teams N:codex` | N Codex CLI panes | Code review, security analysis, architecture |
-| `/omc-teams N:gemini` | N Gemini CLI panes | UI/UX design, docs, large-context tasks |
-| `/omc-teams N:claude` | N Claude CLI panes | General tasks via Claude CLI in tmux |
-| `/ccg` | 1 Codex + 1 Gemini | Parallel tri-model orchestration |
-
-Workers spawn on-demand and die when their task completes — no idle resource usage. Requires `codex` / `gemini` CLIs installed and an active tmux session.
-
-> **Note: Package naming** — The project is branded as **oh-my-claudecode** (repo, plugin, commands), but the npm package is published as [`oh-my-claude-sisyphus`](https://www.npmjs.com/package/oh-my-claude-sisyphus). If you install the CLI tools via npm/bun, use `npm install -g oh-my-claude-sisyphus`.
-
-### Updating
-
-```bash
-# 1. Update the marketplace clone
-/plugin marketplace update omc
-
-# 2. Re-run setup to refresh configuration
-/omc-setup
-```
-
-> **Note:** If marketplace auto-update is not enabled, you must manually run `/plugin marketplace update omc` to sync the latest version before running setup.
-
-If you experience issues after updating, clear the old plugin cache:
-
-```bash
-/omc-doctor
-```
-
-<h1 align="center">Your Claude Just Have been Steroided.</h1>
-
-<p align="center">
-  <img src="assets/omc-character.jpg" alt="oh-my-claudecode" width="400" />
-</p>
 
 ---
 
-## Why oh-my-claudecode?
+## What is oh-my-claudecode?
 
-- **Zero configuration required** - Works out of the box with intelligent defaults
-- **Team-first orchestration** - Team is the canonical multi-agent surface (swarm/ultrapilot are compatibility facades)
-- **Natural language interface** - No commands to memorize, just describe what you want
-- **Automatic parallelization** - Complex tasks distributed across specialized agents
-- **Persistent execution** - Won't give up until the job is verified complete
-- **Cost optimization** - Smart model routing saves 30-50% on tokens
-- **Learn from experience** - Automatically extracts and reuses problem-solving patterns
-- **Real-time visibility** - HUD statusline shows what's happening under the hood
+oh-my-claudecode (OMC) is a multi-agent orchestration layer for Claude Code. It turns Claude Code into a conductor of specialized AI agents — coordinating parallel execution, persistent loops, and IDE-like code intelligence so you get more done with less effort.
+
+Say `autopilot` or `ralph` to activate. No configuration required.
 
 ---
 
 ## Features
 
-### Orchestration Modes
-Multiple strategies for different use cases — from Team-backed orchestration to token-efficient refactoring. [Learn more →](https://yeachan-heo.github.io/oh-my-claudecode-website/docs.html#execution-modes)
+### 21 Specialized Agents
 
-| Mode | What it is | Use For |
-|------|------------|---------|
-| **Team (recommended)** | Canonical staged pipeline (`team-plan → team-prd → team-exec → team-verify → team-fix`) | Coordinated Claude agents on a shared task list |
-| **omc-teams** | tmux CLI workers — real `claude`/`codex`/`gemini` processes in split-panes | Codex/Gemini CLI tasks; on-demand spawn, die when done |
-| **ccg** | Tri-model: Codex (analytical) + Gemini (design) in parallel, Claude synthesizes | Mixed backend+UI work needing both Codex and Gemini |
-| **Autopilot** | Autonomous execution (single lead agent) | End-to-end feature work with minimal ceremony |
-| **Ultrawork** | Maximum parallelism (non-team) | Burst parallel fixes/refactors where Team isn't needed |
-| **Ralph** | Persistent mode with verify/fix loops | Tasks that must complete fully (no silent partials) |
-| **Pipeline** | Sequential, staged processing | Multi-step transformations with strict ordering |
-| **Swarm / Ultrapilot (legacy)** | Compatibility facades that route to **Team** | Existing workflows and older docs |
+Agents cover every domain of software development with 3-tier model routing:
 
-### Intelligent Orchestration
+| Lane | Agents |
+|------|--------|
+| **Build/Analysis** | `explore`, `analyst`, `planner`, `architect`, `debugger`, `executor`, `deep-executor`, `verifier` |
+| **Review** | `quality-reviewer`, `security-reviewer`, `code-reviewer` |
+| **Domain Specialists** | `test-engineer`, `build-fixer`, `designer`, `writer`, `qa-tester`, `scientist`, `document-specialist`, `git-master`, `code-simplifier` |
+| **Coordination** | `critic` |
 
-- **32 specialized agents** for architecture, research, design, testing, data science
-- **Smart model routing** - Haiku for simple tasks, Opus for complex reasoning
-- **Automatic delegation** - Right agent for the job, every time
+Model routing matches complexity: `haiku` for quick lookups, `sonnet` for standard work, `opus` for deep reasoning.
 
-### Developer Experience
+### 28 Skills
 
-- **Magic keywords** - `ralph`, `ulw`, `plan` for explicit control
-- **HUD statusline** - Real-time orchestration metrics in your status bar
-- **Skill learning** - Extract reusable patterns from your sessions
-- **Analytics & cost tracking** - Understand token usage across all sessions
+Skills are invocable commands that automate complex workflows:
 
-[Full feature list →](docs/REFERENCE.md)
+| Category | Skills |
+|----------|--------|
+| **Orchestration** | `autopilot`, `ralph`, `ultrawork`, `ultrapilot`, `pipeline`, `ultraqa` |
+| **Planning** | `plan`, `ralplan`, `review` |
+| **Analysis** | `analyze`, `sciomc`, `external-context`, `tdd`, `build-fix`, `code-review`, `security-review` |
+| **Utilities** | `cancel`, `note`, `learner`, `hud`, `omc-doctor`, `omc-help`, `mcp-setup`, `skill`, `trace`, `ralph-init`, `learn-about-omc`, `writer-memory` |
 
----
+### 10 Magic Keywords
 
-## Magic Keywords
+| Keyword | Effect |
+|---------|--------|
+| `autopilot` | Full autonomous execution from idea to working code |
+| `ralph` | Persistent execution with verify/fix loops until done |
+| `ulw` / `ultrawork` | Maximum parallelism across agents |
+| `ultrapilot` | Parallel autonomous execution |
+| `plan` | Strategic planning interview |
+| `ralplan` | Iterative planning with consensus |
+| `pipeline` | Sequential staged processing |
+| `analyze` | Root-cause analysis and debugging |
+| `tdd` | Test-driven development workflow |
+| `sciomc` | Parallel scientist agents for analysis |
 
-Optional shortcuts for power users. Natural language works fine without them.
+### HUD Statusline
 
-| Keyword | Effect | Example |
-|---------|--------|---------|
-| `team` | Canonical Team orchestration | `/team 3:executor "fix all TypeScript errors"` |
-| `omc-teams` | tmux CLI workers (codex/gemini/claude) | `/omc-teams 2:codex "security review"` |
-| `ccg` | Tri-model Codex+Gemini orchestration | `/ccg review this PR` |
-| `autopilot` | Full autonomous execution | `autopilot: build a todo app` |
-| `ralph` | Persistence mode | `ralph: refactor auth` |
-| `ulw` | Maximum parallelism | `ulw fix all errors` |
-| `plan` | Planning interview | `plan the API` |
-| `ralplan` | Iterative planning consensus | `ralplan this feature` |
-| `swarm` | Legacy keyword (routes to Team) | `swarm 5 agents: fix lint errors` |
-| `ultrapilot` | Legacy keyword (routes to Team) | `ultrapilot: build a fullstack app` |
+Real-time orchestration metrics in your terminal status bar. Shows active agents, execution mode, task progress, and token usage at a glance.
 
-**Notes:**
-- **ralph includes ultrawork**: when you activate ralph mode, it automatically includes ultrawork's parallel execution.
-- `swarm N agents` syntax is still recognized for agent count extraction, but the runtime is Team-backed in v4.1.7+.
+Activate with `/oh-my-claudecode:hud`.
 
-## Utilities
+### MCP Tools
 
-### Rate Limit Wait
+IDE-like code intelligence via built-in MCP servers:
 
-Auto-resume Claude Code sessions when rate limits reset.
+**LSP Tools** (Language Server Protocol):
+- `lsp_hover`, `lsp_goto_definition`, `lsp_find_references`
+- `lsp_document_symbols`, `lsp_workspace_symbols`
+- `lsp_diagnostics`, `lsp_diagnostics_directory`
+- `lsp_rename`, `lsp_code_actions`
 
-```bash
-omc wait          # Check status, get guidance
-omc wait --start  # Enable auto-resume daemon
-omc wait --stop   # Disable daemon
-```
+Supported languages: TypeScript, Python, Rust, Go, C/C++, Java, JSON, HTML, CSS, YAML
 
-**Requires:** tmux (for session detection)
+**AST Tools** (structural code search/transform):
+- `ast_grep_search` — pattern matching with meta-variables
+- `ast_grep_replace` — AST-aware code transformation
 
-### Notification Tags (Telegram/Discord/Slack)
+Supported languages: JS, TS, TSX, Python, Ruby, Go, Rust, Java, Kotlin, Swift, C, C++, C#, HTML, CSS, JSON, YAML
 
-You can configure who gets tagged when stop callbacks send session summaries.
-
-```bash
-# Set/replace tag list
-omc config-stop-callback telegram --enable --token <bot_token> --chat <chat_id> --tag-list "@alice,bob"
-omc config-stop-callback discord --enable --webhook <url> --tag-list "@here,123456789012345678,role:987654321098765432"
-omc config-stop-callback slack --enable --webhook <url> --tag-list "<!here>,<@U1234567890>"
-
-# Incremental updates
-omc config-stop-callback telegram --add-tag charlie
-omc config-stop-callback discord --remove-tag @here
-omc config-stop-callback discord --clear-tags
-```
-
-Tag behavior:
-- Telegram: `alice` becomes `@alice`
-- Discord: supports `@here`, `@everyone`, numeric user IDs, and `role:<id>`
-- Slack: supports `<@MEMBER_ID>`, `<!channel>`, `<!here>`, `<!everyone>`, `<!subteam^GROUP_ID>`
-- `file` callbacks ignore tag options
+**Python REPL**:
+- `python_repl` — persistent Python interpreter for data analysis
 
 ---
 
-## Documentation
+## Architecture
 
-- **[Full Reference](docs/REFERENCE.md)** - Complete feature documentation
-- **[Performance Monitoring](docs/PERFORMANCE-MONITORING.md)** - Agent tracking, debugging, and optimization
-- **[Website](https://yeachan-heo.github.io/oh-my-claudecode-website)** - Interactive guides and examples
-- **[Migration Guide](docs/MIGRATION.md)** - Upgrade from v2.x
-- **[Architecture](docs/ARCHITECTURE.md)** - How it works under the hood
+oh-my-claudecode is built on bun-native TypeScript:
+
+- **Single hook entry point** — all Claude Code hooks route through one bridge
+- **No build step** — TypeScript runs directly via bun
+- **Plugin-scoped** — installs as a Claude Code plugin, zero global config pollution
+- **Worktree-aware** — all state lives under `{worktree}/.omc/`, not in `~/.claude/`
+
+```
+Claude Code CLI
+    |
+oh-my-claudecode (plugin)
+    |-- Skills (28)      -- user-invocable commands
+    |-- Agents (21)      -- specialized sub-agents with model routing
+    |-- Hooks            -- event-driven execution modes
+    |-- MCP Tools        -- LSP, AST, Python REPL
+    |-- Features         -- boulder-state, continuation, model-routing
+```
+
+State files:
+- `{worktree}/.omc/state/` — execution mode state
+- `{worktree}/.omc/notepad.md` — session notepad
+- `{worktree}/.omc/project-memory.json` — persistent project memory
 
 ---
 
 ## Requirements
 
 - [Claude Code](https://docs.anthropic.com/claude-code) CLI
+- [bun](https://bun.sh) runtime
 - Claude Max/Pro subscription OR Anthropic API key
 
-### Optional: Multi-AI Orchestration
+---
 
-OMC can optionally orchestrate external AI providers for cross-validation and design consistency. These are **not required** — OMC works fully without them.
+## Documentation
 
-| Provider | Install | What it enables |
-|----------|---------|-----------------|
-| [Gemini CLI](https://github.com/google-gemini/gemini-cli) | `npm install -g @google/gemini-cli` | Design review, UI consistency (1M token context) |
-| [Codex CLI](https://github.com/openai/codex) | `npm install -g @openai/codex` | Architecture validation, code review cross-check |
-
-**Cost:** 3 Pro plans (Claude + Gemini + ChatGPT) cover everything for ~$60/month.
+- **[Full Reference](docs/REFERENCE.md)** — Complete feature documentation
+- **[Performance Monitoring](docs/PERFORMANCE-MONITORING.md)** — Agent tracking, debugging, optimization
+- **[Architecture](docs/ARCHITECTURE.md)** — How it works under the hood
 
 ---
 
@@ -266,22 +176,13 @@ MIT
 
 [![Star History Chart](https://api.star-history.com/svg?repos=Yeachan-Heo/oh-my-claudecode&type=date&legend=top-left)](https://www.star-history.com/#Yeachan-Heo/oh-my-claudecode&type=date&legend=top-left)
 
-## 💖 Support This Project
+## Support This Project
 
-If Oh-My-ClaudeCode helps your workflow, consider sponsoring:
+If oh-my-claudecode helps your workflow, consider sponsoring:
 
-[![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-❤️-red?style=for-the-badge&logo=github)](https://github.com/sponsors/Yeachan-Heo)
+[![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-%E2%9D%A4%EF%B8%8F-red?style=for-the-badge&logo=github)](https://github.com/sponsors/Yeachan-Heo)
 
-### Why sponsor?
-
-- Keep development active
-- Priority support for sponsors
-- Influence roadmap & features
-- Help maintain free & open source
-
-### Other ways to help
-
-- ⭐ Star the repo
-- 🐛 Report bugs
-- 💡 Suggest features
-- 📝 Contribute code
+- Star the repo
+- Report bugs
+- Suggest features
+- Contribute code

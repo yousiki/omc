@@ -4,8 +4,8 @@
  * Handles cleanup of stale and orphaned background tasks on HUD startup.
  */
 
-import type { BackgroundTask } from './types.js';
 import { readHudState, writeHudState } from './state.js';
+import type { BackgroundTask } from './types.js';
 
 const STALE_TASK_THRESHOLD_MS = 30 * 60 * 1000; // 30 minutes default
 
@@ -16,9 +16,7 @@ const STALE_TASK_THRESHOLD_MS = 30 * 60 * 1000; // 30 minutes default
  * @param thresholdMs Age threshold in milliseconds (default: 30 minutes)
  * @returns Number of tasks removed
  */
-export async function cleanupStaleBackgroundTasks(
-  thresholdMs: number = STALE_TASK_THRESHOLD_MS
-): Promise<number> {
+export async function cleanupStaleBackgroundTasks(thresholdMs: number = STALE_TASK_THRESHOLD_MS): Promise<number> {
   const state = readHudState();
 
   if (!state || !state.backgroundTasks) {
@@ -29,7 +27,7 @@ export async function cleanupStaleBackgroundTasks(
   const originalCount = state.backgroundTasks.length;
 
   // Filter out stale tasks
-  state.backgroundTasks = state.backgroundTasks.filter(task => {
+  state.backgroundTasks = state.backgroundTasks.filter((task) => {
     // Use startedAt for age calculation
     const taskAge = now - new Date(task.startedAt).getTime();
 
@@ -102,7 +100,7 @@ export async function markOrphanedTasksAsStale(): Promise<number> {
   let marked = 0;
 
   for (const orphanedTask of orphaned) {
-    const task = state.backgroundTasks.find(t => t.id === orphanedTask.id);
+    const task = state.backgroundTasks.find((t) => t.id === orphanedTask.id);
     if (task && task.status === 'running') {
       task.status = 'completed'; // Mark as completed to remove from active display
       marked++;

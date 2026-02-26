@@ -12,11 +12,11 @@ Multi-agent orchestration system for Claude Code CLI, providing intelligent dele
 
 oh-my-claudecode enhances Claude Code with:
 
-- **28 specialized agents** across multiple domains with 3-tier model routing (Haiku/Sonnet/Opus)
-- **37 skills** for workflow automation and specialized behaviors
-- **31 hooks** for event-driven execution modes and enhancements
+- **21 specialized agents** across multiple domains with 3-tier model routing (Haiku/Sonnet/Opus)
+- **28 skills** for workflow automation and specialized behaviors
+- **Hooks** for event-driven execution modes and enhancements
 - **15 custom tools** including 12 LSP, 2 AST, and Python REPL
-- **Execution modes**: autopilot, ultrawork, ralph, ultrapilot, swarm, pipeline
+- **Execution modes**: autopilot, ultrawork, ralph, ultrapilot, pipeline
 - **MCP integration** with plugin-scoped tool discovery and skill loading
 
 ## Key Files
@@ -36,9 +36,9 @@ oh-my-claudecode enhances Claude Code with:
 | Directory | Purpose | Related AGENTS.md |
 |-----------|---------|-------------------|
 | `src/` | TypeScript source code - core library | `src/AGENTS.md` |
-| `agents/` | Markdown prompt templates for 28 agents (see `agents/templates/` for guidelines) | - |
-| `skills/` | 37 skill definitions for workflows | `skills/AGENTS.md` |
-| `commands/` | 31 slash command definitions (mirrors skills) | - |
+| `agents/` | Markdown prompt templates for 21 agents (see `agents/templates/` for guidelines) | - |
+| `skills/` | 28 skill definitions for workflows | `skills/AGENTS.md` |
+| `commands/` | Slash command definitions (mirrors skills) | - |
 | `scripts/` | Build scripts, utilities, and automation | - |
 | `docs/` | User documentation and guides | `docs/AGENTS.md` |
 | `templates/` | Hook and rule templates (coding-style, testing, security, performance, git-workflow) | - |
@@ -112,9 +112,7 @@ oh-my-claudecode enhances Claude Code with:
 | Magic keywords | `docs/REFERENCE.md` (Magic Keywords section) |
 | Architecture or skill composition | `docs/ARCHITECTURE.md` |
 | Internal API or feature | `docs/FEATURES.md` |
-| Breaking changes | `docs/MIGRATION.md` |
 | Tiered agent design | `docs/TIERED_AGENTS_V2.md` |
-| Compatibility requirements | `docs/COMPATIBILITY.md` |
 | CLAUDE.md content | `docs/CLAUDE.md` (end-user instructions) |
 
 #### Skills ↔ Commands Relationship
@@ -150,10 +148,10 @@ When you modify files in these locations, update the corresponding AGENTS.md:
 ### Testing Requirements
 
 ```bash
-npm test              # Run Vitest test suite
-npm run build         # TypeScript compilation
-npm run lint          # ESLint checks
-npm run test:coverage # Coverage report
+bun test              # Run Vitest test suite
+bun run build         # TypeScript compilation
+bun run lint          # ESLint checks
+bun run test:coverage # Coverage report
 ```
 
 ### Common Patterns
@@ -180,7 +178,7 @@ import { allCustomTools, lspTools, astTools } from './tools';
 │                  oh-my-claudecode (OMC)                     │
 │  ┌─────────────┬─────────────┬─────────────┬─────────────┐  │
 │  │   Skills    │   Agents    │    Tools    │   Hooks     │  │
-│  │ (37 skills) │ (28 agents) │(LSP/AST/REPL)│ (31 hooks)  │  │
+│  │ (28 skills) │ (21 agents) │(LSP/AST/REPL)│             │  │
 │  └─────────────┴─────────────┴─────────────┴─────────────┘  │
 │  ┌─────────────────────────────────────────────────────────┐│
 │  │              Features Layer                             ││
@@ -190,41 +188,48 @@ import { allCustomTools, lspTools, astTools } from './tools';
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## Agent Summary (28 Total)
+## Agent Summary (21 Total)
 
-### Base Agents (12)
-
-| Agent | Model | Purpose |
-|-------|-------|---------|
-| architect | opus | Architecture, debugging, root cause analysis |
-| document-specialist | sonnet | Documentation, external API research |
-| explore | haiku | Fast codebase pattern search |
-| executor | sonnet | Focused task implementation |
-| designer | sonnet | UI/UX, component design |
-| writer | haiku | Technical documentation |
-| vision | sonnet | Image/screenshot analysis |
-| critic | opus | Critical plan review |
-| analyst | opus | Pre-planning requirements analysis |
-| planner | opus | Strategic planning with interviews |
-| qa-tester | sonnet | Interactive CLI/service testing |
-| scientist | sonnet | Data analysis, hypothesis testing |
-
-### Specialized Agents (4)
+### Build/Analysis Lane (8)
 
 | Agent | Model | Purpose |
 |-------|-------|---------|
-| security-reviewer | opus | Security vulnerability detection and audits |
-| build-fixer | sonnet | Build/type error resolution (multi-language) |
-| test-engineer | sonnet | Test-driven development workflow |
-| code-reviewer | opus | Expert code review and quality assessment |
+| explore | haiku | Fast codebase pattern search and discovery |
+| analyst | opus | Requirements clarity, acceptance criteria, hidden constraints |
+| planner | opus | Task sequencing, execution plans, risk flags |
+| architect | opus | System design, boundaries, interfaces, long-horizon tradeoffs |
+| debugger | sonnet | Root-cause analysis, regression isolation, failure diagnosis |
+| executor | sonnet | Code implementation, refactoring, feature work |
+| deep-executor | opus | Complex autonomous goal-oriented tasks |
+| verifier | sonnet | Completion evidence, claim validation, test adequacy |
 
-### Tiered Variants (12)
+### Review Lane (3)
 
-| Tier | Agents |
-|------|--------|
-| **LOW** (Haiku) | `architect-low`, `executor-low`, `designer-low`, `security-reviewer-low`, `test-engineer-low` (5) |
-| **MEDIUM** (Sonnet) | `architect-medium` (1) |
-| **HIGH** (Opus) | `executor-high`, `designer-high`, `explore-high`, `scientist-high`, `deep-executor` (5) |
+| Agent | Model | Purpose |
+|-------|-------|---------|
+| quality-reviewer | sonnet | Logic defects, maintainability, anti-patterns, performance |
+| security-reviewer | sonnet | Vulnerabilities, trust boundaries, authn/authz |
+| code-reviewer | opus | Comprehensive review across concerns, API contracts, versioning |
+
+### Domain Specialists (9)
+
+| Agent | Model | Purpose |
+|-------|-------|---------|
+| test-engineer | sonnet | Test strategy, coverage, flaky-test hardening |
+| build-fixer | sonnet | Build/toolchain/type failures |
+| designer | sonnet | UX/UI architecture, interaction design |
+| writer | haiku | Docs, migration notes, user guidance |
+| qa-tester | sonnet | Interactive CLI/service runtime validation |
+| scientist | sonnet | Data/statistical analysis |
+| document-specialist | sonnet | External documentation and reference lookup |
+| git-master | sonnet | Git workflows, branching, conflict resolution |
+| code-simplifier | sonnet | Code simplification and readability improvements |
+
+### Coordination (1)
+
+| Agent | Model | Purpose |
+|-------|-------|---------|
+| critic | opus | Plan/design critical challenge |
 
 ## Execution Modes
 
@@ -232,14 +237,13 @@ import { allCustomTools, lspTools, astTools } from './tools';
 |------|---------|---------|
 | autopilot | "autopilot", "build me", "I want a" | Full autonomous execution |
 | ultrawork | "ulw", "ultrawork" | Maximum parallel agent execution |
-| ralph | "ralph", "don't stop until" | Persistence with architect verification |
-| ultrapilot | "ultrapilot", "parallel build" | Parallel autopilot with file ownership |
-| swarm | "swarm N agents" | N coordinated agents with SQLite task claiming |
+| ralph | "ralph", "don't stop until" | Persistence with verifier verification |
+| ultrapilot | "ultrapilot", "parallel build" | Parallel autonomous execution |
 | pipeline | "pipeline" | Sequential agent chaining with data passing |
 
-## Skills (37)
+## Skills (28)
 
-Key skills: `autopilot`, `ultrawork`, `ralph`, `ultrapilot`, `plan`, `ralplan`, `deepsearch`, `deepinit`, `frontend-ui-ux`, `git-master`, `tdd`, `security-review`, `code-review`, `sciomc`, `external-context`, `analyze`, `swarm`, `pipeline`, `cancel`, `learner`, `note`, `hud`, `doctor`, `omc-setup`, `mcp-setup`, `build-fix`, `ultraqa`
+Skills: `autopilot`, `ultrawork`, `ralph`, `ultrapilot`, `plan`, `ralplan`, `tdd`, `security-review`, `code-review`, `sciomc`, `external-context`, `analyze`, `pipeline`, `cancel`, `learner`, `note`, `hud`, `omc-doctor`, `mcp-setup`, `build-fix`, `ultraqa`, `omc-help`, `trace`, `skill`, `writer-memory`, `ralph-init`, `learn-about-omc`, `review`
 
 ## LSP/AST Tools
 
@@ -281,7 +285,7 @@ JavaScript, TypeScript, TSX, Python, Ruby, Go, Rust, Java, Kotlin, Swift, C, C++
 
 | Path | Purpose |
 |------|---------|
-| `.omc/state/*.json` | Execution mode state (autopilot, swarm, etc.) |
+| `.omc/state/*.json` | Execution mode state (autopilot, ralph, ultrawork, etc.) |
 | `.omc/notepads/` | Plan-scoped wisdom (learnings, decisions, issues) |
 | `~/.omc/state/` | Global state |
 | `~/.claude/.omc/` | Legacy state (auto-migrated) |
@@ -296,7 +300,6 @@ JavaScript, TypeScript, TSX, Python, Ruby, Go, Rust, Java, Kotlin, Swift, C, C++
 | `@ast-grep/napi` | AST-based code search/replace |
 | `vscode-languageserver-protocol` | LSP types |
 | `zod` | Runtime schema validation |
-| `better-sqlite3` | Swarm task coordination |
 | `chalk` | Terminal styling |
 | `commander` | CLI parsing |
 
@@ -312,15 +315,15 @@ JavaScript, TypeScript, TSX, Python, Ruby, Go, Rust, Java, Kotlin, Swift, C, C++
 ## Commands
 
 ```bash
-npm run build           # Build TypeScript + skill bridge
-npm run dev             # Watch mode
-npm test                # Run tests
-npm run test:coverage   # Coverage report
-npm run lint            # ESLint
-npm run sync-metadata   # Sync agent/skill metadata
+bun run build           # Build TypeScript + skill bridge
+bun run dev             # Watch mode
+bun test                # Run tests
+bun run test:coverage   # Coverage report
+bun run lint            # ESLint
+bun run sync-metadata   # Sync agent/skill metadata
 ```
 
-## Hook System (31)
+## Hook System
 
 Key hooks in `src/hooks/`:
 
@@ -328,7 +331,6 @@ Key hooks in `src/hooks/`:
 - `ralph/` - Persistence until verified
 - `ultrawork/` - Parallel execution
 - `ultrapilot/` - Parallel autopilot with ownership
-- `swarm/` - Coordinated multi-agent
 - `learner/` - Skill extraction
 - `recovery/` - Error recovery
 - `rules-injector/` - Rule file injection

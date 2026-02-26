@@ -4,8 +4,8 @@
  * Renders background task count display.
  */
 
-import type { BackgroundTask } from '../types.js';
 import { RESET } from '../colors.js';
+import type { BackgroundTask } from '../types.js';
 
 const CYAN = '\x1b[36m';
 const GREEN = '\x1b[32m';
@@ -153,6 +153,6 @@ export function renderBackgroundDetailed(tasks: BackgroundTask[]): string | null
     return truncateToWidth(t.description, 8, '');
   });
 
-  const suffix = running.length > 3 ? ',+' + (running.length - 3) : '';
+  const suffix = running.length > 3 ? `,+${running.length - 3}` : '';
   return `bg:${color}${running.length}/${MAX_CONCURRENT}${RESET} ${DIM}[${descriptions.join(',')}${suffix}]${RESET}`;
 }

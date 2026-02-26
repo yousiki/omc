@@ -15,10 +15,10 @@
  * - Pure JSON file-based state in `.omc/state/skill-active-state.json`
  */
 
-import { join } from 'path';
-import { unlinkSync, existsSync } from 'fs';
-import { readJsonFile, writeJsonFile } from '../utils';
+import { existsSync, unlinkSync } from 'node:fs';
+import { join } from 'node:path';
 import type { HookOutput } from '../types';
+import { readJsonFile, writeJsonFile } from '../utils';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -45,11 +45,11 @@ interface ProtectionConfig {
   ttlMs: number;
 }
 
-const PROTECTION_CONFIGS: Record<ProtectionLevel, ProtectionConfig> = {
-  none:   { maxReinforcements: 0,  ttlMs: 0 },
-  light:  { maxReinforcements: 3,  ttlMs: 5 * 60 * 1000 },   // 5 min
-  medium: { maxReinforcements: 5,  ttlMs: 15 * 60 * 1000 },   // 15 min
-  heavy:  { maxReinforcements: 10, ttlMs: 30 * 60 * 1000 },   // 30 min
+const _PROTECTION_CONFIGS: Record<ProtectionLevel, ProtectionConfig> = {
+  none: { maxReinforcements: 0, ttlMs: 0 },
+  light: { maxReinforcements: 3, ttlMs: 5 * 60 * 1000 }, // 5 min
+  medium: { maxReinforcements: 5, ttlMs: 15 * 60 * 1000 }, // 15 min
+  heavy: { maxReinforcements: 10, ttlMs: 30 * 60 * 1000 }, // 30 min
 };
 
 // ---------------------------------------------------------------------------

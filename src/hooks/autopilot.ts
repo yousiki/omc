@@ -8,9 +8,9 @@
  * into a single focused module. No team/notification/codex/gemini dependencies.
  */
 
-import { join } from 'path';
-import { readJsonFile, writeJsonFile } from '../utils';
+import { join } from 'node:path';
 import type { HookOutput } from '../types';
+import { readJsonFile, writeJsonFile } from '../utils';
 import type { ModeState } from './mode-registry';
 
 // ---------------------------------------------------------------------------

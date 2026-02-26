@@ -6,18 +6,13 @@
  * and stale state cleanup.
  */
 
-import { existsSync, mkdirSync, readdirSync, statSync } from 'fs';
-import { join } from 'path';
+import { existsSync, mkdirSync, readdirSync, statSync } from 'node:fs';
+import { join } from 'node:path';
 import type { HookInput, HookOutput } from '../types';
 import { readJsonFile, writeJsonFile } from '../utils';
 
 /** Directories that must exist under the project root */
-const REQUIRED_DIRS = [
-  '.omc/state',
-  '.omc/plans',
-  '.omc/logs',
-  '.omc/research',
-] as const;
+const REQUIRED_DIRS = ['.omc/state', '.omc/plans', '.omc/logs', '.omc/research'] as const;
 
 /** How long before an active state file is considered stale (1 hour) */
 const STALE_THRESHOLD_MS = 60 * 60 * 1000;
@@ -94,11 +89,8 @@ function pruneStaleState(directory: string): { pruned: string[]; activeModes: st
     // Determine last update time
     let lastUpdate: number;
     if (state.updatedAt) {
-      lastUpdate =
-        typeof state.updatedAt === 'number'
-          ? state.updatedAt
-          : new Date(state.updatedAt).getTime();
-      if (isNaN(lastUpdate)) {
+      lastUpdate = typeof state.updatedAt === 'number' ? state.updatedAt : new Date(state.updatedAt).getTime();
+      if (Number.isNaN(lastUpdate)) {
         try {
           lastUpdate = statSync(filePath).mtimeMs;
         } catch {
@@ -138,7 +130,7 @@ function pruneStaleState(directory: string): { pruned: string[]; activeModes: st
  * 2. Prune stale state files
  * 3. Return context message listing active modes (if any)
  */
-export function processSetup(input: HookInput, directory: string): HookOutput {
+export function processSetup(_input: HookInput, directory: string): HookOutput {
   // 1. Ensure directories
   const created = ensureDirectories(directory);
 

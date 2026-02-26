@@ -7,8 +7,8 @@
  * - detailed: agents:[architect(2m),explore,exec]
  */
 
+import { dim, getDurationColor, getModelTierColor, RESET } from '../colors.js';
 import type { ActiveAgent, AgentsFormat } from '../types.js';
-import { dim, RESET, getModelTierColor, getDurationColor } from '../colors.js';
 
 const CYAN = '\x1b[36m';
 
@@ -110,56 +110,56 @@ const AGENT_TYPE_CODES: Record<string, string> = {
   // BUILD/ANALYSIS LANE
   // ============================================================
   explore: 'e',
-  analyst: 'T',             // opus
-  planner: 'P',             // opus
-  architect: 'A',           // opus
-  debugger: 'g',            // sonnet
-  executor: 'x',            // sonnet
-  'deep-executor': 'X',     // opus
-  verifier: 'V',            // sonnet
+  analyst: 'T', // opus
+  planner: 'P', // opus
+  architect: 'A', // opus
+  debugger: 'g', // sonnet
+  executor: 'x', // sonnet
+  'deep-executor': 'X', // opus
+  verifier: 'V', // sonnet
 
   // ============================================================
   // REVIEW LANE
   // ============================================================
-  'style-reviewer': 'y',    // haiku
+  'style-reviewer': 'y', // haiku
   'quality-reviewer': 'Qr', // sonnet
-  'api-reviewer': 'i',      // sonnet
+  'api-reviewer': 'i', // sonnet
   'security-reviewer': 'K', // sonnet
   'performance-reviewer': 'o', // sonnet
-  'code-reviewer': 'R',     // opus
+  'code-reviewer': 'R', // opus
 
   // ============================================================
   // DOMAIN SPECIALISTS
   // ============================================================
   'dependency-expert': 'l', // sonnet
-  'test-engineer': 't',     // sonnet
+  'test-engineer': 't', // sonnet
   'quality-strategist': 'Qs', // sonnet
-  'build-fixer': 'b',       // sonnet
-  designer: 'd',            // sonnet
-  writer: 'w',              // haiku
-  'qa-tester': 'q',         // sonnet
-  scientist: 's',           // sonnet
-  'git-master': 'm',        // sonnet
+  'build-fixer': 'b', // sonnet
+  designer: 'd', // sonnet
+  writer: 'w', // haiku
+  'qa-tester': 'q', // sonnet
+  scientist: 's', // sonnet
+  'git-master': 'm', // sonnet
 
   // ============================================================
   // PRODUCT LANE
   // ============================================================
-  'product-manager': 'Pm',  // sonnet
-  'ux-researcher': 'u',     // sonnet
+  'product-manager': 'Pm', // sonnet
+  'ux-researcher': 'u', // sonnet
   'information-architect': 'Ia', // sonnet
-  'product-analyst': 'a',   // sonnet
+  'product-analyst': 'a', // sonnet
 
   // ============================================================
   // COORDINATION
   // ============================================================
-  critic: 'C',              // opus
-  vision: 'v',              // sonnet
+  critic: 'C', // opus
+  vision: 'v', // sonnet
   'document-specialist': 'D', // sonnet
 
   // ============================================================
   // BACKWARD COMPATIBILITY (Deprecated)
   // ============================================================
-  researcher: 'r',          // sonnet
+  researcher: 'r', // sonnet
 };
 
 /**
@@ -360,10 +360,10 @@ function getShortAgentName(agentType: string): string {
   const name = parts[parts.length - 1] || agentType;
 
   const abbrevs: Record<string, string> = {
-    'executor': 'exec',
+    executor: 'exec',
     'deep-executor': 'deep-x',
-    'debugger': 'debug',
-    'verifier': 'verify',
+    debugger: 'debug',
+    verifier: 'verify',
     'style-reviewer': 'style',
     'quality-reviewer': 'quality',
     'api-reviewer': 'api-rev',
@@ -375,15 +375,15 @@ function getShortAgentName(agentType: string): string {
     'test-engineer': 'test-eng',
     'quality-strategist': 'qs',
     'build-fixer': 'build',
-    'designer': 'design',
+    designer: 'design',
     'qa-tester': 'qa',
-    'scientist': 'sci',
+    scientist: 'sci',
     'git-master': 'git',
     'product-manager': 'pm',
     'ux-researcher': 'uxr',
     'information-architect': 'ia',
     'product-analyst': 'pa',
-    'researcher': 'dep-exp',
+    researcher: 'dep-exp',
   };
 
   return abbrevs[name] || name;
@@ -494,10 +494,7 @@ export interface MultiLineRenderResult {
  * ├─ e explore    45s  searching for test files
  * └─ x exec       1m   implementing validation logic
  */
-export function renderAgentsMultiLine(
-  agents: ActiveAgent[],
-  maxLines: number = 5
-): MultiLineRenderResult {
+export function renderAgentsMultiLine(agents: ActiveAgent[], maxLines: number = 5): MultiLineRenderResult {
   const running = sortByFreshest(agents.filter((a) => a.status === 'running'));
 
   if (running.length === 0) {
@@ -526,7 +523,7 @@ export function renderAgentsMultiLine(
     const truncatedDesc = truncateToWidth(desc, 45);
 
     detailLines.push(
-      `${dim(prefix)} ${color}${code}${RESET} ${dim(shortName)}${durationColor}${duration}${RESET}  ${truncatedDesc}`
+      `${dim(prefix)} ${color}${code}${RESET} ${dim(shortName)}${durationColor}${duration}${RESET}  ${truncatedDesc}`,
     );
   });
 
@@ -541,10 +538,7 @@ export function renderAgentsMultiLine(
 /**
  * Render agents based on format configuration.
  */
-export function renderAgentsByFormat(
-  agents: ActiveAgent[],
-  format: AgentsFormat
-): string | null {
+export function renderAgentsByFormat(agents: ActiveAgent[], format: AgentsFormat): string | null {
   switch (format) {
     case 'count':
       return renderAgents(agents);

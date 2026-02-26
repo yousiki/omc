@@ -4,8 +4,8 @@
  * Renders autopilot phase and progress display.
  */
 
-import type { HudThresholds } from '../types.js';
 import { RESET } from '../colors.js';
+import type { HudThresholds } from '../types.js';
 
 // ANSI color codes
 const CYAN = '\x1b[36m';
@@ -31,7 +31,7 @@ const PHASE_NAMES: Record<string, string> = {
   qa: 'QA',
   validation: 'Verify',
   complete: 'Done',
-  failed: 'Failed'
+  failed: 'Failed',
 };
 
 const PHASE_INDEX: Record<string, number> = {
@@ -41,7 +41,7 @@ const PHASE_INDEX: Record<string, number> = {
   qa: 4,
   validation: 5,
   complete: 5,
-  failed: 0
+  failed: 0,
 };
 
 /**
@@ -50,10 +50,7 @@ const PHASE_INDEX: Record<string, number> = {
  *
  * Format: [AUTOPILOT] Phase 2/5: Plan | Tasks: 5/12
  */
-export function renderAutopilot(
-  state: AutopilotStateForHud | null,
-  _thresholds?: HudThresholds
-): string | null {
+export function renderAutopilot(state: AutopilotStateForHud | null, _thresholds?: HudThresholds): string | null {
   if (!state?.active) {
     return null;
   }
@@ -103,9 +100,7 @@ export function renderAutopilot(
  *
  * Format: AP:3/5 or AP:Done
  */
-export function renderAutopilotCompact(
-  state: AutopilotStateForHud | null
-): string | null {
+export function renderAutopilotCompact(state: AutopilotStateForHud | null): string | null {
   if (!state?.active) {
     return null;
   }

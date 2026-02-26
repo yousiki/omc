@@ -7,8 +7,8 @@
  * Claude-only; no codex/gemini/team references.
  */
 
-import type { ModelType } from '../types';
 import { getAgentDefinitions } from '../agents/definitions';
+import type { ModelType } from '../types';
 
 // ============================================================
 // CONSTANTS
@@ -69,9 +69,7 @@ export interface DelegationDecision {
  * @param toolInput - The raw tool input (Record with subagent_type, model, etc.)
  * @returns The (possibly modified) toolInput with model injected
  */
-export function enforceModel(
-  toolInput: Record<string, unknown>,
-): Record<string, unknown> {
+export function enforceModel(toolInput: Record<string, unknown>): Record<string, unknown> {
   const subagentType = toolInput.subagent_type;
 
   // Not an OMC subagent call — pass through

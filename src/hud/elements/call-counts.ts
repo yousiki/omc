@@ -36,11 +36,7 @@ const SKILL_ICON = useAscii ? 'S:' : '\u26A1';
  * @param agentInvocations - Total Task/proxy_Task calls seen in transcript
  * @param skillUsages - Total Skill/proxy_Skill calls seen in transcript
  */
-export function renderCallCounts(
-  toolCalls: number,
-  agentInvocations: number,
-  skillUsages: number,
-): string | null {
+export function renderCallCounts(toolCalls: number, agentInvocations: number, skillUsages: number): string | null {
   const parts: string[] = [];
 
   if (toolCalls > 0) {

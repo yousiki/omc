@@ -1,5 +1,5 @@
-import { join, resolve } from 'path';
-import { existsSync, readFileSync } from 'fs';
+import { existsSync, readFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 
 /** Resolve the project root (where agents/ directory lives) */
 const PROJECT_ROOT = resolve(import.meta.dir, '..', '..');

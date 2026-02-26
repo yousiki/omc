@@ -1,6 +1,6 @@
-import { execSync } from 'child_process';
-import { existsSync, readFileSync, writeFileSync, mkdirSync, renameSync } from 'fs';
-import { dirname, join } from 'path';
+import { execSync } from 'node:child_process';
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
+import { dirname } from 'node:path';
 
 /** Resolve the git worktree root for a given directory */
 export function resolveWorktreeRoot(cwd: string): string {
@@ -28,7 +28,7 @@ export function writeJsonFile(path: string, data: unknown): void {
     mkdirSync(dir, { recursive: true });
   }
   const tmp = `${path}.tmp.${process.pid}`;
-  writeFileSync(tmp, JSON.stringify(data, null, 2) + '\n', 'utf-8');
+  writeFileSync(tmp, `${JSON.stringify(data, null, 2)}\n`, 'utf-8');
   renameSync(tmp, path);
 }
 
