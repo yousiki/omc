@@ -1,12 +1,12 @@
 {
   "mcpServers": {
     "t": {
-      "command": "node",
-      "args": ["${CLAUDE_PLUGIN_ROOT}/bridge/mcp-server.cjs"]
+      "command": "bun",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/src/mcp/standalone-server.ts"]
     },
     "team": {
-      "command": "node",
-      "args": ["${CLAUDE_PLUGIN_ROOT}/bridge/team-mcp.cjs"]
+      "command": "bun",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/src/mcp/team-server.ts"]
     }
   }
 }
