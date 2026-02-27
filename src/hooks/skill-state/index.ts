@@ -63,10 +63,10 @@ const PROTECTION_CONFIGS: Record<SkillProtectionLevel, SkillStateConfig> = {
  * Maps each skill name to its protection level.
  *
  * - 'none': Already has dedicated mode state (ralph, autopilot, etc.) or is
- *   instant/read-only (trace, hud, omc-help, etc.)
+ *   instant/read-only (trace, note, etc.)
  * - 'light': Quick agent shortcuts (tdd, build-fix, analyze)
  * - 'medium': Review/planning skills that run multiple agents
- * - 'heavy': Long-running skills (deepinit, omc-setup)
+ * - 'heavy': Long-running skills (deepinit)
  */
 const SKILL_PROTECTION: Record<string, SkillProtectionLevel> = {
   // === Already have mode state → no additional protection ===

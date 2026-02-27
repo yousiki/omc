@@ -85,7 +85,7 @@ async function main(watchMode = false): Promise<void> {
       }
     } else {
       // Non-watch invocation with no stdin - suggest setup
-      console.log("[OMC] run /omc-setup to install properly");
+      console.log("[OMC] run 'omc setup' to install properly");
       return;
     }
 
@@ -260,7 +260,7 @@ async function main(watchMode = false): Promise<void> {
         error.message.includes("Cannot find module"));
 
     if (isInstallError) {
-      console.log("[OMC] run /omc-setup to install properly");
+      console.log("[OMC] run 'omc setup' to install properly");
     } else {
       // Output fallback message to stdout for status line visibility
       console.log("[OMC] HUD error - check stderr");

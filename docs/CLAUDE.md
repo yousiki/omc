@@ -271,7 +271,7 @@ All OMC state lives under the git worktree root, not in `~/.claude/`.
 
 ## Setup
 
-Say "setup omc" or run `/omc:omc-setup`. Everything is automatic after that.
+Run `omc setup` in your terminal. Everything is automatic after that.
 
 Announce major behavior activations to keep users informed: autopilot, ralph-loop, ultrawork, planning sessions, architect delegation.
 <!-- OMC:END -->

@@ -49,30 +49,18 @@ This integrates directly with Claude Code's plugin system and uses Node.js hooks
 
 ## Configuration
 
-### Project-Scoped Configuration (Recommended)
+### Setup
 
-Configure omc for the current project only:
-
-```
-/omc:omc-setup --local
-```
-
-- Creates `./.claude/CLAUDE.md` in your current project
-- Configuration applies only to this project
-- Won't affect other projects or global settings
-- **Safe**: Preserves your global CLAUDE.md
-
-### Global Configuration
-
-Configure omc for all Claude Code sessions:
+Run the CLI setup command:
 
 ```
-/omc:omc-setup
+omc setup
 ```
 
-- Creates `~/.claude/CLAUDE.md` globally
-- Configuration applies to all projects
-- **Warning**: Completely overwrites existing `~/.claude/CLAUDE.md`
+This interactive command will:
+- Install CLAUDE.md (global or project-scoped)
+- Set your default execution mode
+- Run diagnostics for common issues
 
 ### What Configuration Enables
 
@@ -117,12 +105,11 @@ If both a legacy `{worktree}/.omc/` directory and a centralized directory exist,
 
 ### When to Re-run Setup
 
-- **First time**: Run after installation (choose project or global)
+- **First time**: Run after installation
 - **After updates**: Re-run to get the latest configuration
 - **Different machines**: Run on each machine where you use Claude Code
-- **New projects**: Run `/omc:omc-setup --local` in each project that needs omc
 
-> **NOTE**: After updating the plugin (via `npm update`, `git pull`, or Claude Code's plugin update), you MUST re-run `/omc:omc-setup` to apply the latest CLAUDE.md changes.
+> **NOTE**: After updating the plugin, re-run `omc setup` to apply the latest CLAUDE.md changes.
 
 ### Agent Customization
 
