@@ -12,7 +12,7 @@ Runtime hook scripts (`.mjs`, `.cjs`) and utility shell scripts that are install
 | File | Description |
 |------|-------------|
 | `session-start.mjs` | SessionStart hook — initializes OMC state, loads notepad |
-| `session-end.mjs` | SessionEnd hook — persists state, sends notifications |
+| `session-end.mjs` | SessionEnd hook — persists state |
 | `pre-tool-use.mjs` | PreToolUse hook — runs enforcers, injects context |
 | `post-tool-use.mjs` | PostToolUse hook — verifies deliverables, tracks usage |
 | `post-tool-use-failure.mjs` | PostToolUse failure path handler |
@@ -33,7 +33,6 @@ Runtime hook scripts (`.mjs`, `.cjs`) and utility shell scripts that are install
 | `setup-maintenance.mjs` | Maintenance and update setup |
 | `verify-deliverables.mjs` | Verifies task deliverables post-tool |
 | `permission-handler.mjs` | Handles permission requests |
-| `openclaw-gateway-demo.mjs` | OpenClaw gateway demo script |
 | `cleanup-orphans.mjs` | Cleans up orphaned state files |
 | `status.mjs` | Status reporting helper |
 | `run.cjs` | CJS runner for compatibility |

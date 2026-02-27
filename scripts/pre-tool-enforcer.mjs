@@ -8,13 +8,11 @@
 
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
-import { pathToFileURL } from 'url';
 import { readStdin } from './lib/stdin.mjs';
 
 const SESSION_ID_PATTERN = /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,255}$/;
 const MODE_STATE_FILES = [
   'autopilot-state.json',
-  'ultrapilot-state.json',
   'ralph-state.json',
   'ultrawork-state.json',
   'ultraqa-state.json',
@@ -108,32 +106,15 @@ function hasActiveJsonMode(stateDir, { allowSessionTagged = false } = {}) {
   return false;
 }
 
-function hasActiveSwarmMode(stateDir, { allowSessionTagged = false } = {}) {
-  const markerFile = join(stateDir, 'swarm-active.marker');
-  if (!existsSync(markerFile)) return false;
-
-  const summary = readJsonFile(join(stateDir, 'swarm-summary.json'));
-  if (!summary || summary.active !== true) return false;
-  if (!allowSessionTagged && summary.session_id) return false;
-
-  return true;
-}
-
 function hasActiveMode(directory, sessionId) {
   const stateDir = join(directory, '.omc', 'state');
 
   if (isValidSessionId(sessionId)) {
     const sessionStateDir = join(stateDir, 'sessions', sessionId);
-    return (
-      hasActiveJsonMode(sessionStateDir, { allowSessionTagged: true }) ||
-      hasActiveSwarmMode(sessionStateDir, { allowSessionTagged: true })
-    );
+    return hasActiveJsonMode(sessionStateDir, { allowSessionTagged: true });
   }
 
-  return (
-    hasActiveJsonMode(stateDir, { allowSessionTagged: false }) ||
-    hasActiveSwarmMode(stateDir, { allowSessionTagged: false })
-  );
+  return hasActiveJsonMode(stateDir, { allowSessionTagged: false });
 }
 
 /**
@@ -258,31 +239,6 @@ async function main() {
           ? data.sessionId
           : '';
     const modeActive = hasActiveMode(directory, sessionId);
-
-    // Send notification when AskUserQuestion is about to execute (user input needed)
-    // Fires in PreToolUse so users get notified BEFORE the tool blocks for input (#597)
-    if (toolName === 'AskUserQuestion') {
-      try {
-        const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT;
-        if (pluginRoot) {
-          const { notify } = await import(pathToFileURL(join(pluginRoot, 'src', 'notifications', 'index.ts')).href);
-
-          const toolInput = data.toolInput || data.tool_input || {};
-          const questions = toolInput.questions || [];
-          const questionText = questions.map(q => q.question || '').filter(Boolean).join('; ') || 'User input requested';
-          const sessionId = data.session_id || data.sessionId || '';
-
-          // Fire and forget - don't block tool execution
-          notify('ask-user-question', {
-            sessionId,
-            projectPath: directory,
-            question: questionText,
-          }).catch(() => {});
-        }
-      } catch {
-        // Notification not available, skip
-      }
-    }
 
     const todoStatus = getTodoStatus(directory);
 

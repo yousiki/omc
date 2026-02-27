@@ -5,7 +5,7 @@
  * Minimal continuation enforcer for all OMC modes.
  * Stripped down for reliability — no optional imports, no PRD, no notepad pruning.
  *
- * Supported modes: ralph, autopilot, ultrapilot, swarm, ultrawork, ultraqa, pipeline, team
+ * Supported modes: ralph, autopilot, ultrawork, ultraqa, pipeline, team
  */
 
 const {
@@ -52,74 +52,6 @@ function writeJsonFile(path, data) {
     return true;
   } catch {
     return false;
-  }
-}
-
-/**
- * Read the session-idle notification cooldown in seconds from ~/.omc/config.json.
- * Default: 60. 0 = disabled.
- */
-function getIdleCooldownSeconds() {
-  const configPath = join(homedir(), '.omc', 'config.json');
-  const config = readJsonFile(configPath);
-  const val = config?.notificationCooldown?.sessionIdleSeconds;
-  if (typeof val === 'number') return val;
-  return 60;
-}
-
-/**
- * Check whether the session-idle cooldown has elapsed.
- * Returns true if the notification should be sent.
- */
-function shouldSendIdleNotification(stateDir) {
-  const cooldownSecs = getIdleCooldownSeconds();
-  if (cooldownSecs === 0) return true; // cooldown disabled
-
-  const cooldownPath = join(stateDir, 'idle-notif-cooldown.json');
-  const data = readJsonFile(cooldownPath);
-  if (data?.lastSentAt) {
-    const elapsed = (Date.now() - new Date(data.lastSentAt).getTime()) / 1000;
-    if (Number.isFinite(elapsed) && elapsed < cooldownSecs) return false;
-  }
-  return true;
-}
-
-/**
- * Record that the session-idle notification was sent.
- */
-function recordIdleNotificationSent(stateDir) {
-  const cooldownPath = join(stateDir, 'idle-notif-cooldown.json');
-  writeJsonFile(cooldownPath, { lastSentAt: new Date().toISOString() });
-}
-
-/**
- * Send stop notification (fire-and-forget, non-blocking).
- * Only notifies on first stop to avoid spam.
- */
-async function sendStopNotification(modeName, stateData, sessionId, directory) {
-  // Only notify once per mode activation
-  if (stateData._stopNotified) return;
-
-  try {
-    const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT;
-    if (!pluginRoot) return;
-
-    const { pathToFileURL } = require('url');
-    const { notify } = await import(pathToFileURL(join(pluginRoot, 'dist', 'notifications', 'index.js')).href);
-
-    await notify('session-stop', {
-      sessionId: sessionId,
-      projectPath: directory,
-      activeMode: modeName,
-      iteration: stateData.iteration || stateData.reinforcement_count || 1,
-      maxIterations: stateData.max_iterations || stateData.max_reinforcements || 100,
-      incompleteTasks: undefined, // Caller can override
-    }).catch(() => {});
-
-    // Mark as notified to prevent duplicate notifications
-    stateData._stopNotified = true;
-  } catch {
-    // Notification module not available, skip silently
   }
 }
 
@@ -402,15 +334,10 @@ async function main() {
     // Read all mode states (session-scoped with legacy fallback)
     const ralph = readStateFileWithSession(stateDir, "ralph-state.json", sessionId);
     const autopilot = readStateFileWithSession(stateDir, "autopilot-state.json", sessionId);
-    const ultrapilot = readStateFileWithSession(stateDir, "ultrapilot-state.json", sessionId);
     const ultrawork = readStateFileWithSession(stateDir, "ultrawork-state.json", sessionId);
     const ultraqa = readStateFileWithSession(stateDir, "ultraqa-state.json", sessionId);
     const pipeline = readStateFileWithSession(stateDir, "pipeline-state.json", sessionId);
     const team = readStateFileWithSession(stateDir, "team-state.json", sessionId);
-
-    // Swarm uses swarm-summary.json (not swarm-state.json) + marker file
-    const swarmMarker = existsSync(join(stateDir, "swarm-active.marker"));
-    const swarmSummary = readJsonFile(join(stateDir, "swarm-summary.json"));
 
     // Count incomplete items (session-specific + project-local only)
     const taskCount = countIncompleteTasks(sessionId);
@@ -427,9 +354,6 @@ async function main() {
         ralph.state.iteration = iteration + 1;
         ralph.state.last_checked_at = new Date().toISOString();
         writeJsonFile(ralph.path, ralph.state);
-
-        // Fire-and-forget notification
-        sendStopNotification('ralph', ralph.state, sessionId, directory).catch(() => {});
 
         console.log(
           JSON.stringify({
@@ -451,9 +375,6 @@ async function main() {
           autopilot.state.last_checked_at = new Date().toISOString();
           writeJsonFile(autopilot.path, autopilot.state);
 
-          // Fire-and-forget notification
-          sendStopNotification('autopilot', autopilot.state, sessionId, directory).catch(() => {});
-
           console.log(
             JSON.stringify({
               decision: "block",
@@ -465,59 +386,7 @@ async function main() {
       }
     }
 
-    // Priority 3: Ultrapilot (parallel autopilot)
-    if (ultrapilot.state?.active && !isStaleState(ultrapilot.state) && isSessionMatch(ultrapilot.state, sessionId)) {
-      const workers = ultrapilot.state.workers || [];
-      const incomplete = workers.filter(
-        (w) => w.status !== "complete" && w.status !== "failed",
-      ).length;
-      if (incomplete > 0) {
-        const newCount = (ultrapilot.state.reinforcement_count || 0) + 1;
-        if (newCount <= 20) {
-          ultrapilot.state.reinforcement_count = newCount;
-          ultrapilot.state.last_checked_at = new Date().toISOString();
-          writeJsonFile(ultrapilot.path, ultrapilot.state);
-
-          // Fire-and-forget notification
-          sendStopNotification('ultrapilot', ultrapilot.state, sessionId, directory).catch(() => {});
-
-          console.log(
-            JSON.stringify({
-              decision: "block",
-              reason: `[ULTRAPILOT] ${incomplete} workers still running. Continue working. When all workers complete, run /oh-my-claudecode:cancel to cleanly exit and clean up state files. If cancel fails, retry with /oh-my-claudecode:cancel --force.`,
-            }),
-          );
-          return;
-        }
-      }
-    }
-
-    // Priority 4: Swarm (coordinated agents with SQLite)
-    if (swarmMarker && swarmSummary?.active && !isStaleState(swarmSummary)) {
-      const pending =
-        (swarmSummary.tasks_pending || 0) + (swarmSummary.tasks_claimed || 0);
-      if (pending > 0) {
-        const newCount = (swarmSummary.reinforcement_count || 0) + 1;
-        if (newCount <= 15) {
-          swarmSummary.reinforcement_count = newCount;
-          swarmSummary.last_checked_at = new Date().toISOString();
-          writeJsonFile(join(stateDir, "swarm-summary.json"), swarmSummary);
-
-          // Fire-and-forget notification
-          sendStopNotification('swarm', swarmSummary, sessionId, directory).catch(() => {});
-
-          console.log(
-            JSON.stringify({
-              decision: "block",
-              reason: `[SWARM ACTIVE] ${pending} tasks remain. Continue working. When all tasks are done, run /oh-my-claudecode:cancel to cleanly exit and clean up state files. If cancel fails, retry with /oh-my-claudecode:cancel --force.`,
-            }),
-          );
-          return;
-        }
-      }
-    }
-
-    // Priority 5: Pipeline (sequential stages)
+    // Priority 3: Pipeline (sequential stages)
     if (pipeline.state?.active && !isStaleState(pipeline.state) && isSessionMatch(pipeline.state, sessionId)) {
       const currentStage = pipeline.state.current_stage || 0;
       const totalStages = pipeline.state.stages?.length || 0;
@@ -527,9 +396,6 @@ async function main() {
           pipeline.state.reinforcement_count = newCount;
           pipeline.state.last_checked_at = new Date().toISOString();
           writeJsonFile(pipeline.path, pipeline.state);
-
-          // Fire-and-forget notification
-          sendStopNotification('pipeline', pipeline.state, sessionId, directory).catch(() => {});
 
           console.log(
             JSON.stringify({
@@ -542,7 +408,7 @@ async function main() {
       }
     }
 
-    // Priority 6: Team (omc-teams / staged pipeline)
+    // Priority 4: Team (staged pipeline)
     if (team.state?.active && !isStaleState(team.state) && isSessionMatch(team.state, sessionId)) {
       const phase = team.state.current_phase || "executing";
       const terminalPhases = ["completed", "complete", "failed", "cancelled"];
@@ -552,9 +418,6 @@ async function main() {
           team.state.reinforcement_count = newCount;
           team.state.last_checked_at = new Date().toISOString();
           writeJsonFile(team.path, team.state);
-
-          // Fire-and-forget notification
-          sendStopNotification('team', team.state, sessionId, directory).catch(() => {});
 
           console.log(
             JSON.stringify({
@@ -567,7 +430,7 @@ async function main() {
       }
     }
 
-    // Priority 7: UltraQA (QA cycling)
+    // Priority 5: UltraQA (QA cycling)
     if (ultraqa.state?.active && !isStaleState(ultraqa.state) && isSessionMatch(ultraqa.state, sessionId)) {
       const cycle = ultraqa.state.cycle || 1;
       const maxCycles = ultraqa.state.max_cycles || 10;
@@ -575,9 +438,6 @@ async function main() {
         ultraqa.state.cycle = cycle + 1;
         ultraqa.state.last_checked_at = new Date().toISOString();
         writeJsonFile(ultraqa.path, ultraqa.state);
-
-        // Fire-and-forget notification
-        sendStopNotification('ultraqa', ultraqa.state, sessionId, directory).catch(() => {});
 
         console.log(
           JSON.stringify({
@@ -589,7 +449,7 @@ async function main() {
       }
     }
 
-    // Priority 8: Ultrawork - ALWAYS continue while active (not just when tasks exist)
+    // Priority 6: Ultrawork - ALWAYS continue while active (not just when tasks exist)
     // This prevents false stops from bash errors, transient failures, etc.
     // Session isolation: only block if state belongs to this session (issue #311)
     // Project isolation: only block if state belongs to this project
@@ -612,9 +472,6 @@ async function main() {
       ultrawork.state.last_checked_at = new Date().toISOString();
       writeJsonFile(ultrawork.path, ultrawork.state);
 
-      // Fire-and-forget notification
-      sendStopNotification('ultrawork', ultrawork.state, sessionId, directory).catch(() => {});
-
       let reason = `[ULTRAWORK #${newCount}/${maxReinforcements}] Mode active.`;
 
       if (totalIncomplete > 0) {
@@ -636,29 +493,7 @@ async function main() {
       return;
     }
 
-    // No blocking needed — Claude is truly idle.
-    // Send session-idle notification (fire-and-forget) so external integrations
-    // (Telegram, Discord) know the session went idle without any active mode.
-    // Per-session cooldown prevents notification spam when the session idles repeatedly.
-    if (sessionId && shouldSendIdleNotification(stateDir)) {
-      try {
-        const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT;
-        if (pluginRoot) {
-          const { pathToFileURL } = require('url');
-          import(pathToFileURL(join(pluginRoot, 'dist', 'notifications', 'index.js')).href)
-            .then(({ notify }) =>
-              notify('session-idle', {
-                sessionId,
-                projectPath: directory,
-              }).catch(() => {})
-            )
-            .catch(() => {});
-          recordIdleNotificationSent(stateDir);
-        }
-      } catch {
-        // Notification module not available, skip silently
-      }
-    }
+    // No blocking needed
     console.log(JSON.stringify({ continue: true, suppressOutput: true }));
   } catch (error) {
     // On any error, allow stop rather than blocking forever

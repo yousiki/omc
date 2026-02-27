@@ -5,7 +5,7 @@
  * Minimal continuation enforcer for all OMC modes.
  * Stripped down for reliability — no optional imports, no PRD, no notepad pruning.
  *
- * Supported modes: ralph, autopilot, ultrapilot, swarm, ultrawork, ultraqa, pipeline, team
+ * Supported modes: ralph, autopilot, ultrawork, ultraqa, pipeline, team
  */
 
 import {
@@ -420,12 +420,6 @@ async function main() {
       "autopilot-state.json",
       sessionId,
     );
-    const ultrapilot = readStateFileWithSession(
-      stateDir,
-      globalStateDir,
-      "ultrapilot-state.json",
-      sessionId,
-    );
     const ultrawork = readStateFileWithSession(
       stateDir,
       globalStateDir,
@@ -450,10 +444,6 @@ async function main() {
       "team-state.json",
       sessionId,
     );
-
-    // Swarm uses swarm-summary.json (not swarm-state.json) + marker file
-    const swarmMarker = existsSync(join(stateDir, "swarm-active.marker"));
-    const swarmSummary = readJsonFile(join(stateDir, "swarm-summary.json"));
 
     // Count incomplete items (session-specific + project-local only)
     const taskCount = countIncompleteTasks(sessionId);
@@ -549,81 +539,7 @@ async function main() {
       }
     }
 
-    // Priority 3: Ultrapilot (parallel autopilot)
-    if (
-      ultrapilot.state?.active &&
-      !isStaleState(ultrapilot.state) &&
-      (hasValidSessionId
-        ? ultrapilot.state.session_id === sessionId
-        : !ultrapilot.state.session_id || ultrapilot.state.session_id === sessionId) &&
-      isStateForCurrentProject(ultrapilot.state, directory, ultrapilot.isGlobal)
-    ) {
-      const workers = ultrapilot.state.workers || [];
-      const incomplete = workers.filter(
-        (w) => w.status !== "complete" && w.status !== "failed",
-      ).length;
-      if (incomplete > 0) {
-        const newCount = (ultrapilot.state.reinforcement_count || 0) + 1;
-        if (newCount <= 20) {
-          const toolError = readLastToolError(stateDir);
-          const errorGuidance = getToolErrorRetryGuidance(toolError);
-
-          ultrapilot.state.reinforcement_count = newCount;
-          ultrapilot.state.last_checked_at = new Date().toISOString();
-          writeJsonFile(ultrapilot.path, ultrapilot.state);
-
-          let reason = `[ULTRAPILOT] ${incomplete} workers still running. Continue working. When all workers complete, run /oh-my-claudecode:cancel to cleanly exit and clean up state files. If cancel fails, retry with /oh-my-claudecode:cancel --force.`;
-          if (errorGuidance) {
-            reason = errorGuidance + reason;
-          }
-
-          console.log(
-            JSON.stringify({
-              decision: "block",
-              reason,
-            }),
-          );
-          return;
-        }
-      }
-    }
-
-    // Priority 4: Swarm (coordinated agents with SQLite)
-    if (
-      swarmMarker &&
-      swarmSummary?.active &&
-      !isStaleState(swarmSummary) &&
-      isStateForCurrentProject(swarmSummary, directory, false)
-    ) {
-      const pending =
-        (swarmSummary.tasks_pending || 0) + (swarmSummary.tasks_claimed || 0);
-      if (pending > 0) {
-        const newCount = (swarmSummary.reinforcement_count || 0) + 1;
-        if (newCount <= 15) {
-          const toolError = readLastToolError(stateDir);
-          const errorGuidance = getToolErrorRetryGuidance(toolError);
-
-          swarmSummary.reinforcement_count = newCount;
-          swarmSummary.last_checked_at = new Date().toISOString();
-          writeJsonFile(join(stateDir, "swarm-summary.json"), swarmSummary);
-
-          let reason = `[SWARM ACTIVE] ${pending} tasks remain. Continue working. When all tasks are done, run /oh-my-claudecode:cancel to cleanly exit and clean up state files. If cancel fails, retry with /oh-my-claudecode:cancel --force.`;
-          if (errorGuidance) {
-            reason = errorGuidance + reason;
-          }
-
-          console.log(
-            JSON.stringify({
-              decision: "block",
-              reason,
-            }),
-          );
-          return;
-        }
-      }
-    }
-
-    // Priority 5: Pipeline (sequential stages)
+    // Priority 3: Pipeline (sequential stages)
     if (
       pipeline.state?.active &&
       !isStaleState(pipeline.state) &&
@@ -660,7 +576,7 @@ async function main() {
       }
     }
 
-    // Priority 6: Team (omc-teams / staged pipeline)
+    // Priority 4: Team (staged pipeline)
     if (
       team.state?.active &&
       !isStaleState(team.state) &&
@@ -699,7 +615,7 @@ async function main() {
       }
     }
 
-    // Priority 7: UltraQA (QA cycling)
+    // Priority 5: UltraQA (QA cycling)
     if (
       ultraqa.state?.active &&
       !isStaleState(ultraqa.state) &&
@@ -733,7 +649,7 @@ async function main() {
       }
     }
 
-    // Priority 8: Ultrawork - ALWAYS continue while active (not just when tasks exist)
+    // Priority 6: Ultrawork - ALWAYS continue while active (not just when tasks exist)
     // This prevents false stops from bash errors, transient failures, etc.
     // Session isolation: only block if state belongs to this session (issue #311)
     // If state has session_id, it must match. If no session_id (legacy), allow.
