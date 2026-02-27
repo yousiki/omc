@@ -4,7 +4,7 @@ import { tmpdir } from 'os';
 import { dirname, join } from 'path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-const SCRIPT_PATH = join(process.cwd(), 'scripts', 'pre-tool-enforcer.mjs');
+const SCRIPT_PATH = join(process.cwd(), 'scripts', 'pre-tool-enforcer.ts');
 
 function runPreToolEnforcer(input: Record<string, unknown>): Record<string, unknown> {
   const stdout = execSync(`node "${SCRIPT_PATH}"`, {

@@ -4,16 +4,16 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 import { execFileSync } from 'child_process';
 
-const RUN_CJS_PATH = join(__dirname, '..', '..', 'scripts', 'run.cjs');
+const RUN_CJS_PATH = join(__dirname, '..', '..', 'scripts', 'run.ts');
 const NODE = process.execPath;
 
 /**
- * Regression tests for run.cjs graceful fallback when CLAUDE_PLUGIN_ROOT
+ * Regression tests for run.ts graceful fallback when CLAUDE_PLUGIN_ROOT
  * points to a stale/deleted/broken plugin cache directory.
  *
  * See: https://github.com/Yeachan-Heo/omc/issues/1007
  */
-describe('run.cjs — graceful fallback for stale plugin paths', () => {
+describe('run.ts — graceful fallback for stale plugin paths', () => {
   let tmpDir: string;
   let fakeCacheBase: string;
 

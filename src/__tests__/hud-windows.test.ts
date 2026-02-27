@@ -22,8 +22,8 @@ const packageRoot = join(__dirname, '..', '..');
 
 describe('HUD Windows Compatibility', () => {
   describe('File Naming', () => {
-    it('session-start.mjs should reference omc-hud.mjs', () => {
-      const sessionStartPath = join(packageRoot, 'scripts', 'session-start.mjs');
+    it('session-start.ts should reference omc-hud', () => {
+      const sessionStartPath = join(packageRoot, 'scripts', 'session-start.ts');
       expect(existsSync(sessionStartPath)).toBe(true);
 
       const content = readFileSync(sessionStartPath, 'utf-8');
@@ -145,8 +145,8 @@ describe('HUD Windows Compatibility', () => {
       expect(cachePath.startsWith(configDir)).toBe(true);
     });
 
-    it('plugin-setup.mjs should use pathToFileURL for dynamic imports', () => {
-      const setupPath = join(packageRoot, 'scripts', 'plugin-setup.mjs');
+    it('plugin-setup.ts should use pathToFileURL for dynamic imports', () => {
+      const setupPath = join(packageRoot, 'scripts', 'plugin-setup.ts');
       const content = readFileSync(setupPath, 'utf-8');
 
       // Should import pathToFileURL
@@ -155,8 +155,8 @@ describe('HUD Windows Compatibility', () => {
       expect(content).toContain('pathToFileURL(pluginPath).href');
     });
 
-    it('plugin-setup.mjs should respect CLAUDE_CONFIG_DIR for plugin cache base', () => {
-      const setupPath = join(packageRoot, 'scripts', 'plugin-setup.mjs');
+    it('plugin-setup.ts should respect CLAUDE_CONFIG_DIR for plugin cache base', () => {
+      const setupPath = join(packageRoot, 'scripts', 'plugin-setup.ts');
       const content = readFileSync(setupPath, 'utf-8');
 
       // Should use CLAUDE_CONFIG_DIR env var for cross-platform compat (#897)

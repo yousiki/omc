@@ -2,7 +2,7 @@ import { execSync } from 'child_process';
 import { join } from 'path';
 import { describe, expect, it } from 'vitest';
 
-const SCRIPT_PATH = join(process.cwd(), 'scripts', 'context-safety.mjs');
+const SCRIPT_PATH = join(process.cwd(), 'scripts', 'context-safety.ts');
 
 function runContextSafety(input: Record<string, unknown>): { stdout: string; exitCode: number } {
   try {

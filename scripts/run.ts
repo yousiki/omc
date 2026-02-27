@@ -9,9 +9,9 @@
  * /usr/bin/sh is a PE32+ binary the OS refuses to execute natively.
  * Fixes issues #909, #899, #892, #869.
  *
- * Usage (from hooks.json, after setup patches the absolute node path in):
- *   /abs/path/to/node "${CLAUDE_PLUGIN_ROOT}/scripts/run.ts" \
- *       "${CLAUDE_PLUGIN_ROOT}/scripts/<hook>.mjs" [args...]
+ * Usage (from hooks.json):
+ *   bun "${CLAUDE_PLUGIN_ROOT}/scripts/run.ts" \
+ *       "${CLAUDE_PLUGIN_ROOT}/scripts/<hook>.ts" [args...]
  *
  * During post-install setup, the leading `node` token is replaced with
  * process.execPath so nvm/fnm users and Windows users all get the right binary.
@@ -63,7 +63,7 @@ function resolveTarget(targetPath: string): string | null {
     if (!pluginRoot) return null;
 
     const cacheBase = dirname(pluginRoot);           // .../omc/
-    const scriptRelative = targetPath.slice(pluginRoot.length); // /scripts/persistent-mode.cjs
+    const scriptRelative = targetPath.slice(pluginRoot.length); // /scripts/persistent-mode.ts
 
     if (!scriptRelative || !existsSync(cacheBase)) return null;
 

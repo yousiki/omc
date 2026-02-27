@@ -129,6 +129,8 @@ export function isOmcStatusLine(statusLine: unknown): boolean {
   return false;
 }
 
+// Legacy hook filenames used to detect old (pre-TypeScript) installations.
+// These .mjs names are no longer used by the plugin but may exist in user settings.
 /**
  * Known OMC hook script filenames installed into .claude/hooks/.
  * Must be kept in sync with HOOKS_SETTINGS_CONFIG_NODE command entries

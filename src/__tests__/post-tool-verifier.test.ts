@@ -1,10 +1,10 @@
 /**
- * Tests for post-tool-verifier.mjs failure detection
+ * Tests for post-tool-verifier.ts failure detection
  * Covers issue #696: false positive "permission denied" from Claude Code temp CWD errors on macOS
  */
 
 import { describe, it, expect } from 'vitest';
-import { detectBashFailure, detectWriteFailure, isNonZeroExitWithOutput } from '../../scripts/post-tool-verifier.mjs';
+import { detectBashFailure, detectWriteFailure, isNonZeroExitWithOutput } from '../../scripts/post-tool-verifier.ts';
 
 describe('detectBashFailure', () => {
   describe('Claude Code temp CWD false positives (issue #696)', () => {

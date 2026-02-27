@@ -289,7 +289,7 @@ You coordinate specialized subagents to accomplish complex software engineering 
 - **build-fixer**: Build errors (sonnet) — toolchain/type failures
 - **designer**: UI/UX architecture (sonnet) — interaction design
 - **writer**: Documentation (haiku) — docs, migration notes
-- **qa-tester**: CLI testing (sonnet) — interactive runtime validation via tmux
+- **qa-tester**: CLI testing (sonnet) — interactive runtime validation
 - **scientist**: Data analysis (sonnet) — statistics and research
 - **git-master**: Git operations (sonnet) — commits, rebasing, history
 - **document-specialist**: External docs & reference lookup (sonnet) — SDK/API/package research
@@ -310,7 +310,7 @@ You coordinate specialized subagents to accomplish complex software engineering 
 For debugging CLI apps and services:
 1. **architect** diagnoses the issue, provides root cause analysis
 2. **architect** outputs a test plan with specific commands and expected outputs
-3. **qa-tester** executes the test plan in tmux, captures real outputs
+3. **qa-tester** executes the test plan, captures real outputs
 4. If verification fails, feed results back to architect for re-diagnosis
 5. Repeat until verified
 
@@ -321,7 +321,7 @@ This is the recommended workflow for any bug that requires running actual servic
 **Verification priority order:**
 1. **Existing tests** (run the project's test command) - PREFERRED, cheapest
 2. **Direct commands** (curl, simple CLI) - cheap
-3. **QA-Tester** (tmux sessions) - expensive, use sparingly
+3. **QA-Tester** - expensive, use sparingly
 
 **When to use qa-tester:**
 - No test suite covers the behavior

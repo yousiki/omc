@@ -3,7 +3,7 @@
 
 # skills
 
-31 skill directories for workflow automation and specialized behaviors.
+23 skill directories for workflow automation and specialized behaviors.
 
 ## Purpose
 
@@ -48,7 +48,6 @@ Skills are reusable workflow templates that can be invoked via `/omc:skill-name`
 
 | File | Skill | Purpose |
 |-----------|-------|---------|
-| `deepsearch/SKILL.md` | deepsearch | Thorough codebase search |
 | `deepinit/SKILL.md` | deepinit | Generate hierarchical AGENTS.md |
 | `sciomc/SKILL.md` | sciomc | Parallel scientist orchestration |
 
@@ -56,7 +55,6 @@ Skills are reusable workflow templates that can be invoked via `/omc:skill-name`
 
 | File | Skill | Purpose |
 |-----------|-------|---------|
-| `orchestrate/SKILL.md` | orchestrate | Core multi-agent orchestration (always active) |
 | `learner/SKILL.md` | learner | Extract reusable skill from session |
 | `note/SKILL.md` | note | Save notes for compaction resilience |
 | `cancel/SKILL.md` | cancel | Cancel any active OMC mode |
@@ -65,8 +63,6 @@ Skills are reusable workflow templates that can be invoked via `/omc:skill-name`
 
 | File | Skill | Purpose |
 |-----------|-------|---------|
-| `frontend-ui-ux/SKILL.md` | frontend-ui-ux | Designer-developer aesthetic |
-| `git-master/SKILL.md` | git-master | Git expertise, atomic commits |
 | `writer-memory/SKILL.md` | writer-memory | Agentic memory for writers |
 
 ## For AI Agents
@@ -156,7 +152,6 @@ Any configurable options.
 ## Dependencies
 
 ### Internal
-- Loaded by skill bridge (`scripts/build-skill-bridge.mjs`)
 - References agents from `agents/`
 - Uses hooks from `src/hooks/`
 
@@ -170,9 +165,9 @@ None - pure markdown files.
 | Execution | autopilot, ultrawork, ralph, pipeline, team | "autopilot", "ulw", "ralph", "team" |
 | Planning | plan, ralplan, review, analyze, ralph-init | "plan this", "analyze" |
 | Quality | code-review, security-review, tdd, build-fix | "review", "security", "tdd" |
-| Exploration | deepsearch, deepinit, research | "search", "research" |
+| Exploration | deepinit, sciomc | "deepinit", "research" |
 | Utility | learner, note, cancel | "stop", "cancel" |
-| Domain | frontend-ui-ux, git-master, writer-memory | UI context, git context |
+| Domain | writer-memory | writer context |
 
 ## Auto-Activation
 
@@ -183,8 +178,6 @@ Some skills activate automatically based on context:
 | autopilot | "autopilot", "build me", "I want a" |
 | ultrawork | "ulw", "ultrawork" |
 | ralph | "ralph", "don't stop until" |
-| frontend-ui-ux | UI/component work detected |
-| git-master | Git operations detected |
 | cancel | "stop", "cancel", "abort" |
 
 <!-- MANUAL:

@@ -4,7 +4,7 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 import { execFileSync } from 'child_process';
 
-const SCRIPT_PATH = join(__dirname, '..', '..', 'scripts', 'session-start.mjs');
+const SCRIPT_PATH = join(__dirname, '..', '..', 'scripts', 'session-start.ts');
 const NODE = process.execPath;
 
 /**
@@ -16,7 +16,7 @@ const NODE = process.execPath;
  * "Cannot find module" errors when a running session's CLAUDE_PLUGIN_ROOT
  * still points to an old (now-removed) version directory.
  */
-describe('session-start.mjs — plugin cache cleanup uses symlinks', () => {
+describe('session-start.ts — plugin cache cleanup uses symlinks', () => {
   let tmpDir: string;
   let fakeHome: string;
   let fakeCacheBase: string;

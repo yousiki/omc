@@ -108,8 +108,8 @@ describe("Persistent Mode Session Isolation (Issue #311)", () => {
     });
   });
 
-  describe("persistent-mode.mjs script session isolation", () => {
-    const scriptPath = join(process.cwd(), "scripts", "persistent-mode.mjs");
+  describe("persistent-mode.ts script session isolation", () => {
+    const scriptPath = join(process.cwd(), "scripts", "persistent-mode.ts");
 
     function runPersistentModeScript(
       input: Record<string, unknown>,
@@ -337,7 +337,7 @@ describe("Persistent Mode Session Isolation (Issue #311)", () => {
   });
 
   describe("session key alias compatibility (sessionId/session_id/sessionid)", () => {
-    const scriptPath = join(process.cwd(), "scripts", "persistent-mode.mjs");
+    const scriptPath = join(process.cwd(), "scripts", "persistent-mode.ts");
 
     function runPersistentModeScript(
       input: Record<string, unknown>,
@@ -487,7 +487,7 @@ describe("Persistent Mode Session Isolation (Issue #311)", () => {
   });
 
   describe("project isolation (project_path)", () => {
-    const scriptPath = join(process.cwd(), "scripts", "persistent-mode.mjs");
+    const scriptPath = join(process.cwd(), "scripts", "persistent-mode.ts");
 
     function runPersistentModeScript(
       input: Record<string, unknown>,

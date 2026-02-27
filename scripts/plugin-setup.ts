@@ -171,51 +171,28 @@ try {
   console.log('[OMC] Warning: Could not configure settings.json:', (e as Error).message);
 }
 
-// Patch hooks.json to use bun so hooks work on all platforms.
-//
-// The source hooks.json uses `node run.cjs` as a portable template; this step
-// substitutes bun so Claude Code invokes the Bun runtime for hooks.
-//
-// Two patterns are handled:
-//  1. New format  – node "${CLAUDE_PLUGIN_ROOT}/scripts/run.cjs" ... (all platforms)
-//  2. Old format  – sh  "${CLAUDE_PLUGIN_ROOT}/scripts/find-node.sh" ... (Windows
-//     backward-compat: migrates old installs to the new run.cjs chain)
-//
-// Fixes issues #909, #899, #892, #869.
+// Patch hooks.json to ensure bun runtime is used on all platforms.
+// Handles legacy cached hooks.json that may still reference `node` or `run.cjs`.
 try {
   const hooksJsonPath = join(__dirname, '..', 'hooks', 'hooks.json');
   if (existsSync(hooksJsonPath)) {
     const data = JSON.parse(readFileSync(hooksJsonPath, 'utf-8')) as HooksJson;
     let patched = false;
 
-    // Pattern 1 (new): node "${CLAUDE_PLUGIN_ROOT}/scripts/run.cjs" <rest>
-    const runCjsPattern =
-      /^node ("\$\{CLAUDE_PLUGIN_ROOT\}\/scripts\/run\.cjs".*)$/;
-
-    // Pattern 2 (old, Windows backward-compat): sh find-node.sh <target> [args]
-    const findNodePattern =
-      /^sh "\$\{CLAUDE_PLUGIN_ROOT\}\/scripts\/find-node\.sh" "(\$\{CLAUDE_PLUGIN_ROOT\}\/scripts\/[^"]+)"(.*)$/;
+    // Legacy pattern: node "${CLAUDE_PLUGIN_ROOT}/scripts/run.cjs" <rest>
+    const legacyRunPattern =
+      /^node ("\$\{CLAUDE_PLUGIN_ROOT\}\/scripts\/run\.(cjs|ts)".*)$/;
 
     for (const groups of Object.values(data.hooks ?? {})) {
       for (const group of groups) {
         for (const hook of (group.hooks ?? [])) {
           if (typeof hook.command !== 'string') continue;
 
-          // New run.cjs format — replace bare `node` with bun (all platforms)
-          const m1 = hook.command.match(runCjsPattern);
+          // Replace bare `node` with bun
+          const m1 = hook.command.match(legacyRunPattern);
           if (m1) {
             hook.command = `"bun" ${m1[1]}`;
             patched = true;
-            continue;
-          }
-
-          // Old find-node.sh format — migrate to run.cjs + bun (Windows only)
-          if (process.platform === 'win32') {
-            const m2 = hook.command.match(findNodePattern);
-            if (m2) {
-              hook.command = `"bun" "\${CLAUDE_PLUGIN_ROOT}/scripts/run.cjs" "${m2[1]}"${m2[2]}`;
-              patched = true;
-            }
           }
         }
       }
@@ -223,7 +200,7 @@ try {
 
     if (patched) {
       writeFileSync(hooksJsonPath, JSON.stringify(data, null, 2) + '\n');
-      console.log(`[OMC] Patched hooks.json to use bun runtime, fixes issues #909, #899, #892`);
+      console.log('[OMC] Patched hooks.json to use bun runtime');
     }
   }
 } catch (e) {
