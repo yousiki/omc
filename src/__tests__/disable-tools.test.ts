@@ -95,21 +95,6 @@ describe('OMC_DISABLE_TOOLS', () => {
         const result = parseDisabledGroups('skills');
         expect(result.has(TOOL_CATEGORIES.SKILLS)).toBe(true);
       });
-
-      it('disables interop group', () => {
-        const result = parseDisabledGroups('interop');
-        expect(result.has(TOOL_CATEGORIES.INTEROP)).toBe(true);
-      });
-
-      it('accepts codex group (reserved, no tools in t server)', () => {
-        const result = parseDisabledGroups('codex');
-        expect(result.has(TOOL_CATEGORIES.CODEX)).toBe(true);
-      });
-
-      it('accepts gemini group (reserved, no tools in t server)', () => {
-        const result = parseDisabledGroups('gemini');
-        expect(result.has(TOOL_CATEGORIES.GEMINI)).toBe(true);
-      });
     });
 
     describe('multiple groups', () => {
@@ -120,13 +105,11 @@ describe('OMC_DISABLE_TOOLS', () => {
         expect(result.size).toBe(2);
       });
 
-      it('disables all issue-722 specified groups', () => {
-        const result = parseDisabledGroups('lsp,ast,python-repl,gemini,codex,trace,state,notepad,project-memory');
+      it('disables all core groups', () => {
+        const result = parseDisabledGroups('lsp,ast,python-repl,trace,state,notepad,project-memory');
         expect(result.has(TOOL_CATEGORIES.LSP)).toBe(true);
         expect(result.has(TOOL_CATEGORIES.AST)).toBe(true);
         expect(result.has(TOOL_CATEGORIES.PYTHON)).toBe(true);
-        expect(result.has(TOOL_CATEGORIES.GEMINI)).toBe(true);
-        expect(result.has(TOOL_CATEGORIES.CODEX)).toBe(true);
         expect(result.has(TOOL_CATEGORIES.TRACE)).toBe(true);
         expect(result.has(TOOL_CATEGORIES.STATE)).toBe(true);
         expect(result.has(TOOL_CATEGORIES.NOTEPAD)).toBe(true);
@@ -194,8 +177,8 @@ describe('OMC_DISABLE_TOOLS', () => {
   });
 
   describe('DISABLE_TOOLS_GROUP_MAP', () => {
-    it('contains all issue-722 specified group names', () => {
-      const requiredGroups = ['lsp', 'ast', 'python-repl', 'gemini', 'codex', 'trace', 'state', 'notepad', 'project-memory', 'interop'];
+    it('contains all expected group names', () => {
+      const requiredGroups = ['lsp', 'ast', 'python-repl', 'trace', 'state', 'notepad', 'project-memory'];
       for (const group of requiredGroups) {
         expect(DISABLE_TOOLS_GROUP_MAP).toHaveProperty(group);
       }

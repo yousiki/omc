@@ -16,12 +16,7 @@ MCP (Model Context Protocol) server integration. Manages configurations for exte
 | `omc-tools-server.ts` | In-process MCP server exposing all OMC custom tools |
 | `mcp-config.ts` | MCP configuration loading and validation |
 | `standalone-server.ts` | Standalone MCP server runner |
-| `team-server.ts` | Team coordination MCP server |
-| `job-management.ts` | Background job management for MCP workers |
-| `job-state-db.ts` | SQLite-backed job state persistence |
 | `prompt-injection.ts` | System prompt injection for MCP agents |
-| `prompt-persistence.ts` | Persists prompts/responses for audit trail |
-| `cli-detection.ts` | Detects available CLI tools (claude, codex, gemini) |
 
 ## For AI Agents
 
@@ -29,8 +24,6 @@ MCP (Model Context Protocol) server integration. Manages configurations for exte
 
 - `omc-tools-server.ts` is the central file — it registers all custom tools (LSP, AST, state, notepad, trace, skills, memory) as MCP tool handlers
 - External server configs in `servers.ts` follow `McpServerConfig` interface
-- `job-state-db.ts` uses SQLite (`better-sqlite3`) for persistent job tracking
-- `prompt-persistence.ts` writes to `~/.claude/omc-prompts/` for audit trail
 
 ### Testing Requirements
 
@@ -51,10 +44,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
 ### Internal
 - `src/tools/` — LSP, AST, Python REPL tool implementations
-- `src/team/` — team bridge for multi-agent coordination
 
 ### External
 - `@modelcontextprotocol/sdk` — MCP server/client protocol
-- `better-sqlite3` — job state persistence
 
 <!-- MANUAL: -->

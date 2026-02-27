@@ -14,7 +14,6 @@ import { stateTools } from "../tools/state-tools.js";
 import { notepadTools } from "../tools/notepad-tools.js";
 import { memoryTools } from "../tools/memory-tools.js";
 import { traceTools } from "../tools/trace-tools.js";
-import { getInteropTools } from "../interop/mcp-bridge.js";
 import { TOOL_CATEGORIES, type ToolCategory } from "../constants/index.js";
 
 // Type for our tool definitions
@@ -46,9 +45,6 @@ export const DISABLE_TOOLS_GROUP_MAP: Record<string, ToolCategory> = {
   'memory': TOOL_CATEGORIES.MEMORY,
   'project-memory': TOOL_CATEGORIES.MEMORY,
   'skills': TOOL_CATEGORIES.SKILLS,
-  'interop': TOOL_CATEGORIES.INTEROP,
-  'codex': TOOL_CATEGORIES.CODEX,
-  'gemini': TOOL_CATEGORIES.GEMINI,
 };
 
 /**
@@ -81,11 +77,6 @@ export function parseDisabledGroups(envValue?: string): Set<ToolCategory> {
 }
 
 // Aggregate all custom tools with category metadata (full list, unfiltered)
-const interopToolsEnabled = process.env.OMC_INTEROP_TOOLS_ENABLED === '1';
-const interopTools: ToolDef[] = interopToolsEnabled
-  ? tagCategory(getInteropTools() as unknown as ToolDef[], TOOL_CATEGORIES.INTEROP)
-  : [];
-
 const allTools: ToolDef[] = [
   ...tagCategory(lspTools as unknown as ToolDef[], TOOL_CATEGORIES.LSP),
   ...tagCategory(astTools as unknown as ToolDef[], TOOL_CATEGORIES.AST),
@@ -95,7 +86,6 @@ const allTools: ToolDef[] = [
   ...tagCategory(notepadTools as unknown as ToolDef[], TOOL_CATEGORIES.NOTEPAD),
   ...tagCategory(memoryTools as unknown as ToolDef[], TOOL_CATEGORIES.MEMORY),
   ...tagCategory(traceTools as unknown as ToolDef[], TOOL_CATEGORIES.TRACE),
-  ...interopTools,
 ];
 
 // Read OMC_DISABLE_TOOLS once at startup and filter tools accordingly
@@ -152,7 +142,6 @@ export function getOmcToolNames(options?: {
   includeNotepad?: boolean;
   includeMemory?: boolean;
   includeTrace?: boolean;
-  includeInterop?: boolean;
 }): string[] {
   const {
     includeLsp = true,
@@ -163,7 +152,6 @@ export function getOmcToolNames(options?: {
     includeNotepad = true,
     includeMemory = true,
     includeTrace = true,
-    includeInterop = true
   } = options || {};
 
   const excludedCategories = new Set<ToolCategory>();
@@ -175,7 +163,6 @@ export function getOmcToolNames(options?: {
   if (!includeNotepad) excludedCategories.add(TOOL_CATEGORIES.NOTEPAD);
   if (!includeMemory) excludedCategories.add(TOOL_CATEGORIES.MEMORY);
   if (!includeTrace) excludedCategories.add(TOOL_CATEGORIES.TRACE);
-  if (!includeInterop) excludedCategories.add(TOOL_CATEGORIES.INTEROP);
 
   if (excludedCategories.size === 0) return [...omcToolNames];
 
@@ -197,7 +184,6 @@ export function _getAllToolNamesForTests(options?: {
   includeNotepad?: boolean;
   includeMemory?: boolean;
   includeTrace?: boolean;
-  includeInterop?: boolean;
 }): string[] {
   const {
     includeLsp = true,
@@ -208,7 +194,6 @@ export function _getAllToolNamesForTests(options?: {
     includeNotepad = true,
     includeMemory = true,
     includeTrace = true,
-    includeInterop = true,
   } = options || {};
 
   const excludedCategories = new Set<ToolCategory>();
@@ -220,7 +205,6 @@ export function _getAllToolNamesForTests(options?: {
   if (!includeNotepad) excludedCategories.add(TOOL_CATEGORIES.NOTEPAD);
   if (!includeMemory) excludedCategories.add(TOOL_CATEGORIES.MEMORY);
   if (!includeTrace) excludedCategories.add(TOOL_CATEGORIES.TRACE);
-  if (!includeInterop) excludedCategories.add(TOOL_CATEGORIES.INTEROP);
 
   return allTools
     .filter(t => !t.category || !excludedCategories.has(t.category))

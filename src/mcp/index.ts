@@ -31,41 +31,6 @@ export {
 } from '../agents/prompt-helpers.js';
 export type { AgentRole } from '../agents/prompt-helpers.js';
 
-// Prompt persistence for external model audit trail
-export {
-  persistPrompt,
-  persistResponse,
-  getExpectedResponsePath,
-  getPromptsDir,
-  slugify,
-  generatePromptId,
-  // Job status utilities for background execution
-  getStatusFilePath,
-  writeJobStatus,
-  readJobStatus,
-  checkResponseReady,
-  readCompletedResponse,
-  listActiveJobs,
-  cleanupStaleJobs
-} from './prompt-persistence.js';
-export type {
-  PersistPromptOptions,
-  PersistResponseOptions,
-  PersistPromptResult,
-  JobStatus,
-  BackgroundJobMeta
-} from './prompt-persistence.js';
-
-// Job management tools for background execution
-export {
-  handleWaitForJob,
-  handleCheckJobStatus,
-  handleKillJob,
-  handleListJobs,
-  findJobStatusFile,
-  getJobManagementToolSchemas
-} from './job-management.js';
-
 // MCP Configuration module
 export {
   loadMcpConfig,

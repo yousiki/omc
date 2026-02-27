@@ -1,12 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { omcToolsServer, omcToolNames, getOmcToolNames } from '../mcp/omc-tools-server.js';
 
-const interopEnabled = process.env.OMC_INTEROP_TOOLS_ENABLED === '1';
-const totalTools = interopEnabled ? 43 : 35;
-const withoutLsp = interopEnabled ? 31 : 23;
-const withoutAst = interopEnabled ? 41 : 33;
-const withoutPython = interopEnabled ? 42 : 34;
-const withoutSkills = interopEnabled ? 40 : 32;
+const totalTools = 35;
+const withoutLsp = 23;
+const withoutAst = 33;
+const withoutPython = 34;
+const withoutSkills = 32;
 
 describe('omc-tools-server', () => {
   describe('omcToolNames', () => {
@@ -70,15 +69,6 @@ describe('omc-tools-server', () => {
       expect(skillsTools).toHaveLength(3);
     });
 
-    it('supports includeInterop filter option', () => {
-      const withInterop = getOmcToolNames({ includeInterop: true });
-      const withoutInterop = getOmcToolNames({ includeInterop: false });
-
-      if (interopEnabled) {
-        expect(withInterop.some(n => n.includes('interop_'))).toBe(true);
-      }
-      expect(withoutInterop.some(n => n.includes('interop_'))).toBe(false);
-    });
   });
 
   describe('omcToolsServer', () => {

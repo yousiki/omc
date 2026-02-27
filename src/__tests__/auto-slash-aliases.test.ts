@@ -30,7 +30,6 @@ describe('auto-slash command skill aliases', () => {
       `---
 name: team
 description: Team orchestration
-aliases: [swarm]
 ---
 
 Team body`
@@ -69,17 +68,11 @@ PSM body`
     const names = commands.map((command) => command.name);
 
     expect(names).toContain('team');
-    expect(names).toContain('swarm');
     expect(names).toContain('project-session-manager');
     expect(names).toContain('psm');
 
-    const swarm = findCommand('swarm');
     const psm = findCommand('psm');
 
-    expect(swarm?.scope).toBe('skill');
-    expect(swarm?.metadata.aliasOf).toBe('team');
-    expect(swarm?.metadata.deprecatedAlias).toBe(true);
-    expect(swarm?.metadata.deprecationMessage).toContain('/team');
     expect(psm?.scope).toBe('skill');
     expect(psm?.metadata.aliasOf).toBe('project-session-manager');
     expect(psm?.metadata.deprecatedAlias).toBe(true);
@@ -88,41 +81,21 @@ PSM body`
     const listedNames = listAvailableCommands().map((command) => command.name);
     expect(listedNames).toContain('team');
     expect(listedNames).toContain('project-session-manager');
-    expect(listedNames).not.toContain('swarm');
     expect(listedNames).not.toContain('psm');
-  });
-
-  it('keeps source-priority semantics with deduped names', async () => {
-    writeFileSync(
-      join(tempProjectDir, '.claude', 'commands', 'swarm.md'),
-      `---
-description: Project-level swarm override
----
-
-Project swarm body`
-    );
-
-    const { discoverAllCommands, findCommand } = await loadExecutor();
-    const commands = discoverAllCommands();
-    const swarmCommands = commands.filter((command) => command.name.toLowerCase() === 'swarm');
-
-    expect(swarmCommands).toHaveLength(1);
-    expect(swarmCommands[0].scope).toBe('project');
-    expect(findCommand('swarm')?.scope).toBe('project');
   });
 
   it('injects deprecation warning when alias command is executed', async () => {
     const { executeSlashCommand } = await loadExecutor();
 
     const result = executeSlashCommand({
-      command: 'swarm',
-      args: 'fix lint',
-      raw: '/swarm fix lint',
+      command: 'psm',
+      args: '',
+      raw: '/psm',
     });
 
     expect(result.success).toBe(true);
     expect(result.replacementText).toContain('Deprecated Alias');
-    expect(result.replacementText).toContain('/swarm');
-    expect(result.replacementText).toContain('/team');
+    expect(result.replacementText).toContain('/psm');
+    expect(result.replacementText).toContain('/project-session-manager');
   });
 });
