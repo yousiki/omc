@@ -18,7 +18,7 @@ Spawn N coordinated agents working on a shared task list using Claude Code's nat
 ### Parameters
 
 - **N** - Number of teammate agents (1-20). Optional; defaults to auto-sizing based on task decomposition.
-- **agent-type** - OMC agent to spawn for the `team-exec` stage (e.g., executor, build-fixer, designer, codex, gemini). Optional; defaults to stage-aware routing. Use `codex` to spawn Codex CLI workers or `gemini` for Gemini CLI workers (requires respective CLIs installed). See Stage Agent Routing below.
+- **agent-type** - OMC agent to spawn for the `team-exec` stage (e.g., executor, build-fixer, designer). Optional; defaults to stage-aware routing. See Stage Agent Routing below.
 - **task** - High-level task to decompose and distribute among teammates
 - **ralph** - Optional modifier. When present, wraps the team pipeline in Ralph's persistence loop (retry on failure, architect verification before completion). See Team + Ralph Composition below.
 
@@ -30,11 +30,6 @@ Spawn N coordinated agents working on a shared task list using Claude Code's nat
 /team 4:designer "implement responsive layouts for all page components"
 /team "refactor the auth module with security review"
 /team ralph "build a complete REST API for user management"
-# With Codex CLI workers (requires: npm install -g @openai/codex)
-/team 2:codex "review architecture and suggest improvements"
-# With Gemini CLI workers (requires: npm install -g @google/gemini-cli)
-/team 2:gemini "redesign the UI components"
-# Mixed: Codex for backend analysis, Gemini for frontend (use /ccg instead for this)
 ```
 
 ## Architecture
@@ -106,7 +101,7 @@ Each pipeline stage uses **specialized agents** -- not just executors. The lead 
 **Routing rules:**
 
 1. **The lead picks agents per stage, not the user.** The user's `N:agent-type` parameter only overrides the `team-exec` stage worker type. All other stages use stage-appropriate specialists.
-2. **Specialist agents complement executor agents.** Route analysis/review to architect/critic Claude agents and UI work to designer agents. Tmux CLI workers are one-shot and don't participate in team communication.
+2. **Specialist agents complement executor agents.** Route analysis/review to architect/critic Claude agents and UI work to designer agents.
 3. **Cost mode affects model tier.** In downgrade: `opus` agents to `sonnet`, `sonnet` to `haiku` where quality permits. `team-verify` always uses at least `sonnet`.
 4. **Risk level escalates review.** Security-sensitive or >20 file changes must include `security-reviewer` + `code-reviewer` (opus) in `team-verify`.
 
@@ -569,134 +564,6 @@ This scans for processes matching the team name whose config no longer exists, a
 
 **IMPORTANT:** The `request_id` is provided in the shutdown request message that the teammate receives. The teammate must extract it and pass it back. Do NOT fabricate request IDs.
 
-## CLI Workers (Codex and Gemini)
-
-The team skill supports **hybrid execution** combining Claude agent teammates with external CLI workers (Codex CLI and Gemini CLI). Both types can make code changes -- they differ in capabilities and cost. These are standalone CLI tools, not MCP servers.
-
-### Execution Modes
-
-Tasks are tagged with an execution mode during decomposition:
-
-| Execution Mode | Provider | Capabilities |
-|---------------|----------|-------------|
-| `claude_worker` | Claude agent | Full Claude Code tool access (Read/Write/Edit/Bash/Task). Best for tasks needing Claude's reasoning + iterative tool use. |
-| `codex_worker` | Codex CLI (tmux pane) | Full filesystem access in working_directory. Runs autonomously via tmux pane. Best for code review, security analysis, refactoring, architecture. Requires `npm install -g @openai/codex`. |
-| `gemini_worker` | Gemini CLI (tmux pane) | Full filesystem access in working_directory. Runs autonomously via tmux pane. Best for UI/design work, documentation, large-context tasks. Requires `npm install -g @google/gemini-cli`. |
-
-### How CLI Workers Operate
-
-Tmux CLI workers run in dedicated tmux panes with filesystem access. They are **autonomous executors**, not just analysts:
-
-1. Lead writes task instructions to a prompt file
-2. Lead spawns a tmux CLI worker with `working_directory` set to the project root
-3. The worker reads files, makes changes, runs commands -- all within the working directory
-4. Results/summary are written to an output file
-5. Lead reads the output, marks the task complete, and feeds results to dependent tasks
-
-**Key difference from Claude teammates:**
-- CLI workers operate via tmux, not Claude Code's tool system
-- They cannot use TaskList/TaskUpdate/SendMessage (no team awareness)
-- They run as one-shot autonomous jobs, not persistent teammates
-- The lead manages their lifecycle (spawn, monitor, collect results)
-
-### When to Route Where
-
-| Task Type | Best Route | Why |
-|-----------|-----------|-----|
-| Iterative multi-step work | Claude teammate | Needs tool-mediated iteration + team communication |
-| Code review / security audit | CLI worker or specialist agent | Autonomous execution, good at structured analysis |
-| Architecture analysis / planning | architect Claude agent | Strong analytical reasoning with codebase access |
-| Refactoring (well-scoped) | CLI worker or executor agent | Autonomous execution, good at structured transforms |
-| UI/frontend implementation | designer Claude agent | Design expertise, framework idioms |
-| Large-scale documentation | writer Claude agent | Writing expertise + large context for consistency |
-| Build/test iteration loops | Claude teammate | Needs Bash tool + iterative fix cycles |
-| Tasks needing team coordination | Claude teammate | Needs SendMessage for status updates |
-
-### Example: Hybrid Team with CLI Workers
-
-```
-/team 3:executor "refactor auth module with security review"
-
-Task decomposition:
-#1 [codex_worker] Security review of current auth code -> output to .omc/research/auth-security.md
-#2 [codex_worker] Refactor auth/login.ts and auth/session.ts (uses #1 findings)
-#3 [claude_worker:designer] Redesign auth UI components (login form, session indicator)
-#4 [claude_worker] Update auth tests + fix integration issues
-#5 [gemini_worker] Final code review of all changes
-```
-
-The lead runs #1 (Codex security analysis), then #2 and #3 in parallel (Codex refactors backend, designer agent redesigns frontend), then #4 (Claude teammate handles test iteration), then #5 (Gemini final review).
-
-### Pre-flight Analysis (Optional)
-
-For large ambiguous tasks, run analysis before team creation:
-
-1. Spawn `Task(subagent_type="oh-my-claudecode:planner", ...)` with task description + codebase context
-2. Use the analysis to produce better task decomposition
-3. Create team and tasks with enriched context
-
-This is especially useful when the task scope is unclear and benefits from external reasoning before committing to a specific decomposition.
-
-## Monitor Enhancement: Outbox Auto-Ingestion
-
-The lead can proactively ingest outbox messages from CLI workers using the outbox reader utilities, enabling event-driven monitoring without relying solely on `SendMessage` delivery.
-
-### Outbox Reader Functions
-
-**`readNewOutboxMessages(teamName, workerName)`** -- Read new outbox messages for a single worker using a byte-offset cursor. Each call advances the cursor, so subsequent calls only return messages written since the last read. Mirrors the inbox cursor pattern from `readNewInboxMessages()`.
-
-**`readAllTeamOutboxMessages(teamName)`** -- Read new outbox messages from ALL workers in a team. Returns an array of `{ workerName, messages }` entries, skipping workers with no new messages. Useful for batch polling in the monitor loop.
-
-**`resetOutboxCursor(teamName, workerName)`** -- Reset the outbox cursor for a worker back to byte 0. Useful when re-reading historical messages after a lead restart or for debugging.
-
-### Using `getTeamStatus()` in the Monitor Phase
-
-The `getTeamStatus(teamName, workingDirectory, heartbeatMaxAgeMs?)` function provides a unified snapshot combining:
-
-- **Worker registration** -- Which MCP workers are registered (from shadow registry / config.json)
-- **Heartbeat freshness** -- Whether each worker is alive based on heartbeat age
-- **Task progress** -- Per-worker and team-wide task counts (pending, in_progress, completed)
-- **Current task** -- Which task each worker is actively executing
-- **Recent outbox messages** -- New messages since the last status check
-
-Example usage in the monitor loop:
-
-```typescript
-const status = getTeamStatus('fix-ts-errors', workingDirectory);
-
-for (const worker of status.workers) {
-  if (!worker.isAlive) {
-    // Worker is dead -- reassign its in-progress tasks
-  }
-  for (const msg of worker.recentMessages) {
-    if (msg.type === 'task_complete') {
-      // Mark task complete, unblock dependents
-    } else if (msg.type === 'task_failed') {
-      // Handle failure, possibly retry or reassign
-    } else if (msg.type === 'error') {
-      // Log error, check if worker needs intervention
-    }
-  }
-}
-
-if (status.taskSummary.pending === 0 && status.taskSummary.inProgress === 0) {
-  // All work done -- proceed to shutdown
-}
-```
-
-### Event-Based Actions from Outbox Messages
-
-| Message Type | Action |
-|-------------|--------|
-| `task_complete` | Mark task completed, check if blocked tasks are now unblocked, notify dependent workers |
-| `task_failed` | Increment failure sidecar, decide retry vs reassign vs skip |
-| `idle` | Worker has no assigned tasks -- assign pending work or begin shutdown |
-| `error` | Log the error, check `consecutiveErrors` in heartbeat for quarantine threshold |
-| `shutdown_ack` | Worker acknowledged shutdown -- safe to remove from team |
-| `heartbeat` | Update liveness tracking (redundant with heartbeat files but useful for latency monitoring) |
-
-This approach complements the existing `SendMessage`-based communication by providing a pull-based mechanism for MCP workers that cannot use Claude Code's team messaging tools.
-
 ## Error Handling
 
 ### Teammate Fails a Task
@@ -799,15 +666,13 @@ This prevents duplicate teams and allows graceful recovery from lead failures.
 | **Race conditions** | Possible if two agents claim same task (mitigate by pre-assigning) |
 | **Communication** | `SendMessage` (DM, broadcast, shutdown) |
 | **Task dependencies** | Built-in `blocks` / `blockedBy` arrays |
-| **Heartbeat** | Automatic idle notifications from Claude Code | Manual heartbeat table + polling |
-| **Shutdown** | Graceful request/response protocol | Signal-based termination |
-| **Agent lifecycle** | Auto-tracked via internal tasks + config members | Manual tracking via heartbeat table |
-| **Progress visibility** | `TaskList` shows live status with owner | SQL queries on tasks table |
-| **Conflict prevention** | Owner field (lead-assigned) | Lease-based claiming with timeout |
-| **Crash recovery** | Lead detects via missing messages, reassigns | Auto-release after 5-min lease timeout |
-| **State cleanup** | `TeamDelete` removes everything | Manual `rm` of SQLite database |
-
-**When to use Team over Swarm:** Always prefer `/team` for new work. It uses Claude Code's built-in infrastructure, requires no external dependencies, supports inter-agent communication, and has task dependency management.
+| **Heartbeat** | Automatic idle notifications from Claude Code |
+| **Shutdown** | Graceful request/response protocol |
+| **Agent lifecycle** | Auto-tracked via internal tasks + config members |
+| **Progress visibility** | `TaskList` shows live status with owner |
+| **Conflict prevention** | Owner field (lead-assigned) |
+| **Crash recovery** | Lead detects via missing messages, reassigns |
+| **State cleanup** | `TeamDelete` removes everything |
 
 ## Cancellation
 
@@ -908,7 +773,7 @@ MCP workers can operate in isolated git worktrees to prevent file conflicts betw
 
 1. **Internal tasks pollute TaskList** -- When a teammate is spawned, the system auto-creates an internal task with `metadata._internal: true`. These appear in `TaskList` output. Filter them when counting real task progress. The subject of an internal task is the teammate's name.
 
-2. **No atomic claiming** -- Unlike SQLite swarm, there is no transactional guarantee on `TaskUpdate`. Two teammates could race to claim the same task. **Mitigation:** The lead should pre-assign owners via `TaskUpdate(taskId, owner)` before spawning teammates. Teammates should only work on tasks assigned to them.
+2. **No atomic claiming** -- There is no transactional guarantee on `TaskUpdate`. Two teammates could race to claim the same task. **Mitigation:** The lead should pre-assign owners via `TaskUpdate(taskId, owner)` before spawning teammates. Teammates should only work on tasks assigned to them.
 
 3. **Task IDs are strings** -- IDs are auto-incrementing strings ("1", "2", "3"), not integers. Always pass string values to `taskId` fields.
 
@@ -926,4 +791,3 @@ MCP workers can operate in isolated git worktrees to prevent file conflicts betw
 
 10. **Broadcast is expensive** -- Each broadcast sends a separate message to every teammate. Use `message` (DM) by default. Only broadcast for truly team-wide critical alerts.
 
-11. **CLI workers are one-shot, not persistent** -- Tmux CLI workers have full filesystem access and CAN make code changes. However, they run as autonomous one-shot jobs -- they cannot use TaskList/TaskUpdate/SendMessage. The lead must manage their lifecycle: write prompt_file, spawn CLI worker, read output_file, mark task complete. They don't participate in team communication like Claude teammates do.

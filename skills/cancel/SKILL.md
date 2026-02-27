@@ -82,8 +82,6 @@ Legacy compatibility list (removed only under `--force`/`--all`):
 - `.omc/state/hud-state.json`
 - `.omc/state/subagent-tracking.json`
 - `.omc/state/subagent-tracker.lock`
-- `.omc/state/rate-limit-daemon.pid`
-- `.omc/state/rate-limit-daemon.log`
 - `.omc/state/checkpoints/` (directory)
 - `.omc/state/sessions/` (empty directory cleanup after clearing sessions)
 
@@ -335,8 +333,6 @@ Mode-specific subsections below describe what extra cleanup each handler perform
 | Ralph | "Ralph cancelled. Persistent mode deactivated." |
 | Ultrawork | "Ultrawork cancelled. Parallel execution mode deactivated." |
 | UltraQA | "UltraQA cancelled. QA cycling workflow stopped." |
-| Swarm | "Swarm cancelled. Coordinated agents stopped." |
-| Ultrapilot | "Ultrapilot cancelled. Parallel autopilot workers stopped." |
 | Pipeline | "Pipeline cancelled. Sequential agent chain stopped." |
 | Team | "Team cancelled. Teammates shut down and cleaned up." |
 | Plan Consensus | "Plan Consensus cancelled. Planning session ended." |
@@ -351,8 +347,6 @@ Mode-specific subsections below describe what extra cleanup each handler perform
 | Ralph | No | N/A |
 | Ultrawork | No | N/A |
 | UltraQA | No | N/A |
-| Swarm | No | N/A |
-| Ultrapilot | No | N/A |
 | Pipeline | No | N/A |
 | Plan Consensus | Yes (plan file path preserved) | N/A |
 
@@ -365,22 +359,3 @@ Mode-specific subsections below describe what extra cleanup each handler perform
 - **Resume-friendly**: Autopilot state is preserved for seamless resume
 - **Team-aware**: Detects native Claude Code teams and performs graceful shutdown
 
-## MCP Worker Cleanup
-
-When cancelling modes that may have spawned MCP workers (team bridge daemons), the cancel skill should also:
-
-1. **Check for active MCP workers**: Look for heartbeat files at `.omc/state/team-bridge/{team}/*.heartbeat.json`
-2. **Send shutdown signals**: Write shutdown signal files for each active worker
-3. **Kill tmux sessions**: Run `tmux kill-session -t omc-team-{team}-{worker}` for each worker
-4. **Clean up heartbeat files**: Remove all heartbeat files for the team
-5. **Clean up shadow registry**: Remove `.omc/state/team-mcp-workers.json`
-
-### Force Clear Addition
-
-When `--force` is used, also clean up:
-```bash
-rm -rf .omc/state/team-bridge/       # Heartbeat files
-rm -f .omc/state/team-mcp-workers.json  # Shadow registry
-# Kill all omc-team-* tmux sessions
-tmux list-sessions -F '#{session_name}' 2>/dev/null | grep '^omc-team-' | while read s; do tmux kill-session -t "$s" 2>/dev/null; done
-```
