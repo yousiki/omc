@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Oh-My-ClaudeCode CLI
+ * OMC CLI
  *
  * Command-line interface for the OMC multi-agent system.
  *
@@ -113,13 +113,13 @@ Examples:
   $ omc init --force             Overwrite existing config`)
   .action(async (options) => {
     console.log(chalk.yellow('⚠️  DEPRECATED: The init command is deprecated.'));
-    console.log(chalk.gray('Configuration is now managed automatically. Use /oh-my-claudecode:omc-setup instead.\n'));
+    console.log(chalk.gray('Configuration is now managed automatically. Use /omc:omc-setup instead.\n'));
 
     const paths = getConfigPaths();
     const targetPath = options.global ? paths.user : paths.project;
     const targetDir = dirname(targetPath);
 
-    console.log(chalk.blue('Oh-My-ClaudeCode Configuration Setup\n'));
+    console.log(chalk.blue('OMC Configuration Setup\n'));
 
     // Check if config already exists
     if (existsSync(targetPath) && !options.force) {
@@ -140,8 +140,8 @@ Examples:
     const modelLow = getDefaultModelLow();
 
     // Generate config content
-    const configContent = `// Oh-My-ClaudeCode Configuration
-// See: https://github.com/Yeachan-Heo/oh-my-claudecode for documentation
+    const configContent = `// OMC Configuration
+// See: https://github.com/Yeachan-Heo/omc for documentation
 //
 // Model IDs can be overridden via environment variables:
 //   OMC_MODEL_HIGH   (opus-class)
@@ -748,7 +748,7 @@ Examples:
   .action(async () => {
     const session = createOmcSession();
 
-    console.log(chalk.blue.bold('\nOh-My-ClaudeCode System Information\n'));
+    console.log(chalk.blue.bold('\nOMC System Information\n'));
     console.log(chalk.gray('━'.repeat(50)));
 
     console.log(chalk.blue('\nAvailable Agents:'));
@@ -827,7 +827,7 @@ Examples:
   $ omc update --standalone      Force npm update in plugin context`)
   .action(async (options) => {
     if (!options.quiet) {
-      console.log(chalk.blue('Oh-My-ClaudeCode Update\n'));
+      console.log(chalk.blue('OMC Update\n'));
     }
 
     try {
@@ -932,7 +932,7 @@ Examples:
   .action(async () => {
     const installed = getInstalledVersion();
 
-    console.log(chalk.blue.bold('\nOh-My-ClaudeCode Version Information\n'));
+    console.log(chalk.blue.bold('\nOMC Version Information\n'));
     console.log(chalk.gray('━'.repeat(50)));
 
     console.log(`\n  Package version:   ${chalk.green(version)}`);
@@ -953,7 +953,7 @@ Examples:
     }
 
     console.log(chalk.gray('\n━'.repeat(50)));
-    console.log(chalk.gray('\nTo check for updates, run: oh-my-claudecode update --check'));
+    console.log(chalk.gray('\nTo check for updates, run: omc update --check'));
   });
 
 /**
@@ -973,7 +973,7 @@ Examples:
   .action(async (options) => {
     if (!options.quiet) {
       console.log(chalk.blue('╔═══════════════════════════════════════════════════════════╗'));
-      console.log(chalk.blue('║         Oh-My-ClaudeCode Installer                        ║'));
+      console.log(chalk.blue('║         OMC Installer                        ║'));
       console.log(chalk.blue('║   Multi-Agent Orchestration for Claude Code               ║'));
       console.log(chalk.blue('╚═══════════════════════════════════════════════════════════╝'));
       console.log('');
@@ -1188,7 +1188,7 @@ Examples:
   $ omc setup --force-hooks       Force reinstall hooks`)
   .action(async (options) => {
     if (!options.quiet) {
-      console.log(chalk.blue('Oh-My-ClaudeCode Setup\n'));
+      console.log(chalk.blue('OMC Setup\n'));
     }
 
     // Step 1: Run installation (which handles hooks, agents, skills)
@@ -1239,7 +1239,7 @@ Examples:
 
       console.log('');
       console.log(chalk.gray(`Version: ${version}`));
-      console.log(chalk.gray('Start Claude Code and use /oh-my-claudecode:omc-setup for interactive setup.'));
+      console.log(chalk.gray('Start Claude Code and use /omc:omc-setup for interactive setup.'));
     }
   });
 
@@ -1258,13 +1258,13 @@ program
     });
 
     if (result.success) {
-      console.log(chalk.green('✓ Oh-My-ClaudeCode installed successfully!'));
-      console.log(chalk.gray('  Run "oh-my-claudecode info" to see available agents.'));
+      console.log(chalk.green('✓ OMC installed successfully!'));
+      console.log(chalk.gray('  Run "omc info" to see available agents.'));
       console.log(chalk.yellow('  Run "/omc-default" (project) or "/omc-default-global" (global) in Claude Code.'));
     } else {
       // Don't fail the npm install, just warn
       console.warn(chalk.yellow('⚠ Could not complete OMC setup:'), result.message);
-      console.warn(chalk.gray('  Run "oh-my-claudecode install" manually to complete setup.'));
+      console.warn(chalk.gray('  Run "omc install" manually to complete setup.'));
     }
   });
 

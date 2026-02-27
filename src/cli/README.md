@@ -1,13 +1,13 @@
 # OMC Analytics CLI
 
-Command-line interface for Oh-My-ClaudeCode analytics, token tracking, cost reports, and session management.
+Command-line interface for OMC analytics, token tracking, cost reports, and session management.
 
 ## Installation
 
-Install via npm (note: the npm package name is `oh-my-claudecode`):
+Install via npm (note: the npm package name is `omc`):
 
 ```bash
-npm install -g oh-my-claudecode
+npm install -g omc
 ```
 
 The `omc-analytics` command will be available globally.

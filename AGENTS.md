@@ -1,6 +1,6 @@
 <!-- Generated: 2026-02-27 | Updated: 2026-02-27 -->
 
-# oh-my-claudecode
+# omc
 
 ## Purpose
 
@@ -59,7 +59,6 @@ Multi-agent orchestration system for Claude Code. Provides specialized AI agents
 | `@anthropic-ai/claude-agent-sdk` | Claude agent integration |
 | `@ast-grep/napi` | AST pattern search and replace |
 | `@modelcontextprotocol/sdk` | MCP server/client protocol |
-| `better-sqlite3` | SQLite for job state and persistence |
 | `chalk` | Terminal color output |
 | `commander` | CLI argument parsing |
 | `jsonc-parser` | JSONC config file parsing |

@@ -333,7 +333,7 @@ export function loadContextFromFiles(files: string[]): string {
 export function generateConfigSchema(): object {
   return {
     $schema: 'http://json-schema.org/draft-07/schema#',
-    title: 'Oh-My-ClaudeCode Configuration',
+    title: 'OMC Configuration',
     type: 'object',
     properties: {
       agents: {

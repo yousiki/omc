@@ -1,19 +1,19 @@
 ---
 name: release
-description: Automated release workflow for oh-my-claudecode
+description: Automated release workflow for omc
 ---
 
 # Release Skill
 
-Automate the release process for oh-my-claudecode.
+Automate the release process for omc.
 
 ## Usage
 
 ```
-/oh-my-claudecode:release <version>
+/omc:release <version>
 ```
 
-Example: `/oh-my-claudecode:release 2.4.0` or `/oh-my-claudecode:release patch` or `/oh-my-claudecode:release minor`
+Example: `/omc:release 2.4.0` or `/omc:release patch` or `/omc:release minor`
 
 ## Release Checklist
 
@@ -52,7 +52,7 @@ gh release create v<version> --title "v<version> - <title>" --notes "<release no
 ```
 
 ### 6. Verify
-- [ ] GitHub: https://github.com/Yeachan-Heo/oh-my-claudecode/releases
+- [ ] GitHub: https://github.com/Yeachan-Heo/omc/releases
 
 ## Version Files Reference
 

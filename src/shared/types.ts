@@ -1,5 +1,5 @@
 /**
- * Shared types for Oh-My-ClaudeCode
+ * Shared types for OMC
  */
 
 export type ModelType = 'sonnet' | 'opus' | 'haiku' | 'inherit';

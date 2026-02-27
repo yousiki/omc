@@ -111,7 +111,7 @@ export function isHudEnabledInConfig(): boolean {
 }
 
 /**
- * Detect whether a statusLine config belongs to oh-my-claudecode.
+ * Detect whether a statusLine config belongs to omc.
  *
  * Checks the command string for known OMC HUD paths so that custom
  * (non-OMC) statusLine configurations are preserved during forced
@@ -152,11 +152,11 @@ const OMC_HOOK_FILENAMES = new Set([
 ]);
 
 /**
- * Detect whether a hook command belongs to oh-my-claudecode.
+ * Detect whether a hook command belongs to omc.
  *
  * Recognition strategy (any match is sufficient):
  * 1. Command path contains "omc" as a path/word segment (e.g. `omc-hook.mjs`, `/omc/`)
- * 2. Command path contains "oh-my-claudecode"
+ * 2. Command path contains "omc"
  * 3. Command references a known OMC hook filename inside .claude/hooks/
  *
  * @param command - The hook command string
@@ -167,7 +167,7 @@ export function isOmcHook(command: string): boolean {
   // Match "omc" as a path segment or word boundary
   // Matches: /omc/, /omc-, omc/, -omc, _omc, omc_
   const omcPattern = /(?:^|[\/\\_-])omc(?:$|[\/\\_-])/;
-  const fullNamePattern = /oh-my-claudecode/;
+  const fullNamePattern = /omc/;
   if (omcPattern.test(lowerCommand) || fullNamePattern.test(lowerCommand)) {
     return true;
   }
@@ -607,9 +607,9 @@ export function install(options: InstallOptions = {}): InstallResult {
         '  // 1. Development paths (only when OMC_DEV=1)',
         '  if (process.env.OMC_DEV === "1") {',
         '    const devPaths = [',
-        '      join(home, "Workspace/oh-my-claudecode/src/hud/index.ts"),',
-        '      join(home, "workspace/oh-my-claudecode/src/hud/index.ts"),',
-        '      join(home, "projects/oh-my-claudecode/src/hud/index.ts"),',
+        '      join(home, "Workspace/omc/src/hud/index.ts"),',
+        '      join(home, "workspace/omc/src/hud/index.ts"),',
+        '      join(home, "projects/omc/src/hud/index.ts"),',
         '    ];',
         '    ',
         '    for (const devPath of devPaths) {',
@@ -625,7 +625,7 @@ export function install(options: InstallOptions = {}): InstallResult {
         '  // 2. Plugin cache (for production installs)',
         '  // Respect CLAUDE_CONFIG_DIR so installs under a custom config dir are found',
         '  const configDir = process.env.CLAUDE_CONFIG_DIR || join(home, ".claude");',
-        '  const pluginCacheBase = join(configDir, "plugins", "cache", "omc", "oh-my-claudecode");',
+        '  const pluginCacheBase = join(configDir, "plugins", "cache", "omc", "omc");',
         '  if (existsSync(pluginCacheBase)) {',
         '    try {',
         '      const versions = readdirSync(pluginCacheBase);',
@@ -650,7 +650,7 @@ export function install(options: InstallOptions = {}): InstallResult {
         '  ',
         '  // 3. npm package (global or local install)',
         '  try {',
-        '    await import("oh-my-claudecode/src/hud/index.ts");',
+        '    await import("omc/src/hud/index.ts");',
         '    return;',
         '  } catch { /* continue */ }',
         '  ',
@@ -665,10 +665,10 @@ export function install(options: InstallOptions = {}): InstallResult {
         '    }',
         '  } else if (existsSync(pluginCacheBase)) {',
         '    // Plugin cache directory exists but no versions',
-        '    console.log(`[OMC HUD] Plugin cache found but no versions installed. Run: /oh-my-claudecode:omc-setup`);',
+        '    console.log(`[OMC HUD] Plugin cache found but no versions installed. Run: /omc:omc-setup`);',
         '  } else {',
         '    // No plugin installation found at all',
-        '    console.log("[OMC HUD] Plugin not installed. Run: /oh-my-claudecode:omc-setup");',
+        '    console.log("[OMC HUD] Plugin not installed. Run: /omc:omc-setup");',
         '  }',
         '}',
         '',

@@ -1,6 +1,6 @@
 ---
 name: omc-setup
-description: Setup and configure oh-my-claudecode (the ONLY command you need to learn)
+description: Setup and configure omc (the ONLY command you need to learn)
 ---
 
 # OMC Setup
@@ -179,7 +179,7 @@ Check for flags in the user's invocation:
 
 Use the AskUserQuestion tool to prompt the user:
 
-**Question:** "Where should I configure oh-my-claudecode?"
+**Question:** "Where should I configure omc?"
 
 **Options:**
 1. **Local (this project)** - Creates `.claude/CLAUDE.md` in current project directory. Best for project-specific configurations.
@@ -204,7 +204,7 @@ TARGET_PATH=".claude/CLAUDE.md"
 SOURCE_PATH="${CLAUDE_PLUGIN_ROOT}/docs/CLAUDE.md"
 
 # Extract old version before update
-OLD_VERSION=$(grep -m1 "^# oh-my-claudecode" "$TARGET_PATH" 2>/dev/null | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' || echo "none")
+OLD_VERSION=$(grep -m1 "^# omc" "$TARGET_PATH" 2>/dev/null | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' || echo "none")
 
 # Backup existing
 if [ -f "$TARGET_PATH" ]; then
@@ -271,7 +271,7 @@ else
 fi
 
 # Extract new version and report
-NEW_VERSION=$(grep -m1 "^# oh-my-claudecode" "$TARGET_PATH" 2>/dev/null | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' || echo "unknown")
+NEW_VERSION=$(grep -m1 "^# omc" "$TARGET_PATH" 2>/dev/null | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' || echo "unknown")
 if [ "$OLD_VERSION" = "none" ]; then
   echo "Installed CLAUDE.md: $NEW_VERSION"
 elif [ "$OLD_VERSION" = "$NEW_VERSION" ]; then
@@ -288,7 +288,7 @@ fi
 ### Verify Plugin Installation
 
 ```bash
-grep -q "oh-my-claudecode" ~/.claude/settings.json && echo "Plugin verified" || echo "Plugin NOT found - run: claude /install-plugin oh-my-claudecode"
+grep -q "omc" ~/.claude/settings.json && echo "Plugin verified" || echo "Plugin NOT found - run: claude /install-plugin omc"
 ```
 
 ### Confirm Local Configuration Success
@@ -335,7 +335,7 @@ TARGET_PATH="$HOME/.claude/CLAUDE.md"
 SOURCE_PATH="${CLAUDE_PLUGIN_ROOT}/docs/CLAUDE.md"
 
 # Extract old version before update
-OLD_VERSION=$(grep -m1 "^# oh-my-claudecode" "$TARGET_PATH" 2>/dev/null | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' || echo "none")
+OLD_VERSION=$(grep -m1 "^# omc" "$TARGET_PATH" 2>/dev/null | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' || echo "none")
 
 # Backup existing
 if [ -f "$TARGET_PATH" ]; then
@@ -402,7 +402,7 @@ else
 fi
 
 # Extract new version and report
-NEW_VERSION=$(grep -m1 "^# oh-my-claudecode" "$TARGET_PATH" 2>/dev/null | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' || echo "unknown")
+NEW_VERSION=$(grep -m1 "^# omc" "$TARGET_PATH" 2>/dev/null | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' || echo "unknown")
 if [ "$OLD_VERSION" = "none" ]; then
   echo "Installed CLAUDE.md: $NEW_VERSION"
 elif [ "$OLD_VERSION" = "$NEW_VERSION" ]; then
@@ -436,7 +436,7 @@ Check `~/.claude/settings.json` for manual hook entries. If the "hooks" key exis
 ### Verify Plugin Installation
 
 ```bash
-grep -q "oh-my-claudecode" ~/.claude/settings.json && echo "Plugin verified" || echo "Plugin NOT found - run: claude /install-plugin oh-my-claudecode"
+grep -q "omc" ~/.claude/settings.json && echo "Plugin verified" || echo "Plugin NOT found - run: claude /install-plugin omc"
 ```
 
 ### Confirm Global Configuration Success
@@ -504,7 +504,7 @@ Clear old cached plugin versions to avoid conflicts:
 
 ```bash
 # Clear stale plugin cache versions (cross-platform)
-bun -e "const p=require('path'),f=require('fs'),h=require('os').homedir(),d=process.env.CLAUDE_CONFIG_DIR||p.join(h,'.claude'),b=p.join(d,'plugins','cache','omc','oh-my-claudecode');try{const v=f.readdirSync(b).filter(x=>/^\d/.test(x)).sort((a,c)=>a.localeCompare(c,void 0,{numeric:true}));if(v.length<=1){console.log('Cache is clean');process.exit()}v.slice(0,-1).forEach(x=>{f.rmSync(p.join(b,x),{recursive:true,force:true})});console.log('Cleared',v.length-1,'stale cache version(s)')}catch{console.log('No cache directory found (normal for new installs)')}"
+bun -e "const p=require('path'),f=require('fs'),h=require('os').homedir(),d=process.env.CLAUDE_CONFIG_DIR||p.join(h,'.claude'),b=p.join(d,'plugins','cache','omc','omc');try{const v=f.readdirSync(b).filter(x=>/^\d/.test(x)).sort((a,c)=>a.localeCompare(c,void 0,{numeric:true}));if(v.length<=1){console.log('Cache is clean');process.exit()}v.slice(0,-1).forEach(x=>{f.rmSync(p.join(b,x),{recursive:true,force:true})});console.log('Cleared',v.length-1,'stale cache version(s)')}catch{console.log('No cache directory found (normal for new installs)')}"
 ```
 
 ## Step 3.6: Check for Updates
@@ -518,12 +518,12 @@ const p=require('path'),f=require('fs'),h=require('os').homedir();
 const d=process.env.CLAUDE_CONFIG_DIR||p.join(h,'.claude');
 let v='';
 // Try cache directory first
-const b=p.join(d,'plugins','cache','omc','oh-my-claudecode');
+const b=p.join(d,'plugins','cache','omc','omc');
 try{const vs=f.readdirSync(b).filter(x=>/^\d/.test(x)).sort((a,c)=>a.localeCompare(c,void 0,{numeric:true}));if(vs.length)v=vs[vs.length-1]}catch{}
 // Try .omc-version.json second
 if(v==='')try{const j=JSON.parse(f.readFileSync('.omc-version.json','utf-8'));v=j.version||''}catch{}
 // Try CLAUDE.md header third
-if(v==='')for(const c of['.claude/CLAUDE.md',p.join(d,'CLAUDE.md')]){try{const m=f.readFileSync(c,'utf-8').match(/^# oh-my-claudecode.*?(v?\d+\.\d+\.\d+)/m);if(m){v=m[1].replace(/^v/,'');break}}catch{}}
+if(v==='')for(const c of['.claude/CLAUDE.md',p.join(d,'CLAUDE.md')]){try{const m=f.readFileSync(c,'utf-8').match(/^# omc.*?(v?\d+\.\d+\.\d+)/m);if(m){v=m[1].replace(/^v/,'');break}}catch{}}
 console.log('Installed:',v||'(not found)');
 "
 ```
@@ -595,7 +595,7 @@ if ! command -v bun &>/dev/null; then
 else
   # Find plugin cache and link
   CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
-  CACHE_BASE="$CONFIG_DIR/plugins/cache/omc/oh-my-claudecode"
+  CACHE_BASE="$CONFIG_DIR/plugins/cache/omc/omc"
   LATEST=$(ls -d "$CACHE_BASE"/[0-9]* 2>/dev/null | sort -V | tail -1)
   if [ -n "$LATEST" ]; then
     cd "$LATEST" && bun link 2>&1
@@ -607,14 +607,14 @@ else
       echo "Linked but 'omc' not on PATH. You may need to restart your shell."
     fi
   else
-    echo "WARNING: No plugin cache found. Install the plugin first: claude /install-plugin oh-my-claudecode"
+    echo "WARNING: No plugin cache found. Install the plugin first: claude /install-plugin omc"
   fi
 fi
 ```
 
 If user chooses **No - Skip**, continue to the next step without installing.
 
-**Note**: The CLI is optional. All core functionality is also available through the plugin system (`/oh-my-claudecode:omc-help`, `/oh-my-claudecode:omc-doctor`). The CLI adds standalone terminal commands for analytics outside of Claude Code sessions.
+**Note**: The CLI is optional. All core functionality is also available through the plugin system (`/omc:omc-help`, `/omc:omc-doctor`). The CLI adds standalone terminal commands for analytics outside of Claude Code sessions.
 
 ## Step 3.8.5: Select Task Management Tool
 
@@ -680,7 +680,7 @@ echo "Task tool set to: USER_CHOICE"
 ## Step 4: Verify Plugin Installation
 
 ```bash
-grep -q "oh-my-claudecode" ~/.claude/settings.json && echo "Plugin verified" || echo "Plugin NOT found - run: claude /install-plugin oh-my-claudecode"
+grep -q "omc" ~/.claude/settings.json && echo "Plugin verified" || echo "Plugin NOT found - run: claude /install-plugin omc"
 ```
 
 ## Step 5: Offer MCP Server Configuration
@@ -691,7 +691,7 @@ Ask user: "Would you like to configure MCP servers for enhanced capabilities? (C
 
 If yes, invoke the mcp-setup skill:
 ```
-/oh-my-claudecode:mcp-setup
+/omc:mcp-setup
 ```
 
 If no, skip to next step.
@@ -875,7 +875,7 @@ Skip this step. Agent teams will remain disabled. User can enable later by addin
 }
 ```
 
-Or by running `/oh-my-claudecode:omc-setup --force` and choosing to enable teams.
+Or by running `/omc:omc-setup --force` and choosing to enable teams.
 
 ### Save Progress
 
@@ -932,12 +932,12 @@ Just include these words naturally in your request:
 
 TEAMS:
 Spawn coordinated agents with shared task lists and real-time messaging:
-- /oh-my-claudecode:team 3:executor "fix all TypeScript errors"
-- /oh-my-claudecode:team 5:build-fixer "fix build errors in src/"
+- /omc:team 3:executor "fix all TypeScript errors"
+- /omc:team 5:build-fixer "fix build errors in src/"
 Teams use Claude Code native tools (TeamCreate/SendMessage/TaskCreate).
 
 MCP SERVERS:
-Run /oh-my-claudecode:mcp-setup to add tools like web search, GitHub, etc.
+Run /omc:mcp-setup to add tools like web search, GitHub, etc.
 
 HUD STATUSLINE:
 The status bar now shows OMC state. Restart Claude Code to see it.
@@ -977,7 +977,7 @@ MAGIC KEYWORDS (power-user shortcuts):
 
 TEAMS (NEW!):
 Spawn coordinated agents with shared task lists and real-time messaging:
-- /oh-my-claudecode:team 3:executor "fix all TypeScript errors"
+- /omc:team 3:executor "fix all TypeScript errors"
 - Uses Claude Code native tools (TeamCreate/SendMessage/TaskCreate)
 
 HUD STATUSLINE:
@@ -1007,9 +1007,9 @@ mkdir -p "$(dirname "$CONFIG_FILE")"
 # Get current OMC version from CLAUDE.md
 OMC_VERSION=""
 if [ -f ".claude/CLAUDE.md" ]; then
-  OMC_VERSION=$(grep -m1 "^# oh-my-claudecode" .claude/CLAUDE.md 2>/dev/null | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' || echo "unknown")
+  OMC_VERSION=$(grep -m1 "^# omc" .claude/CLAUDE.md 2>/dev/null | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' || echo "unknown")
 elif [ -f "$HOME/.claude/CLAUDE.md" ]; then
-  OMC_VERSION=$(grep -m1 "^# oh-my-claudecode" "$HOME/.claude/CLAUDE.md" 2>/dev/null | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' || echo "unknown")
+  OMC_VERSION=$(grep -m1 "^# omc" "$HOME/.claude/CLAUDE.md" 2>/dev/null | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' || echo "unknown")
 fi
 
 if [ -f "$CONFIG_FILE" ]; then
@@ -1028,30 +1028,30 @@ echo "Note: Future updates will only refresh CLAUDE.md, not the full setup wizar
 
 ## Keeping Up to Date
 
-After installing oh-my-claudecode updates (via plugin update):
+After installing omc updates (via plugin update):
 
-**Automatic**: Just run `/oh-my-claudecode:omc-setup` - it will detect you've already configured and offer a quick "Update CLAUDE.md only" option that skips the full wizard.
+**Automatic**: Just run `/omc:omc-setup` - it will detect you've already configured and offer a quick "Update CLAUDE.md only" option that skips the full wizard.
 
 **Manual options**:
-- `/oh-my-claudecode:omc-setup --local` to update project config only
-- `/oh-my-claudecode:omc-setup --global` to update global config only
-- `/oh-my-claudecode:omc-setup --force` to re-run the full wizard (reconfigure preferences)
+- `/omc:omc-setup --local` to update project config only
+- `/omc:omc-setup --global` to update global config only
+- `/omc:omc-setup --force` to re-run the full wizard (reconfigure preferences)
 
 This ensures you have the newest features and agent configurations without the token cost of repeating the full setup.
 
 ## Help Text
 
-When user runs `/oh-my-claudecode:omc-setup --help` or just `--help`, display:
+When user runs `/omc:omc-setup --help` or just `--help`, display:
 
 ```
-OMC Setup - Configure oh-my-claudecode
+OMC Setup - Configure omc
 
 USAGE:
-  /oh-my-claudecode:omc-setup           Run initial setup wizard (or update if already configured)
-  /oh-my-claudecode:omc-setup --local   Configure local project (.claude/CLAUDE.md)
-  /oh-my-claudecode:omc-setup --global  Configure global settings (~/.claude/CLAUDE.md)
-  /oh-my-claudecode:omc-setup --force   Force full setup wizard even if already configured
-  /oh-my-claudecode:omc-setup --help    Show this help
+  /omc:omc-setup           Run initial setup wizard (or update if already configured)
+  /omc:omc-setup --local   Configure local project (.claude/CLAUDE.md)
+  /omc:omc-setup --global  Configure global settings (~/.claude/CLAUDE.md)
+  /omc:omc-setup --force   Force full setup wizard even if already configured
+  /omc:omc-setup --help    Show this help
 
 MODES:
   Initial Setup (no flags)
@@ -1082,12 +1082,12 @@ MODES:
     - Use when you want to reconfigure preferences
 
 EXAMPLES:
-  /oh-my-claudecode:omc-setup           # First time setup (or update CLAUDE.md if configured)
-  /oh-my-claudecode:omc-setup --local   # Update this project
-  /oh-my-claudecode:omc-setup --global  # Update all projects
-  /oh-my-claudecode:omc-setup --force   # Re-run full setup wizard
+  /omc:omc-setup           # First time setup (or update CLAUDE.md if configured)
+  /omc:omc-setup --local   # Update this project
+  /omc:omc-setup --global  # Update all projects
+  /omc:omc-setup --force   # Re-run full setup wizard
 
-For more info: https://github.com/yousiki/oh-my-claudecode
+For more info: https://github.com/yousiki/omc
 ```
 
 ## Optional Rule Templates

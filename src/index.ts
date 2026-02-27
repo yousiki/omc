@@ -1,5 +1,5 @@
 /**
- * Oh-My-ClaudeCode
+ * OMC
  *
  * A multi-agent orchestration system for the Claude Agent SDK.
  * Inspired by oh-my-opencode, reimagined for Claude Code.
@@ -242,7 +242,7 @@ export interface OmcSession {
  *
  * @example
  * ```typescript
- * import { createOmcSession } from 'oh-my-claudecode';
+ * import { createOmcSession } from 'omc';
  * import { query } from '@anthropic-ai/claude-agent-sdk';
  *
  * const session = createOmcSession();

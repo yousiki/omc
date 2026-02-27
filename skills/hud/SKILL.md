@@ -15,16 +15,16 @@ Note: All `~/.claude/...` paths in this guide respect `CLAUDE_CONFIG_DIR` when t
 
 | Command | Description |
 |---------|-------------|
-| `/oh-my-claudecode:hud` | Show current HUD status (auto-setup if needed) |
-| `/oh-my-claudecode:hud setup` | Install/repair HUD statusline |
-| `/oh-my-claudecode:hud minimal` | Switch to minimal display |
-| `/oh-my-claudecode:hud focused` | Switch to focused display (default) |
-| `/oh-my-claudecode:hud full` | Switch to full display |
-| `/oh-my-claudecode:hud status` | Show detailed HUD status |
+| `/omc:hud` | Show current HUD status (auto-setup if needed) |
+| `/omc:hud setup` | Install/repair HUD statusline |
+| `/omc:hud minimal` | Switch to minimal display |
+| `/omc:hud focused` | Switch to focused display (default) |
+| `/omc:hud full` | Switch to full display |
+| `/omc:hud status` | Show detailed HUD status |
 
 ## Auto-Setup
 
-When you run `/oh-my-claudecode:hud` or `/oh-my-claudecode:hud setup`, the system will automatically:
+When you run `/omc:hud` or `/omc:hud setup`, the system will automatically:
 1. Check if `~/.claude/hud/omc-hud.mjs` exists
 2. Check if `statusLine` is configured in `~/.claude/settings.json`
 3. If missing, create the HUD wrapper script and configure settings
@@ -41,7 +41,7 @@ bun -e "const p=require('path'),f=require('fs'),d=process.env.CLAUDE_CONFIG_DIR|
 
 **Step 2:** Verify the plugin is installed:
 ```bash
-bun -e "const p=require('path'),f=require('fs'),d=process.env.CLAUDE_CONFIG_DIR||p.join(require('os').homedir(),'.claude'),b=p.join(d,'plugins','cache','omc','oh-my-claudecode');try{const v=f.readdirSync(b).filter(x=>/^\d/.test(x)).sort((a,c)=>a.localeCompare(c,void 0,{numeric:true}));if(v.length===0){console.log('Plugin not installed - run: /plugin install oh-my-claudecode');process.exit()}const l=v[v.length-1],h=p.join(b,l,'src','hud','index.ts');console.log('Version:',l);console.log(f.existsSync(h)?'READY':'NOT_FOUND - try reinstalling: /plugin install oh-my-claudecode')}catch{console.log('Plugin not installed - run: /plugin install oh-my-claudecode')}"
+bun -e "const p=require('path'),f=require('fs'),d=process.env.CLAUDE_CONFIG_DIR||p.join(require('os').homedir(),'.claude'),b=p.join(d,'plugins','cache','omc','omc');try{const v=f.readdirSync(b).filter(x=>/^\d/.test(x)).sort((a,c)=>a.localeCompare(c,void 0,{numeric:true}));if(v.length===0){console.log('Plugin not installed - run: /plugin install omc');process.exit()}const l=v[v.length-1],h=p.join(b,l,'src','hud','index.ts');console.log('Version:',l);console.log(f.existsSync(h)?'READY':'NOT_FOUND - try reinstalling: /plugin install omc')}catch{console.log('Plugin not installed - run: /plugin install omc')}"
 ```
 
 **Step 3:** If omc-hud.mjs is MISSING or argument is `setup`, create the HUD directory and script:
@@ -73,9 +73,9 @@ async function main() {
   // 1. Development paths (only when OMC_DEV=1)
   if (process.env.OMC_DEV === "1") {
     const devPaths = [
-      join(home, "Workspace/oh-my-claudecode/src/hud/index.ts"),
-      join(home, "workspace/oh-my-claudecode/src/hud/index.ts"),
-      join(home, "projects/oh-my-claudecode/src/hud/index.ts"),
+      join(home, "Workspace/omc/src/hud/index.ts"),
+      join(home, "workspace/omc/src/hud/index.ts"),
+      join(home, "projects/omc/src/hud/index.ts"),
     ];
 
     for (const devPath of devPaths) {
@@ -91,7 +91,7 @@ async function main() {
   // 2. Plugin cache (for production installs)
   // Respect CLAUDE_CONFIG_DIR so installs under a custom config dir are found
   const configDir = process.env.CLAUDE_CONFIG_DIR || join(home, ".claude");
-  const pluginCacheBase = join(configDir, "plugins", "cache", "omc", "oh-my-claudecode");
+  const pluginCacheBase = join(configDir, "plugins", "cache", "omc", "omc");
   if (existsSync(pluginCacheBase)) {
     try {
       const versions = readdirSync(pluginCacheBase);
@@ -116,7 +116,7 @@ async function main() {
 
   // 3. Local install
   try {
-    await import("oh-my-claudecode/src/hud/index.ts");
+    await import("omc/src/hud/index.ts");
     return;
   } catch { /* continue */ }
 
@@ -131,10 +131,10 @@ async function main() {
     }
   } else if (existsSync(pluginCacheBase)) {
     // Plugin cache directory exists but no valid versions found
-    console.log("[OMC HUD] Plugin cache found but no valid versions. Run: /oh-my-claudecode:omc-setup");
+    console.log("[OMC HUD] Plugin cache found but no valid versions. Run: /omc:omc-setup");
   } else {
     // No plugin installation found at all
-    console.log("[OMC HUD] Plugin not installed. Run: /oh-my-claudecode:omc-setup");
+    console.log("[OMC HUD] Plugin not installed. Run: /omc:omc-setup");
   }
 }
 
@@ -205,7 +205,7 @@ Shows all relevant elements:
 ### Full
 Shows everything including multi-line agent details:
 ```
-[OMC] repo:oh-my-claudecode branch:main | ralph:3/10 | US-002 (2/5) | ultrawork | ctx:[████░░]67% | agents:3 | bg:3/5 | todos:2/5
+[OMC] repo:omc branch:main | ralph:3/10 | US-002 (2/5) | ultrawork | ctx:[████░░]67% | agents:3 | bg:3/5 | todos:2/5
 ├─ O architect    2m   analyzing architecture patterns...
 ├─ e explore     45s   searching for test files
 └─ s executor     1m   implementing validation logic
@@ -277,11 +277,11 @@ You can manually edit the config file. Each option can be set individually - any
 ## Troubleshooting
 
 If the HUD is not showing:
-1. Run `/oh-my-claudecode:hud setup` to auto-install and configure
+1. Run `/omc:hud setup` to auto-install and configure
 2. Restart Claude Code after setup completes
-3. If still not working, run `/oh-my-claudecode:omc-doctor` for full diagnostics
+3. If still not working, run `/omc:omc-doctor` for full diagnostics
 
-**Legacy string format migration:** Older OMC versions wrote `statusLine` as a plain string (e.g., `"~/.claude/hud/omc-hud.mjs"`). Modern Claude Code (v2.1+) requires an object format. Running the installer or `/oh-my-claudecode:hud setup` will auto-migrate legacy strings to the correct object format:
+**Legacy string format migration:** Older OMC versions wrote `statusLine` as a plain string (e.g., `"~/.claude/hud/omc-hud.mjs"`). Modern Claude Code (v2.1+) requires an object format. Running the installer or `/omc:hud setup` will auto-migrate legacy strings to the correct object format:
 ```json
 {
   "statusLine": {

@@ -424,7 +424,7 @@ This skill activates when:
 
 **Explicit invocation:**
 ```
-/oh-my-claudecode:pipeline review "task"
+/omc:pipeline review "task"
 ```
 
 **Auto-detection:**

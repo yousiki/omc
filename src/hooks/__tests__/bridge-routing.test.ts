@@ -148,7 +148,7 @@ describe('processHook - Routing Matrix', () => {
         const input: HookInput = {
           sessionId,
           toolName: 'Skill',
-          toolInput: { skill: 'oh-my-claudecode:ralph' },
+          toolInput: { skill: 'omc:ralph' },
           directory: tempDir,
         };
 

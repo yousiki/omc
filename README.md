@@ -1,6 +1,6 @@
-# oh-my-claudecode
+# omc
 
-Personal fork of [Yeachan-Heo/oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) — customized for individual use.
+omc (short for oh-my-claudecode) is a fork of [Yeachan-Heo/oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode), rebuilt with a focus on simplicity.
 
 ## What's Different
 
@@ -9,6 +9,7 @@ This is a heavily customized version with the following changes:
 - **Bun Runtime**: Uses [Bun](https://bun.sh) (≥1.0.0) instead of Node.js
 - **No Dist Directory**: Runs directly from source — no build artifacts
 - **Radical Cleanup**: Removed unused files, duplicate docs, and unnecessary clutter
+- **Simplified CLI**: Single `omc setup` command replaces agent-driven setup wizards
 
 ## Status
 
@@ -19,14 +20,14 @@ This is a heavily customized version with the following changes:
 Install as a Claude Code plugin:
 
 ```bash
-/plugin marketplace add https://github.com/yousiki/oh-my-claudecode
-/plugin install oh-my-claudecode
+/plugin marketplace add https://github.com/yousiki/omc
+/plugin install omc
 ```
 
 Then setup:
 
 ```bash
-/omc-setup
+omc setup
 ```
 
 ## Requirements

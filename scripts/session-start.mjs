@@ -176,7 +176,7 @@ async function checkNpmUpdate(currentVersion) {
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 2000);
-    const response = await fetch('https://registry.npmjs.org/oh-my-claudecode/latest', {
+    const response = await fetch('https://registry.npmjs.org/omc/latest', {
       signal: controller.signal
     });
     clearTimeout(timeoutId);
@@ -281,7 +281,7 @@ async function main() {
       if (pluginVersion) {
         const updateInfo = await checkNpmUpdate(pluginVersion);
         if (updateInfo) {
-          messages.push(`<session-restore>\n\n[OMC UPDATE AVAILABLE]\n\nA new version of oh-my-claudecode is available: v${updateInfo.latestVersion} (current: v${updateInfo.currentVersion})\n\nTo update, run: omc update\n(This syncs plugin, npm package, and CLAUDE.md together)\n\n</session-restore>\n\n---\n`);
+          messages.push(`<session-restore>\n\n[OMC UPDATE AVAILABLE]\n\nA new version of omc is available: v${updateInfo.latestVersion} (current: v${updateInfo.currentVersion})\n\nTo update, run: omc update\n(This syncs plugin, npm package, and CLAUDE.md together)\n\n</session-restore>\n\n---\n`);
         }
       }
     } catch {}
@@ -419,7 +419,7 @@ ${cleanContent}
     // This prevents "Cannot find module" errors for sessions started before a
     // plugin update whose CLAUDE_PLUGIN_ROOT still points to the old version.
     try {
-      const cacheBase = join(configDir, 'plugins', 'cache', 'omc', 'oh-my-claudecode');
+      const cacheBase = join(configDir, 'plugins', 'cache', 'omc', 'omc');
       if (existsSync(cacheBase)) {
         const versions = readdirSync(cacheBase)
           .filter(v => /^\d+\.\d+\.\d+/.test(v))

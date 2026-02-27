@@ -99,6 +99,6 @@ The test-engineer agent MAY consult a Claude Task agent for test strategy valida
 - Small, isolated functionality
 
 ### Tool Usage
-Use `Task(subagent_type="oh-my-claudecode:test-engineer", ...)` for test strategy cross-validation.
+Use `Task(subagent_type="omc:test-engineer", ...)` for test strategy cross-validation.
 
 **Remember:** The discipline IS the value. Shortcuts destroy the benefit.

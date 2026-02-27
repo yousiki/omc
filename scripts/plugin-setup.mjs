@@ -59,10 +59,10 @@ function semverCompare(a, b) {
 async function main() {
   const home = homedir();
 
-  // 1. Try plugin cache first (marketplace: omc, plugin: oh-my-claudecode)
+  // 1. Try plugin cache first (marketplace: omc, plugin: omc)
   // Respect CLAUDE_CONFIG_DIR so installs under a custom config dir are found
   const configDir = process.env.CLAUDE_CONFIG_DIR || join(home, ".claude");
-  const pluginCacheBase = join(configDir, "plugins", "cache", "omc", "oh-my-claudecode");
+  const pluginCacheBase = join(configDir, "plugins", "cache", "omc", "omc");
   if (existsSync(pluginCacheBase)) {
     try {
       const versions = readdirSync(pluginCacheBase);
@@ -84,9 +84,9 @@ async function main() {
 
   // 2. Development paths
   const devPaths = [
-    join(home, "Workspace/oh-my-claudecode/src/hud/index.ts"),
-    join(home, "workspace/oh-my-claudecode/src/hud/index.ts"),
-    join(home, "projects/oh-my-claudecode/src/hud/index.ts"),
+    join(home, "Workspace/omc/src/hud/index.ts"),
+    join(home, "workspace/omc/src/hud/index.ts"),
+    join(home, "projects/omc/src/hud/index.ts"),
   ];
 
   for (const devPath of devPaths) {

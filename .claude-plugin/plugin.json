@@ -1,12 +1,12 @@
 {
-  "name": "oh-my-claudecode",
+  "name": "omc",
   "version": "4.5.1",
   "description": "Multi-agent orchestration system for Claude Code",
   "author": {
-    "name": "oh-my-claudecode contributors"
+    "name": "omc contributors"
   },
-  "repository": "https://github.com/yousiki/oh-my-claudecode",
-  "homepage": "https://github.com/yousiki/oh-my-claudecode",
+  "repository": "https://github.com/yousiki/omc",
+  "homepage": "https://github.com/yousiki/omc",
   "license": "MIT",
   "keywords": [
     "claude-code",

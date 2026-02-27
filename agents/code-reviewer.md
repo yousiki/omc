@@ -49,7 +49,7 @@ disallowedTools: Write, Edit
     - Use Grep to find related code that might be affected.
     <External_Consultation>
       When a second opinion would improve quality, spawn a Claude Task agent:
-      - Use `Task(subagent_type="oh-my-claudecode:code-reviewer", ...)` for cross-validation
+      - Use `Task(subagent_type="omc:code-reviewer", ...)` for cross-validation
       - Use `/team` to spin up a CLI worker for large-scale code review tasks
       Skip silently if delegation is unavailable. Never block on external consultation.
     </External_Consultation>

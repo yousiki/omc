@@ -118,8 +118,8 @@ describe('isOmcHook()', () => {
     expect(isOmcHook('node "%USERPROFILE%\\.claude\\hooks\\keyword-detector.mjs"')).toBe(true);
   });
 
-  it('recognises oh-my-claudecode in command path', () => {
-    expect(isOmcHook('/path/to/oh-my-claudecode/hook.mjs')).toBe(true);
+  it('recognises omc in command path', () => {
+    expect(isOmcHook('/path/to/omc/hook.mjs')).toBe(true);
   });
 
   it('recognises omc as a path segment', () => {

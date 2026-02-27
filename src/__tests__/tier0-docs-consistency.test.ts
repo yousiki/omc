@@ -27,7 +27,7 @@ describe('Tier-0 contract docs consistency', () => {
 
   it('documents all Tier-0 slash commands in REFERENCE.md', () => {
     for (const skillName of ['autopilot', 'ultrawork', 'ralph', 'team', 'ralplan']) {
-      expect(referenceDoc).toContain(`/oh-my-claudecode:${skillName}`);
+      expect(referenceDoc).toContain(`/omc:${skillName}`);
     }
   });
 
@@ -39,7 +39,7 @@ describe('Tier-0 contract docs consistency', () => {
 
   it('does not contain blank placeholder rows in core skill/command docs', () => {
     expect(referenceDoc).not.toContain('| `` |');
-    expect(referenceDoc).not.toContain('/oh-my-claudecode: <task>');
+    expect(referenceDoc).not.toContain('/omc: <task>');
     expect(referenceDoc).not.toContain('incl. )');
   });
 

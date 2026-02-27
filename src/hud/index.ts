@@ -2,7 +2,7 @@
 /**
  * OMC HUD - Main Entry Point
  *
- * Statusline command that visualizes oh-my-claudecode state.
+ * Statusline command that visualizes omc state.
  * Receives stdin JSON from Claude Code and outputs formatted statusline.
  */
 

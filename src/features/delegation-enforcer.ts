@@ -61,8 +61,8 @@ export function enforceModel(agentInput: AgentInput): EnforcementResult {
     };
   }
 
-  // Extract agent type (strip oh-my-claudecode: prefix if present)
-  const rawAgentType = agentInput.subagent_type.replace(/^oh-my-claudecode:/, '');
+  // Extract agent type (strip omc: prefix if present)
+  const rawAgentType = agentInput.subagent_type.replace(/^omc:/, '');
   // Normalize deprecated role aliases before registry lookup
   const agentType = normalizeDelegationRole(rawAgentType);
 
@@ -165,12 +165,12 @@ export function processPreToolUse(
 /**
  * Get model for an agent type (for testing/debugging)
  *
- * @param agentType - The agent type (with or without oh-my-claudecode: prefix)
+ * @param agentType - The agent type (with or without omc: prefix)
  * @returns The default model for the agent
  * @throws Error if agent type not found or has no model
  */
 export function getModelForAgent(agentType: string): ModelType {
-  const normalizedType = agentType.replace(/^oh-my-claudecode:/, '');
+  const normalizedType = agentType.replace(/^omc:/, '');
   const agentDefs = getAgentDefinitions();
   const agentDef = agentDefs[normalizedType];
 

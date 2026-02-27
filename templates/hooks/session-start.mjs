@@ -200,7 +200,7 @@ async function main() {
     for (let i = 1; i <= 4; i++) {
       const candidate = join(__dirname, ...Array(i).fill('..'), 'package.json');
       const pkg = readJsonFile(candidate);
-      if (pkg?.name === 'oh-my-claudecode' && pkg?.version) {
+      if (pkg?.name === 'omc' && pkg?.version) {
         currentVersion = pkg.version;
         break;
       }
@@ -218,7 +218,7 @@ async function main() {
 
 [OMC AUTO-UPGRADE AVAILABLE]
 
-oh-my-claudecode v${updateInfo.latestVersion} is available (current: v${updateInfo.currentVersion}).
+omc v${updateInfo.latestVersion} is available (current: v${updateInfo.currentVersion}).
 
 ACTION: Use AskUserQuestion to ask the user if they want to upgrade now. Offer these options:
 - "Upgrade now" (Recommended): Run \`npm install -g oh-my-claude-sisyphus@latest\` via Bash, then run \`omc install --force --skip-claude-check --refresh-hooks\` to reconcile hooks and CLAUDE.md
@@ -236,7 +236,7 @@ Keep the prompt brief. If the user accepts, execute the upgrade commands and rep
 
 [OMC UPDATE AVAILABLE]
 
-A new version of oh-my-claudecode is available: v${updateInfo.latestVersion} (current: ${updateInfo.currentVersion})
+A new version of omc is available: v${updateInfo.latestVersion} (current: ${updateInfo.currentVersion})
 
 To update, run: omc update
 

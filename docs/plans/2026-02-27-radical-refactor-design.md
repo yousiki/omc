@@ -1,4 +1,4 @@
-# Radical Refactor: oh-my-claudecode -> omc
+# Radical Refactor: omc -> omc
 
 **Date:** 2026-02-27
 **Branch:** feat/radical-slimming
@@ -6,7 +6,7 @@
 
 ## Summary
 
-A four-phase refactor that transforms oh-my-claudecode into a lean, TypeScript-only project named `omc`. The rename reflects the project's philosophy: extreme simplification of an overly complex predecessor.
+A four-phase refactor that transforms omc into a lean, TypeScript-only project named `omc`. The rename reflects the project's philosophy: extreme simplification of an overly complex predecessor.
 
 ## Approach: Layered Commits
 
@@ -14,14 +14,14 @@ Each phase is a separate commit, independently reviewable and bisectable.
 
 ---
 
-## Phase 1: Rename (oh-my-claudecode -> omc)
+## Phase 1: Rename (omc -> omc)
 
-**Goal:** The string `oh-my-claudecode` should not appear anywhere in the codebase.
+**Goal:** The string `omc` should not appear anywhere in the codebase.
 
 **Scope:**
 - `package.json`: `"name": "omc"`
 - `.claude-plugin/plugin.json`: update plugin name/id
-- All skill `SKILL.md` files: `oh-my-claudecode:` prefix -> `omc:`
+- All skill `SKILL.md` files: `omc:` prefix -> `omc:`
 - `docs/CLAUDE.md`: all references updated
 - `src/` TypeScript (~20 files): string literals
 - `scripts/` (~4 files): references
@@ -30,9 +30,9 @@ Each phase is a separate commit, independently reviewable and bisectable.
 - `templates/` files
 
 **Rules:**
-- Skill prefix: `oh-my-claudecode:autopilot` -> `omc:autopilot`
-- Product name in prose: `oh-my-claudecode` -> `omc`
-- README notes omc is forked from and is short for oh-my-claudecode
+- Skill prefix: `omc:autopilot` -> `omc:autopilot`
+- Product name in prose: `omc` -> `omc`
+- README notes omc is forked from and is short for omc
 
 ---
 
@@ -145,7 +145,7 @@ omc --help    # Show help
 
 ## Non-goals
 
-- No backward compatibility with oh-my-claudecode installations
+- No backward compatibility with omc installations
 - No migration paths from old versions
 - No agent alias backward compat
 - No auto-update system (users update via plugin marketplace)

@@ -62,7 +62,7 @@ Delegates to the `security-reviewer` agent (Opus model) for deep security analys
 
 ```
 Task(
-  subagent_type="oh-my-claudecode:security-reviewer",
+  subagent_type="omc:security-reviewer",
   model="opus",
   prompt="SECURITY REVIEW TASK
 
@@ -110,7 +110,7 @@ The security-reviewer agent MAY consult a Claude Task agent for cross-validation
 - Code with existing security tests
 
 ### Tool Usage
-Use `Task(subagent_type="oh-my-claudecode:security-reviewer", ...)` for cross-validation.
+Use `Task(subagent_type="omc:security-reviewer", ...)` for cross-validation.
 
 **Note:** Security second opinions are high-value. Consider consulting for CRITICAL/HIGH findings.
 

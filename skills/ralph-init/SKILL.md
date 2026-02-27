@@ -10,7 +10,7 @@ Initialize a PRD (Product Requirements Document) for structured ralph-loop execu
 ## Usage
 
 ```
-/oh-my-claudecode:ralph-init "project or feature description"
+/omc:ralph-init "project or feature description"
 ```
 
 ## Behavior
@@ -34,7 +34,7 @@ A structured PRD file saved to `.omc/plans/` that serves as the definition of do
 
 After creating the PRD, start execution with:
 ```
-/oh-my-claudecode:ralph "implement the PRD"
+/omc:ralph "implement the PRD"
 ```
 
 Ralph will iterate until all acceptance criteria in the PRD are met and architect-verified.

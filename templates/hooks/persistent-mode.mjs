@@ -363,7 +363,7 @@ function countIncompleteTodos(sessionId, projectDir) {
  * Blocking these stops causes a deadlock: can't compact because can't stop,
  * can't continue because context is full.
  *
- * See: https://github.com/Yeachan-Heo/oh-my-claudecode/issues/213
+ * See: https://github.com/Yeachan-Heo/omc/issues/213
  */
 function isContextLimitStop(data) {
   const reason = (data.stop_reason || data.stopReason || "").toLowerCase();
@@ -440,7 +440,7 @@ async function main() {
 
     // CRITICAL: Never block context-limit stops.
     // Blocking these causes a deadlock where Claude Code cannot compact.
-    // See: https://github.com/Yeachan-Heo/oh-my-claudecode/issues/213
+    // See: https://github.com/Yeachan-Heo/omc/issues/213
     if (isContextLimitStop(data)) {
       console.log(JSON.stringify({ continue: true, suppressOutput: true }));
       return;
@@ -517,7 +517,7 @@ async function main() {
           ralph.state.last_checked_at = new Date().toISOString();
           writeJsonFile(ralph.path, ralph.state);
 
-          let reason = `[RALPH LOOP - ITERATION ${iteration + 1}/${maxIter}] Work is NOT done. Continue working.\nWhen FULLY complete (after Architect verification), run /oh-my-claudecode:cancel to cleanly exit ralph mode and clean up all state files. If cancel fails, retry with /oh-my-claudecode:cancel --force.\n${ralph.state.prompt ? `Task: ${ralph.state.prompt}` : ""}`;
+          let reason = `[RALPH LOOP - ITERATION ${iteration + 1}/${maxIter}] Work is NOT done. Continue working.\nWhen FULLY complete (after Architect verification), run /omc:cancel to cleanly exit ralph mode and clean up all state files. If cancel fails, retry with /omc:cancel --force.\n${ralph.state.prompt ? `Task: ${ralph.state.prompt}` : ""}`;
           if (errorGuidance) {
             reason = errorGuidance + reason;
           }
@@ -540,7 +540,7 @@ async function main() {
         console.log(
           JSON.stringify({
             decision: "block",
-            reason: `[RALPH LOOP - EXTENDED] Max iterations reached; extending to ${ralph.state.max_iterations} and continuing. When FULLY complete (after Architect verification), run /oh-my-claudecode:cancel (or --force).`,
+            reason: `[RALPH LOOP - EXTENDED] Max iterations reached; extending to ${ralph.state.max_iterations} and continuing. When FULLY complete (after Architect verification), run /omc:cancel (or --force).`,
           }),
         );
         return;
@@ -568,7 +568,7 @@ async function main() {
             autopilot.state.last_checked_at = new Date().toISOString();
             writeJsonFile(autopilot.path, autopilot.state);
 
-            let reason = `[AUTOPILOT - Phase: ${phase}] Autopilot not complete. Continue working. When all phases are complete, run /oh-my-claudecode:cancel to cleanly exit and clean up state files. If cancel fails, retry with /oh-my-claudecode:cancel --force.`;
+            let reason = `[AUTOPILOT - Phase: ${phase}] Autopilot not complete. Continue working. When all phases are complete, run /omc:cancel to cleanly exit and clean up state files. If cancel fails, retry with /omc:cancel --force.`;
             if (errorGuidance) {
               reason = errorGuidance + reason;
             }
@@ -606,7 +606,7 @@ async function main() {
           pipeline.state.last_checked_at = new Date().toISOString();
           writeJsonFile(pipeline.path, pipeline.state);
 
-          let reason = `[PIPELINE - Stage ${currentStage + 1}/${totalStages}] Pipeline not complete. Continue working. When all stages complete, run /oh-my-claudecode:cancel to cleanly exit and clean up state files. If cancel fails, retry with /oh-my-claudecode:cancel --force.`;
+          let reason = `[PIPELINE - Stage ${currentStage + 1}/${totalStages}] Pipeline not complete. Continue working. When all stages complete, run /omc:cancel to cleanly exit and clean up state files. If cancel fails, retry with /omc:cancel --force.`;
           if (errorGuidance) {
             reason = errorGuidance + reason;
           }
@@ -644,7 +644,7 @@ async function main() {
             team.state.last_checked_at = new Date().toISOString();
             writeJsonFile(team.path, team.state);
 
-            let reason = `[TEAM - Phase: ${phase}] Team mode active. Continue working. When all team tasks complete, run /oh-my-claudecode:cancel to cleanly exit. If cancel fails, retry with /oh-my-claudecode:cancel --force.`;
+            let reason = `[TEAM - Phase: ${phase}] Team mode active. Continue working. When all team tasks complete, run /omc:cancel to cleanly exit. If cancel fails, retry with /omc:cancel --force.`;
             if (errorGuidance) {
               reason = errorGuidance + reason;
             }
@@ -680,7 +680,7 @@ async function main() {
         ultraqa.state.last_checked_at = new Date().toISOString();
         writeJsonFile(ultraqa.path, ultraqa.state);
 
-        let reason = `[ULTRAQA - Cycle ${cycle + 1}/${maxCycles}] Tests not all passing. Continue fixing. When all tests pass, run /oh-my-claudecode:cancel to cleanly exit and clean up state files. If cancel fails, retry with /oh-my-claudecode:cancel --force.`;
+        let reason = `[ULTRAQA - Cycle ${cycle + 1}/${maxCycles}] Tests not all passing. Continue fixing. When all tests pass, run /omc:cancel to cleanly exit and clean up state files. If cancel fails, retry with /omc:cancel --force.`;
         if (errorGuidance) {
           reason = errorGuidance + reason;
         }
@@ -730,7 +730,7 @@ async function main() {
         reason += ` ${totalIncomplete} incomplete ${itemType} remain. Continue working.`;
       } else if (newCount >= 3) {
         // Only suggest cancel after minimum iterations (guard against no-tasks-created scenario)
-        reason += ` If all work is complete, run /oh-my-claudecode:cancel to cleanly exit ultrawork mode and clean up state files. If cancel fails, retry with /oh-my-claudecode:cancel --force. Otherwise, continue working.`;
+        reason += ` If all work is complete, run /omc:cancel to cleanly exit ultrawork mode and clean up state files. If cancel fails, retry with /omc:cancel --force. Otherwise, continue working.`;
       } else {
         // Early iterations with no tasks yet - just tell LLM to continue
         reason += ` Continue working - create Tasks to track your progress.`;

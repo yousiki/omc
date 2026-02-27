@@ -1,6 +1,6 @@
 # Reference Documentation
 
-Complete reference for oh-my-claudecode. For quick start, see the main [README.md](../README.md).
+Complete reference for omc. For quick start, see the main [README.md](../README.md).
 
 ---
 
@@ -28,10 +28,10 @@ Complete reference for oh-my-claudecode. For quick start, see the main [README.m
 
 ```bash
 # Step 1: Add the marketplace
-/plugin marketplace add https://github.com/Yeachan-Heo/oh-my-claudecode
+/plugin marketplace add https://github.com/Yeachan-Heo/omc
 
 # Step 2: Install the plugin
-/plugin install oh-my-claudecode
+/plugin install omc
 ```
 
 This integrates directly with Claude Code's plugin system and uses Node.js hooks.
@@ -54,7 +54,7 @@ This integrates directly with Claude Code's plugin system and uses Node.js hooks
 Configure omc for the current project only:
 
 ```
-/oh-my-claudecode:omc-setup --local
+/omc:omc-setup --local
 ```
 
 - Creates `./.claude/CLAUDE.md` in your current project
@@ -67,7 +67,7 @@ Configure omc for the current project only:
 Configure omc for all Claude Code sessions:
 
 ```
-/oh-my-claudecode:omc-setup
+/omc:omc-setup
 ```
 
 - Creates `~/.claude/CLAUDE.md` globally
@@ -120,9 +120,9 @@ If both a legacy `{worktree}/.omc/` directory and a centralized directory exist,
 - **First time**: Run after installation (choose project or global)
 - **After updates**: Re-run to get the latest configuration
 - **Different machines**: Run on each machine where you use Claude Code
-- **New projects**: Run `/oh-my-claudecode:omc-setup --local` in each project that needs omc
+- **New projects**: Run `/omc:omc-setup --local` in each project that needs omc
 
-> **NOTE**: After updating the plugin (via `npm update`, `git pull`, or Claude Code's plugin update), you MUST re-run `/oh-my-claudecode:omc-setup` to apply the latest CLAUDE.md changes.
+> **NOTE**: After updating the plugin (via `npm update`, `git pull`, or Claude Code's plugin update), you MUST re-run `/omc:omc-setup` to apply the latest CLAUDE.md changes.
 
 ### Agent Customization
 
@@ -161,7 +161,7 @@ This is a TypeScript monorepo using:
 
 ## Agents
 
-Always use `oh-my-claudecode:` prefix when calling via Task tool.
+Always use `omc:` prefix when calling via Task tool.
 
 ### By Domain and Tier
 
@@ -226,84 +226,84 @@ Always use `oh-my-claudecode:` prefix when calling via Task tool.
 | Skill | Description | Manual Command |
 |-------|-------------|----------------|
 | `orchestrate` | Multi-agent orchestration mode | - |
-| `autopilot` | Full autonomous execution from idea to working code | `/oh-my-claudecode:autopilot` |
-| `ultrawork` | Maximum performance with parallel agents | `/oh-my-claudecode:ultrawork` |
-| `team` | N coordinated agents on shared task list using native teams | `/oh-my-claudecode:team` |
-| `pipeline` | Sequential agent chaining | `/oh-my-claudecode:pipeline` |
-| `ralph` | Self-referential development until completion | `/oh-my-claudecode:ralph` |
-| `ralph-init` | Initialize PRD for structured task tracking | `/oh-my-claudecode:ralph-init` |
-| `ultraqa` | Autonomous QA cycling workflow | `/oh-my-claudecode:ultraqa` |
-| `plan` | Start planning session (consensus mode uses RALPLAN-DR structured deliberation) | `/oh-my-claudecode:plan` |
-| `ralplan` | Iterative planning (Planner+Architect+Critic) with structured deliberation; short mode default, `--deliberate` for high-risk pre-mortem + expanded test plan | `/oh-my-claudecode:ralplan` |
-| `review` | Review work plans with critic | `/oh-my-claudecode:review` |
+| `autopilot` | Full autonomous execution from idea to working code | `/omc:autopilot` |
+| `ultrawork` | Maximum performance with parallel agents | `/omc:ultrawork` |
+| `team` | N coordinated agents on shared task list using native teams | `/omc:team` |
+| `pipeline` | Sequential agent chaining | `/omc:pipeline` |
+| `ralph` | Self-referential development until completion | `/omc:ralph` |
+| `ralph-init` | Initialize PRD for structured task tracking | `/omc:ralph-init` |
+| `ultraqa` | Autonomous QA cycling workflow | `/omc:ultraqa` |
+| `plan` | Start planning session (consensus mode uses RALPLAN-DR structured deliberation) | `/omc:plan` |
+| `ralplan` | Iterative planning (Planner+Architect+Critic) with structured deliberation; short mode default, `--deliberate` for high-risk pre-mortem + expanded test plan | `/omc:ralplan` |
+| `review` | Review work plans with critic | `/omc:review` |
 
 ### Enhancement Skills
 
 | Skill | Description | Manual Command |
 |-------|-------------|----------------|
-| `deepinit` | Hierarchical AGENTS.md codebase documentation | `/oh-my-claudecode:deepinit` |
-| `deepsearch` | Thorough multi-strategy codebase search | `/oh-my-claudecode:deepsearch` |
-| `analyze` | Deep analysis and investigation | `/oh-my-claudecode:analyze` |
-| `sciomc` | Parallel scientist orchestration | `/oh-my-claudecode:sciomc` |
+| `deepinit` | Hierarchical AGENTS.md codebase documentation | `/omc:deepinit` |
+| `deepsearch` | Thorough multi-strategy codebase search | `/omc:deepsearch` |
+| `analyze` | Deep analysis and investigation | `/omc:analyze` |
+| `sciomc` | Parallel scientist orchestration | `/omc:sciomc` |
 | `frontend-ui-ux` | Designer-turned-developer UI/UX expertise | (silent activation) |
 | `git-master` | Git expert for atomic commits and history | (silent activation) |
-| `tdd` | TDD enforcement: test-first development | `/oh-my-claudecode:tdd` |
-| `learner` | Extract reusable skill from session | `/oh-my-claudecode:learner` |
-| `build-fix` | Fix build and TypeScript errors | `/oh-my-claudecode:build-fix` |
-| `code-review` | Comprehensive code review | `/oh-my-claudecode:code-review` |
-| `security-review` | Security vulnerability detection | `/oh-my-claudecode:security-review` |
+| `tdd` | TDD enforcement: test-first development | `/omc:tdd` |
+| `learner` | Extract reusable skill from session | `/omc:learner` |
+| `build-fix` | Fix build and TypeScript errors | `/omc:build-fix` |
+| `code-review` | Comprehensive code review | `/omc:code-review` |
+| `security-review` | Security vulnerability detection | `/omc:security-review` |
 
 ### Utility Skills
 
 | Skill | Description | Manual Command |
 |-------|-------------|----------------|
-| `note` | Save notes to compaction-resilient notepad | `/oh-my-claudecode:note` |
-| `cancel` | Unified cancellation for all modes | `/oh-my-claudecode:cancel` |
-| `omc-setup` | One-time setup wizard | `/oh-my-claudecode:omc-setup` |
-| `omc-doctor` | Diagnose and fix installation issues | `/oh-my-claudecode:omc-doctor` |
-| `omc-help` | Show OMC usage guide | `/oh-my-claudecode:omc-help` |
-| `hud` | Configure HUD statusline | `/oh-my-claudecode:hud` |
-| `release` | Automated release workflow | `/oh-my-claudecode:release` |
-| `mcp-setup` | Configure MCP servers | `/oh-my-claudecode:mcp-setup` |
-| `writer-memory` | Agentic memory system for writers | `/oh-my-claudecode:writer-memory` |
-| `project-session-manager` | Manage isolated dev environments (git worktrees + tmux) | `/oh-my-claudecode:project-session-manager` |
-| `psm` | **Deprecated** compatibility alias for `project-session-manager` | `/oh-my-claudecode:psm` |
-| `skill` | Manage local skills (list, add, remove, search, edit) | `/oh-my-claudecode:skill` |
+| `note` | Save notes to compaction-resilient notepad | `/omc:note` |
+| `cancel` | Unified cancellation for all modes | `/omc:cancel` |
+| `omc-setup` | One-time setup wizard | `/omc:omc-setup` |
+| `omc-doctor` | Diagnose and fix installation issues | `/omc:omc-doctor` |
+| `omc-help` | Show OMC usage guide | `/omc:omc-help` |
+| `hud` | Configure HUD statusline | `/omc:hud` |
+| `release` | Automated release workflow | `/omc:release` |
+| `mcp-setup` | Configure MCP servers | `/omc:mcp-setup` |
+| `writer-memory` | Agentic memory system for writers | `/omc:writer-memory` |
+| `project-session-manager` | Manage isolated dev environments (git worktrees + tmux) | `/omc:project-session-manager` |
+| `psm` | **Deprecated** compatibility alias for `project-session-manager` | `/omc:psm` |
+| `skill` | Manage local skills (list, add, remove, search, edit) | `/omc:skill` |
 
 ---
 
 ## Slash Commands
 
-All skills are available as slash commands with the prefix `/oh-my-claudecode:`.
+All skills are available as slash commands with the prefix `/omc:`.
 
 | Command | Description |
 |---------|-------------|
-| `/oh-my-claudecode:orchestrate <task>` | Activate multi-agent orchestration mode |
-| `/oh-my-claudecode:autopilot <task>` | Full autonomous execution |
-| `/oh-my-claudecode:ultrawork <task>` | Maximum performance mode with parallel agents |
-| `/oh-my-claudecode:team <N>:<agent> <task>` | Coordinated native team workflow |
-| `/oh-my-claudecode:pipeline <stages>` | Sequential agent chaining |
-| `/oh-my-claudecode:ralph-init <task>` | Initialize PRD for structured task tracking |
-| `/oh-my-claudecode:ralph <task>` | Self-referential loop until task completion |
-| `/oh-my-claudecode:ultraqa <goal>` | Autonomous QA cycling workflow |
-| `/oh-my-claudecode:plan <description>` | Start planning session (supports consensus structured deliberation) |
-| `/oh-my-claudecode:ralplan <description>` | Iterative planning with consensus structured deliberation (`--deliberate` for high-risk mode) |
-| `/oh-my-claudecode:review [plan-path]` | Review a plan with critic |
-| `/oh-my-claudecode:deepsearch <query>` | Thorough multi-strategy codebase search |
-| `/oh-my-claudecode:deepinit [path]` | Index codebase with hierarchical AGENTS.md files |
-| `/oh-my-claudecode:analyze <target>` | Deep analysis and investigation |
-| `/oh-my-claudecode:sciomc <topic>` | Parallel research orchestration |
-| `/oh-my-claudecode:tdd <feature>` | TDD workflow enforcement |
-| `/oh-my-claudecode:learner` | Extract reusable skill from session |
-| `/oh-my-claudecode:note <content>` | Save notes to notepad.md |
-| `/oh-my-claudecode:cancel` | Unified cancellation |
-| `/oh-my-claudecode:omc-setup` | One-time setup wizard |
-| `/oh-my-claudecode:omc-doctor` | Diagnose and fix installation issues |
-| `/oh-my-claudecode:omc-help` | Show OMC usage guide |
-| `/oh-my-claudecode:hud` | Configure HUD statusline |
-| `/oh-my-claudecode:release` | Automated release workflow |
-| `/oh-my-claudecode:mcp-setup` | Configure MCP servers |
-| `/oh-my-claudecode:psm <arguments>` | Deprecated alias for project session manager |
+| `/omc:orchestrate <task>` | Activate multi-agent orchestration mode |
+| `/omc:autopilot <task>` | Full autonomous execution |
+| `/omc:ultrawork <task>` | Maximum performance mode with parallel agents |
+| `/omc:team <N>:<agent> <task>` | Coordinated native team workflow |
+| `/omc:pipeline <stages>` | Sequential agent chaining |
+| `/omc:ralph-init <task>` | Initialize PRD for structured task tracking |
+| `/omc:ralph <task>` | Self-referential loop until task completion |
+| `/omc:ultraqa <goal>` | Autonomous QA cycling workflow |
+| `/omc:plan <description>` | Start planning session (supports consensus structured deliberation) |
+| `/omc:ralplan <description>` | Iterative planning with consensus structured deliberation (`--deliberate` for high-risk mode) |
+| `/omc:review [plan-path]` | Review a plan with critic |
+| `/omc:deepsearch <query>` | Thorough multi-strategy codebase search |
+| `/omc:deepinit [path]` | Index codebase with hierarchical AGENTS.md files |
+| `/omc:analyze <target>` | Deep analysis and investigation |
+| `/omc:sciomc <topic>` | Parallel research orchestration |
+| `/omc:tdd <feature>` | TDD workflow enforcement |
+| `/omc:learner` | Extract reusable skill from session |
+| `/omc:note <content>` | Save notes to notepad.md |
+| `/omc:cancel` | Unified cancellation |
+| `/omc:omc-setup` | One-time setup wizard |
+| `/omc:omc-doctor` | Diagnose and fix installation issues |
+| `/omc:omc-help` | Show OMC usage guide |
+| `/omc:hud` | Configure HUD statusline |
+| `/omc:release` | Automated release workflow |
+| `/omc:mcp-setup` | Configure MCP servers |
+| `/omc:psm <arguments>` | Deprecated alias for project session manager |
 
 ---
 
@@ -523,7 +523,7 @@ pipeline: analyze → fix → test this bug
 
 ## Performance Monitoring
 
-oh-my-claudecode includes comprehensive monitoring for agent performance, token usage, and debugging parallel workflows.
+omc includes comprehensive monitoring for agent performance, token usage, and debugging parallel workflows.
 
 For complete documentation, see **[Performance Monitoring Guide](./PERFORMANCE-MONITORING.md)**.
 
@@ -569,7 +569,7 @@ Enable detailed cost tracking in your status line:
 ### Diagnose Installation Issues
 
 ```bash
-/oh-my-claudecode:omc-doctor
+/omc:omc-doctor
 ```
 
 Checks for:
@@ -582,7 +582,7 @@ Checks for:
 ### Configure HUD Statusline
 
 ```bash
-/oh-my-claudecode:hud setup
+/omc:hud setup
 ```
 
 Installs or repairs the HUD statusline for real-time status updates.
@@ -622,11 +622,11 @@ Available presets: `minimal`, `focused`, `full`, `dense`, `analytics`, `opencode
 
 | Issue | Solution |
 |-------|----------|
-| Commands not found | Re-run `/oh-my-claudecode:omc-setup` |
+| Commands not found | Re-run `/omc:omc-setup` |
 | Hooks not executing | Check hook permissions: `chmod +x ~/.claude/hooks/**/*.sh` |
 | Agents not delegating | Verify CLAUDE.md is loaded: check `./.claude/CLAUDE.md` or `~/.claude/CLAUDE.md` |
 | LSP tools not working | Install language servers: `npm install -g typescript-language-server` |
-| Token limit errors | Use `/oh-my-claudecode:` for token-efficient execution |
+| Token limit errors | Use `/omc:` for token-efficient execution |
 
 ### Auto-Update
 
@@ -642,7 +642,7 @@ To manually update, re-run the plugin install command or use Claude Code's built
 ### Uninstall
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Yeachan-Heo/oh-my-claudecode/main/scripts/uninstall.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Yeachan-Heo/omc/main/scripts/uninstall.sh | bash
 ```
 
 Or manually:

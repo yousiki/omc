@@ -4,7 +4,7 @@
  * Unified handler for persistent work modes: ultrawork, ralph, and todo-continuation.
  * This hook intercepts Stop events and enforces work continuation based on:
  * 1. Active ultrawork mode with pending todos
- * 2. Active ralph loop (until cancelled via /oh-my-claudecode:cancel)
+ * 2. Active ralph loop (until cancelled via /omc:cancel)
  * 3. Any pending todos (general enforcement)
  *
  * Priority order: Ralph > Ultrawork > Todo Continuation
@@ -567,7 +567,7 @@ CRITICAL INSTRUCTIONS:
 1. Review your progress and the original task
 ${prdInstruction}
 3. Continue from where you left off
-4. When FULLY complete (after Architect verification), run \`/oh-my-claudecode:cancel\` to cleanly exit and clean up state files. If cancel fails, retry with \`/oh-my-claudecode:cancel --force\`.
+4. When FULLY complete (after Architect verification), run \`/omc:cancel\` to cleanly exit and clean up state files. If cancel fails, retry with \`/omc:cancel --force\`.
 5. Do NOT stop until the task is truly done
 
 ${newState.prompt ? `Original task: ${newState.prompt}` : ''}
@@ -722,7 +722,7 @@ export async function checkPersistentModes(
 
   // CRITICAL: Never block context-limit stops.
   // Blocking these causes a deadlock where Claude Code cannot compact.
-  // See: https://github.com/Yeachan-Heo/oh-my-claudecode/issues/213
+  // See: https://github.com/Yeachan-Heo/omc/issues/213
   if (isContextLimitStop(stopContext)) {
     return {
       shouldBlock: false,
@@ -766,7 +766,7 @@ export async function checkPersistentModes(
   // When the API returns 429 / quota-exhausted, Claude Code stops the session.
   // Blocking these stops creates an infinite retry loop: the hook injects a
   // continuation prompt → Claude hits the rate limit again → stops again → loops.
-  // Fix for: https://github.com/Yeachan-Heo/oh-my-claudecode/issues/777
+  // Fix for: https://github.com/Yeachan-Heo/omc/issues/777
   if (isRateLimitStop(stopContext)) {
     return {
       shouldBlock: false,

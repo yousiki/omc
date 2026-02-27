@@ -1,7 +1,7 @@
 {
-  "name": "oh-my-claudecode",
+  "name": "omc",
   "version": "4.5.1",
-  "description": "Multi-agent orchestration system for Claude Code - Inspired by oh-my-opencode",
+  "description": "Multi-agent orchestration system for Claude Code - Forked from omc",
   "type": "module",
   "main": "src/index.ts",
   "exports": {
@@ -37,11 +37,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yousiki/oh-my-claudecode.git"
+    "url": "git+https://github.com/yousiki/omc.git"
   },
-  "homepage": "https://github.com/yousiki/oh-my-claudecode#readme",
+  "homepage": "https://github.com/yousiki/omc#readme",
   "bugs": {
-    "url": "https://github.com/yousiki/oh-my-claudecode/issues"
+    "url": "https://github.com/yousiki/omc/issues"
   },
   "author": "yousiki",
   "license": "MIT",

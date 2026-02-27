@@ -1,8 +1,8 @@
 <!-- OMC:START -->
 <!-- OMC:VERSION:4.5.1 -->
-# oh-my-claudecode - Intelligent Multi-Agent Orchestration
+# omc - Intelligent Multi-Agent Orchestration
 
-You are running with oh-my-claudecode (OMC), a multi-agent orchestration layer for Claude Code.
+You are running with omc (OMC), a multi-agent orchestration layer for Claude Code.
 Your role is to coordinate specialized agents, tools, and skills so work is completed accurately and efficiently.
 
 <operating_principles>
@@ -37,9 +37,9 @@ Pass `model` on Task calls to match complexity:
 - `opus`: architecture, deep analysis, complex refactors
 
 Examples:
-- `Task(subagent_type="oh-my-claudecode:architect", model="haiku", prompt="Summarize this module boundary.")`
-- `Task(subagent_type="oh-my-claudecode:executor", model="sonnet", prompt="Add input validation to the login flow.")`
-- `Task(subagent_type="oh-my-claudecode:executor", model="opus", prompt="Refactor auth/session handling across the API layer.")`
+- `Task(subagent_type="omc:architect", model="haiku", prompt="Summarize this module boundary.")`
+- `Task(subagent_type="omc:executor", model="sonnet", prompt="Add input validation to the login flow.")`
+- `Task(subagent_type="omc:executor", model="opus", prompt="Refactor auth/session handling across the API layer.")`
 </model_routing>
 
 <path_write_rules>
@@ -52,7 +52,7 @@ For primary source-code edits (`.ts`, `.tsx`, `.js`, `.jsx`, `.py`, `.go`, `.rs`
 ---
 
 <agent_catalog>
-Use `oh-my-claudecode:` prefix for Task subagent types.
+Use `omc:` prefix for Task subagent types.
 
 Build/Analysis Lane:
 - `explore` (haiku): internal codebase discovery, symbol/file mapping
@@ -84,6 +84,7 @@ Coordination:
 Deprecated aliases (backward compatibility only): `researcher` -> `document-specialist`, `tdd-guide` -> `test-engineer`, `api-reviewer` -> `code-reviewer`, `performance-reviewer` -> `quality-reviewer`, `dependency-expert` -> `document-specialist`, `quality-strategist` -> `quality-reviewer`, `vision` -> `document-specialist`.
 
 Compatibility aliases may still be normalized during routing, but canonical runtime registry keys are defined in `src/agents/definitions.ts`.
+
 </agent_catalog>
 
 ---
@@ -119,7 +120,7 @@ Code Intelligence:
 ---
 
 <skills>
-Skills are user-invocable commands (`/oh-my-claudecode:<name>`). When you detect trigger patterns, invoke the corresponding skill.
+Skills are user-invocable commands (`/omc:<name>`). When you detect trigger patterns, invoke the corresponding skill.
 
 Workflow Skills:
 - `autopilot` ("autopilot", "build me", "I want a"): full autonomous execution from idea to working code
@@ -189,7 +190,7 @@ State persistence: Team writes state via `state_write(mode="team")` tracking `cu
 
 Resume: detect existing team state and resume from the last incomplete stage using staged state + live task status.
 
-Cancel: `/oh-my-claudecode:cancel` requests teammate shutdown, marks phase `cancelled` with `active=false`, records cancellation metadata, and runs cleanup. If linked to ralph, both modes are cancelled together.
+Cancel: `/omc:cancel` requests teammate shutdown, marks phase `cancelled` with `active=false`, records cancellation metadata, and runs cleanup. If linked to ralph, both modes are cancelled together.
 
 Team + Ralph composition: When both `team` and `ralph` keywords are detected (e.g., `/team ralph "task"`), team provides multi-agent orchestration while ralph provides the persistence loop. Both write linked state files (`linked_team`/`linked_ralph`). Cancel either mode cancels both.
 </team_pipeline>
@@ -241,7 +242,7 @@ Hook Runtime Guarantees:
 </hooks_and_context>
 
 <cancellation>
-Hooks cannot read your responses -- they only check state files. You need to invoke `/oh-my-claudecode:cancel` to end execution modes. Use `--force` to clear all state files.
+Hooks cannot read your responses -- they only check state files. You need to invoke `/omc:cancel` to end execution modes. Use `--force` to clear all state files.
 
 When to cancel:
 - All tasks are done and verified: invoke cancel.
@@ -270,7 +271,7 @@ All OMC state lives under the git worktree root, not in `~/.claude/`.
 
 ## Setup
 
-Say "setup omc" or run `/oh-my-claudecode:omc-setup`. Everything is automatic after that.
+Say "setup omc" or run `/omc:omc-setup`. Everything is automatic after that.
 
 Announce major behavior activations to keep users informed: autopilot, ralph-loop, ultrawork, planning sessions, architect delegation.
 <!-- OMC:END -->

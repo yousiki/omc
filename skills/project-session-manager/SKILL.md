@@ -18,7 +18,7 @@ aliases: [psm]
 
 Automate isolated development environments using git worktrees and tmux sessions with Claude Code. Enables parallel work across multiple tasks, projects, and repositories.
 
-Canonical slash command: `/oh-my-claudecode:project-session-manager` (alias: `/oh-my-claudecode:psm`).
+Canonical slash command: `/omc:project-session-manager` (alias: `/omc:psm`).
 
 ## Commands
 
@@ -49,8 +49,8 @@ Supported formats:
 {
   "aliases": {
     "omc": {
-      "repo": "Yeachan-Heo/oh-my-claudecode",
-      "local": "~/Workspace/oh-my-claudecode",
+      "repo": "Yeachan-Heo/omc",
+      "local": "~/Workspace/omc",
       "default_base": "main"
     }
   },
@@ -543,8 +543,8 @@ if [[ ! -f ~/.psm/projects.json ]]; then
 {
   "aliases": {
     "omc": {
-      "repo": "Yeachan-Heo/oh-my-claudecode",
-      "local": "~/Workspace/oh-my-claudecode",
+      "repo": "Yeachan-Heo/omc",
+      "local": "~/Workspace/omc",
       "default_base": "main"
     }
   },

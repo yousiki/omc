@@ -8,7 +8,7 @@
  * 1. Ralph claims task is complete
  * 2. System enters verification mode
  * 3. Architect agent is invoked to verify the work
- * 4. If architect approves -> truly complete, use /oh-my-claudecode:cancel to exit
+ * 4. If architect approves -> truly complete, use /omc:cancel to exit
  * 5. If architect finds flaws -> continue ralph with architect feedback
  */
 
@@ -198,7 +198,7 @@ ${state.architect_feedback ? `**Previous Architect Feedback (rejected):**\n${sta
    - Are tests passing (if applicable)?
 
 3. **Based on Architect's response:**
-   - If APPROVED: Output \`<architect-approved>VERIFIED_COMPLETE</architect-approved>\`, then run \`/oh-my-claudecode:cancel\` to cleanly exit
+   - If APPROVED: Output \`<architect-approved>VERIFIED_COMPLETE</architect-approved>\`, then run \`/omc:cancel\` to cleanly exit
    - If REJECTED: Continue working on the identified issues
 
 </ralph-verification>
@@ -229,7 +229,7 @@ ${state.original_task}
 1. Address ALL issues identified by Architect
 2. Do NOT claim completion again until issues are fixed
 3. When truly done, another Architect verification will be triggered
-4. After Architect approves, run \`/oh-my-claudecode:cancel\` to cleanly exit
+4. After Architect approves, run \`/omc:cancel\` to cleanly exit
 
 Continue working now.
 

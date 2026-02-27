@@ -17,8 +17,8 @@ psm_init() {
 {
   "aliases": {
     "omc": {
-      "repo": "Yeachan-Heo/oh-my-claudecode",
-      "local": "~/Workspace/oh-my-claudecode",
+      "repo": "Yeachan-Heo/omc",
+      "local": "~/Workspace/omc",
       "default_base": "main"
     }
   },

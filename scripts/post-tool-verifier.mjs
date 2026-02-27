@@ -280,7 +280,7 @@ function getAgentCompletionSummary(directory) {
 
       const parts = [];
       if (running.length > 0) {
-        parts.push(`Running: ${running.length} [${running.map(a => a.agent_type.replace('oh-my-claudecode:', '')).join(', ')}]`);
+        parts.push(`Running: ${running.length} [${running.map(a => a.agent_type.replace('omc:', '')).join(', ')}]`);
       }
       if (completed > 0) parts.push(`Completed: ${completed}`);
       if (failed > 0) parts.push(`Failed: ${failed}`);

@@ -13,7 +13,7 @@
  * 2. Read/write/clear functions for skill-active-state.json
  * 3. A check function for the Stop hook to determine if blocking is needed
  *
- * Fix for: https://github.com/Yeachan-Heo/oh-my-claudecode/issues/1033
+ * Fix for: https://github.com/Yeachan-Heo/omc/issues/1033
  */
 
 import { existsSync, readFileSync, writeFileSync, mkdirSync, unlinkSync } from 'fs';
@@ -120,7 +120,7 @@ const SKILL_PROTECTION: Record<string, SkillProtectionLevel> = {
  * Unknown skills default to 'light' for safety.
  */
 export function getSkillProtection(skillName: string): SkillProtectionLevel {
-  const normalized = skillName.toLowerCase().replace(/^oh-my-claudecode:/, '');
+  const normalized = skillName.toLowerCase().replace(/^omc:/, '');
   return SKILL_PROTECTION[normalized] ?? 'light';
 }
 
@@ -187,7 +187,7 @@ export function writeSkillActiveState(
 
   const config = PROTECTION_CONFIGS[protection];
   const now = new Date().toISOString();
-  const normalized = skillName.toLowerCase().replace(/^oh-my-claudecode:/, '');
+  const normalized = skillName.toLowerCase().replace(/^omc:/, '');
 
   const state: SkillActiveState = {
     active: true,

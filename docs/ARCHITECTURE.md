@@ -1,14 +1,14 @@
 # Architecture
 
-> How oh-my-claudecode orchestrates multi-agent workflows.
+> How omc orchestrates multi-agent workflows.
 
 ## Overview
 
-oh-my-claudecode enables Claude Code to orchestrate specialized agents through a skill-based routing system.
+omc enables Claude Code to orchestrate specialized agents through a skill-based routing system.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                         OH-MY-CLAUDECODE                                 │
+│                              OMC                                         │
 │                     Intelligent Skill Activation                         │
 └─────────────────────────────────────────────────────────────────────────┘
 
@@ -70,7 +70,7 @@ Work is delegated through the Task tool with intelligent model routing:
 
 ```typescript
 Task(
-  subagent_type="oh-my-claudecode:executor",
+  subagent_type="omc:executor",
   model="sonnet",
   prompt="Implement feature..."
 )
@@ -118,7 +118,7 @@ Legacy locations are auto-migrated on read.
 
 ## Hooks
 
-oh-my-claudecode includes 31 hooks in `src/hooks/` for lifecycle events:
+omc includes 31 hooks in `src/hooks/` for lifecycle events:
 
 | Event | Purpose |
 |-------|---------|

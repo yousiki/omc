@@ -44,7 +44,7 @@ function getCachePath(): string {
   return join(
     getClaudeConfigDir(),
     'plugins',
-    'oh-my-claudecode',
+    'omc',
     '.custom-rate-cache.json',
   );
 }

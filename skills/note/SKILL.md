@@ -11,12 +11,12 @@ Save important context to `.omc/notepad.md` that survives conversation compactio
 
 | Command | Action |
 |---------|--------|
-| `/oh-my-claudecode:note <content>` | Add to Working Memory with timestamp |
-| `/oh-my-claudecode:note --priority <content>` | Add to Priority Context (always loaded) |
-| `/oh-my-claudecode:note --manual <content>` | Add to MANUAL section (never pruned) |
-| `/oh-my-claudecode:note --show` | Display current notepad contents |
-| `/oh-my-claudecode:note --prune` | Remove entries older than 7 days |
-| `/oh-my-claudecode:note --clear` | Clear Working Memory (keep Priority + MANUAL) |
+| `/omc:note <content>` | Add to Working Memory with timestamp |
+| `/omc:note --priority <content>` | Add to Priority Context (always loaded) |
+| `/omc:note --manual <content>` | Add to MANUAL section (never pruned) |
+| `/omc:note --show` | Display current notepad contents |
+| `/omc:note --prune` | Remove entries older than 7 days |
+| `/omc:note --clear` | Clear Working Memory (keep Priority + MANUAL) |
 
 ## Sections
 
@@ -38,11 +38,11 @@ Save important context to `.omc/notepad.md` that survives conversation compactio
 ## Examples
 
 ```
-/oh-my-claudecode:note Found auth bug in UserContext - missing useEffect dependency
-/oh-my-claudecode:note --priority Project uses TypeScript strict mode, all files in src/
-/oh-my-claudecode:note --manual Contact: api-team@company.com for backend questions
-/oh-my-claudecode:note --show
-/oh-my-claudecode:note --prune
+/omc:note Found auth bug in UserContext - missing useEffect dependency
+/omc:note --priority Project uses TypeScript strict mode, all files in src/
+/omc:note --manual Contact: api-team@company.com for backend questions
+/omc:note --show
+/omc:note --prune
 ```
 
 ## Behavior

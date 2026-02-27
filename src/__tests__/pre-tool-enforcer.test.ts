@@ -110,7 +110,7 @@ describe('pre-tool-enforcer fallback gating (issue #970)', () => {
     const output = runPreToolEnforcer({
       tool_name: 'Task',
       toolInput: {
-        subagent_type: 'oh-my-claudecode:executor',
+        subagent_type: 'omc:executor',
         description: 'Fix type errors',
         prompt: 'Fix all type errors in src/auth/',
       },
@@ -139,7 +139,7 @@ describe('pre-tool-enforcer fallback gating (issue #970)', () => {
     const output = runPreToolEnforcer({
       tool_name: 'Task',
       toolInput: {
-        subagent_type: 'oh-my-claudecode:executor',
+        subagent_type: 'omc:executor',
         team_name: 'fix-ts-errors',
         name: 'worker-1',
         description: 'Fix type errors',
@@ -160,7 +160,7 @@ describe('pre-tool-enforcer fallback gating (issue #970)', () => {
     const output = runPreToolEnforcer({
       tool_name: 'Task',
       toolInput: {
-        subagent_type: 'oh-my-claudecode:executor',
+        subagent_type: 'omc:executor',
         description: 'Fix type errors',
         prompt: 'Fix all type errors in src/auth/',
       },
@@ -183,7 +183,7 @@ describe('pre-tool-enforcer fallback gating (issue #970)', () => {
     const output = runPreToolEnforcer({
       tool_name: 'Task',
       toolInput: {
-        subagent_type: 'oh-my-claudecode:executor',
+        subagent_type: 'omc:executor',
         description: 'Fix something',
         prompt: 'Fix it',
       },
@@ -209,7 +209,7 @@ describe('pre-tool-enforcer fallback gating (issue #970)', () => {
     const output = runPreToolEnforcer({
       tool_name: 'Task',
       toolInput: {
-        subagent_type: 'oh-my-claudecode:executor',
+        subagent_type: 'omc:executor',
         description: 'Fix something',
         prompt: 'Fix it',
       },

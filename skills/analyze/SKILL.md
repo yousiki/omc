@@ -35,12 +35,12 @@ Deep investigation requires a different approach than quick lookups or code chan
 <Steps>
 1. **Identify the analysis type**: Architecture, bug investigation, performance, or dependency analysis
 2. **Gather relevant context**: Read or identify the key files involved
-3. **Route to analyzer**: `Task(subagent_type="oh-my-claudecode:architect", model="opus", prompt="Analyze: ...")`
+3. **Route to analyzer**: `Task(subagent_type="omc:architect", model="opus", prompt="Analyze: ...")`
 4. **Return structured findings**: Present the analysis with evidence, file references, and actionable recommendations
 </Steps>
 
 <Tool_Usage>
-- Use `Task(subagent_type="oh-my-claudecode:architect", model="opus", ...)` as the primary analysis route
+- Use `Task(subagent_type="omc:architect", model="opus", ...)` as the primary analysis route
 - For broad analysis, use `explore` agent first to identify relevant files before routing to architect
 </Tool_Usage>
 

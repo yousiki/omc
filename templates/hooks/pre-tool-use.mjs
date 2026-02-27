@@ -74,7 +74,7 @@ function checkBashCommand(command) {
     return `[DELEGATION NOTICE] Bash command may modify source files: ${command}
 
 Recommended: Delegate to executor agent instead:
-  Task(subagent_type="oh-my-claudecode:executor", model="sonnet", prompt="...")
+  Task(subagent_type="omc:executor", model="sonnet", prompt="...")
 
 This is a soft warning. Operation will proceed.`;
   }
@@ -141,7 +141,7 @@ async function main() {
     const warning = `[DELEGATION NOTICE] Direct ${toolName} on source file: ${filePath}
 
 Recommended: Delegate to executor agent instead:
-  Task(subagent_type="oh-my-claudecode:executor", model="sonnet", prompt="...")
+  Task(subagent_type="omc:executor", model="sonnet", prompt="...")
 
 This is a soft warning. Operation will proceed.`;
 

@@ -45,7 +45,7 @@ Delegates to the `code-reviewer` agent (Opus model) for deep analysis:
 
 ```
 Task(
-  subagent_type="oh-my-claudecode:code-reviewer",
+  subagent_type="omc:code-reviewer",
   model="opus",
   prompt="CODE REVIEW TASK
 
@@ -92,7 +92,7 @@ The code-reviewer agent MAY consult a Claude Task agent for cross-validation.
 - Small, isolated changes
 
 ### Tool Usage
-Use `Task(subagent_type="oh-my-claudecode:code-reviewer", ...)` for cross-validation.
+Use `Task(subagent_type="omc:code-reviewer", ...)` for cross-validation.
 
 ## Output Format
 

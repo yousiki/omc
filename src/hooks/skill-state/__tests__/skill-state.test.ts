@@ -72,9 +72,9 @@ describe('skill-state', () => {
       expect(getSkillProtection('my-custom-skill')).toBe('light');
     });
 
-    it('strips oh-my-claudecode: prefix', () => {
-      expect(getSkillProtection('oh-my-claudecode:code-review')).toBe('medium');
-      expect(getSkillProtection('oh-my-claudecode:ralph')).toBe('none');
+    it('strips omc: prefix', () => {
+      expect(getSkillProtection('omc:code-review')).toBe('medium');
+      expect(getSkillProtection('omc:ralph')).toBe('none');
     });
 
     it('is case-insensitive', () => {
@@ -139,7 +139,7 @@ describe('skill-state', () => {
     });
 
     it('strips namespace prefix from skill name', () => {
-      const state = writeSkillActiveState(tempDir, 'oh-my-claudecode:code-review', 'session-1');
+      const state = writeSkillActiveState(tempDir, 'omc:code-review', 'session-1');
       expect(state!.skill_name).toBe('code-review');
     });
 

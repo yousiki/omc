@@ -7,7 +7,7 @@
 
 ## Purpose
 
-This directory defines all agents available in oh-my-claudecode:
+This directory defines all agents available in omc:
 
 - **12 base agents** with default model assignments
 - **4 specialized agents** (security-reviewer, build-fixer, test-engineer, code-reviewer)
