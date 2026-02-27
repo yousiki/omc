@@ -557,14 +557,10 @@ async function processSessionStart(input: HookInput): Promise<HookOutput> {
   const directory = resolveToWorktreeRoot(input.directory);
 
   // Lazy-load session-start dependencies
-  const { initSilentAutoUpdate } = await import("../features/auto-update.js");
   const { readAutopilotState } = await import("./autopilot/index.js");
   const { readUltraworkState } = await import("./ultrawork/index.js");
   const { checkIncompleteTodos } = await import("./todo-continuation/index.js");
   const { buildAgentsOverlay } = await import("./agents-overlay.js");
-
-  // Trigger silent auto-update check (non-blocking, checks config internally)
-  initSilentAutoUpdate();
 
   const messages: string[] = [];
 

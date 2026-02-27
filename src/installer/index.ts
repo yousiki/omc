@@ -30,12 +30,6 @@ export const HUD_DIR = join(CLAUDE_CONFIG_DIR, 'hud');
 export const SETTINGS_FILE = join(CLAUDE_CONFIG_DIR, 'settings.json');
 export const VERSION_FILE = join(CLAUDE_CONFIG_DIR, '.omc-version.json');
 
-/**
- * Core commands - DISABLED for v3.0+
- * All commands are now plugin-scoped skills managed by Claude Code.
- * The installer no longer copies commands to ~/.claude/commands/
- */
-export const CORE_COMMANDS: string[] = [];
 
 /** Current version */
 export const VERSION = getRuntimePackageVersion();
@@ -92,8 +86,7 @@ export interface InstallOptions {
 }
 
 /**
- * Read hudEnabled from .omc-config.json without importing auto-update
- * (avoids circular dependency since auto-update imports from installer)
+ * Read hudEnabled from .omc-config.json
  */
 export function isHudEnabledInConfig(): boolean {
   const configPath = join(CLAUDE_CONFIG_DIR, '.omc-config.json');
@@ -138,8 +131,8 @@ export function isOmcStatusLine(statusLine: unknown): boolean {
 
 /**
  * Known OMC hook script filenames installed into .claude/hooks/.
- * Must be kept in sync with getHookScripts() in hooks.ts and
- * HOOKS_SETTINGS_CONFIG_NODE command entries.
+ * Must be kept in sync with HOOKS_SETTINGS_CONFIG_NODE command entries
+ * in hooks.ts.
  */
 const OMC_HOOK_FILENAMES = new Set([
   'keyword-detector.mjs',
@@ -297,29 +290,6 @@ function loadAgentDefinitions(): Record<string, string> {
   return definitions;
 }
 
-/**
- * Load command definitions from /commands/*.md files
- *
- * NOTE: The commands/ directory was removed in v4.1.16 (#582).
- * All commands are now plugin-scoped skills. This function returns
- * an empty object for backward compatibility.
- */
-function loadCommandDefinitions(): Record<string, string> {
-  const commandsDir = join(getPackageDir(), 'commands');
-
-  if (!existsSync(commandsDir)) {
-    return {};
-  }
-
-  const definitions: Record<string, string> = {};
-  for (const file of readdirSync(commandsDir)) {
-    if (file.endsWith('.md')) {
-      definitions[file] = readFileSync(join(commandsDir, file), 'utf-8');
-    }
-  }
-
-  return definitions;
-}
 
 /**
  * Load CLAUDE.md content from /docs/CLAUDE.md
@@ -486,42 +456,8 @@ export function install(options: InstallOptions = {}): InstallResult {
         }
       }
 
-      // Skip command installation - all commands are now plugin-scoped skills
-      // Commands are accessible via the plugin system (${CLAUDE_PLUGIN_ROOT}/commands/)
-      // and are managed by Claude Code's skill discovery mechanism.
+      // Commands are now plugin-scoped skills managed by Claude Code's skill discovery.
       log('Skipping slash command installation (all commands are now plugin-scoped skills)');
-
-      // The command installation loop is disabled - CORE_COMMANDS is empty
-      for (const [filename, content] of Object.entries(loadCommandDefinitions())) {
-        // All commands are skipped - they're managed by the plugin system
-        if (!CORE_COMMANDS.includes(filename)) {
-          log(`  Skipping ${filename} (plugin-scoped skill)`);
-          continue;
-        }
-
-        const filepath = join(COMMANDS_DIR, filename);
-
-        // Create command directory if needed (only for nested paths like 'ultrawork/skill.md')
-        // Handle both Unix (/) and Windows (\) path separators
-        if (filename.includes('/') || filename.includes('\\')) {
-          const segments = filename.split(/[/\\]/);
-          const commandDir = join(COMMANDS_DIR, segments[0]);
-          if (!existsSync(commandDir)) {
-            mkdirSync(commandDir, { recursive: true });
-          }
-        }
-
-        if (existsSync(filepath) && !options.force) {
-          log(`  Skipping ${filename} (already exists)`);
-        } else {
-          writeFileSync(filepath, content);
-          result.installedCommands.push(filename);
-          log(`  Installed ${filename}`);
-        }
-      }
-
-      // NOTE: SKILL_DEFINITIONS removed - skills now only installed via COMMAND_DEFINITIONS
-      // to avoid duplicate entries in Claude Code's available skills list
 
       // Install CLAUDE.md with merge support
       const claudeMdPath = join(CLAUDE_CONFIG_DIR, 'CLAUDE.md');

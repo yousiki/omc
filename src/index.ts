@@ -42,28 +42,15 @@ export {
   type BackgroundTaskManager,
   type TaskExecutionDecision
 } from './features/background-tasks.js';
+// OMC Config (extracted from removed auto-update module)
 export {
-  // Auto-update types
-  type VersionMetadata,
-  type ReleaseInfo,
-  type UpdateCheckResult,
-  type UpdateResult,
-  // Auto-update constants
-  REPO_OWNER,
-  REPO_NAME,
-  GITHUB_API_URL,
+  type OMCConfig,
   CLAUDE_CONFIG_DIR,
-  VERSION_FILE,
-  // Auto-update functions
-  getInstalledVersion,
-  saveVersionMetadata,
-  checkForUpdates,
-  performUpdate,
-  formatUpdateNotification,
-  shouldCheckForUpdates,
-  backgroundUpdateCheck,
-  compareVersions
-} from './features/auto-update.js';
+  CONFIG_FILE,
+  getOMCConfig,
+  isTeamEnabled,
+  compareVersions,
+} from './utils/omc-config.js';
 export * from './shared/types.js';
 
 // Hooks module exports
@@ -144,7 +131,6 @@ export {
   ARCHITECT_PROMPT_METADATA,
   exploreAgent,
   EXPLORE_PROMPT_METADATA,
-  researcherAgent,
   DOCUMENT_SPECIALIST_PROMPT_METADATA,
   executorAgent,
   EXECUTOR_PROMPT_METADATA,

@@ -1,5 +1,5 @@
 import { contextCollector } from '../../features/context-injector/index.js';
-import { getOMCConfig } from '../../features/auto-update.js';
+import { getOMCConfig } from '../../utils/omc-config.js';
 import { BEADS_INSTRUCTIONS, BEADS_RUST_INSTRUCTIONS } from './constants.js';
 import type { TaskTool, BeadsContextConfig } from './types.js';
 

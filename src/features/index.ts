@@ -15,41 +15,20 @@ export {
   generateVerificationPrompt
 } from './continuation-enforcement.js';
 
+// OMC Config (extracted from removed auto-update module)
 export {
-  // Types
-  type VersionMetadata,
-  type ReleaseInfo,
-  type UpdateCheckResult,
-  type UpdateResult,
-  type SilentUpdateConfig,
-  // Constants
-  REPO_OWNER,
-  REPO_NAME,
-  GITHUB_API_URL,
-  GITHUB_RAW_URL,
+  type OMCConfig,
+  type StopCallbackFileConfig,
+  type StopCallbackTelegramConfig,
+  type StopCallbackDiscordConfig,
+  type StopCallbackSlackConfig,
+  type StopHookCallbacksConfig,
   CLAUDE_CONFIG_DIR,
-  VERSION_FILE,
-  // Functions
-  getInstalledVersion,
-  saveVersionMetadata,
-  updateLastCheckTime,
-  fetchLatestRelease,
+  CONFIG_FILE,
+  getOMCConfig,
+  isTeamEnabled,
   compareVersions,
-  checkForUpdates,
-  performUpdate,
-  formatUpdateNotification,
-  shouldCheckForUpdates,
-  backgroundUpdateCheck,
-  interactiveUpdate,
-  // Silent auto-update
-  silentAutoUpdate,
-  hasPendingUpdateRestart,
-  clearPendingUpdateRestart,
-  getPendingUpdateVersion,
-  initSilentAutoUpdate,
-  // Auto-upgrade prompt
-  isAutoUpgradePromptEnabled
-} from './auto-update.js';
+} from '../utils/omc-config.js';
 
 // Boulder State - session/plan tracking
 export {

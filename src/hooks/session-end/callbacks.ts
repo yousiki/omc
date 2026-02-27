@@ -12,7 +12,7 @@ import type { SessionMetrics } from './index.js';
 import {
   getOMCConfig,
   type StopCallbackFileConfig,
-} from '../../features/auto-update.js';
+} from '../../utils/omc-config.js';
 
 /**
  * Format session summary for notifications

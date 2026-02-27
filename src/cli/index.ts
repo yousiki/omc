@@ -29,15 +29,10 @@ import {
 } from '../config/models.js';
 import { createOmcSession } from '../index.js';
 import {
-  checkForUpdates,
-  performUpdate,
-  formatUpdateNotification,
-  getInstalledVersion,
   getOMCConfig,
-  reconcileUpdateRuntime,
   CONFIG_FILE,
   type OMCConfig,
-} from '../features/auto-update.js';
+} from '../utils/omc-config.js';
 import {
   install as installOmc,
   isInstalled,
@@ -810,117 +805,6 @@ Examples:
   });
 
 /**
- * Update command - Check for and install updates
- */
-program
-  .command('update')
-  .description('Check for and install updates')
-  .option('-c, --check', 'Only check for updates, do not install')
-  .option('-f, --force', 'Force reinstall even if up to date')
-  .option('-q, --quiet', 'Suppress output except for errors')
-  .option('--standalone', 'Force npm update even in plugin context')
-  .addHelpText('after', `
-Examples:
-  $ omc update                   Check and install updates
-  $ omc update --check           Only check, don't install
-  $ omc update --force           Force reinstall
-  $ omc update --standalone      Force npm update in plugin context`)
-  .action(async (options) => {
-    if (!options.quiet) {
-      console.log(chalk.blue('OMC Update\n'));
-    }
-
-    try {
-      // Show current version
-      const installed = getInstalledVersion();
-      if (!options.quiet) {
-        console.log(chalk.gray(`Current version: ${installed?.version ?? 'unknown'}`));
-        console.log(chalk.gray(`Install method: ${installed?.installMethod ?? 'unknown'}`));
-        console.log('');
-      }
-
-      // Check for updates
-      if (!options.quiet) {
-        console.log('Checking for updates...');
-      }
-
-      const checkResult = await checkForUpdates();
-
-      if (!checkResult.updateAvailable && !options.force) {
-        if (!options.quiet) {
-          console.log(chalk.green(`\n✓ You are running the latest version (${checkResult.currentVersion})`));
-        }
-        return;
-      }
-
-      if (!options.quiet) {
-        console.log(formatUpdateNotification(checkResult));
-      }
-
-      // If check-only mode, stop here
-      if (options.check) {
-        if (checkResult.updateAvailable) {
-          console.log(chalk.yellow('\nRun without --check to install the update.'));
-        }
-        return;
-      }
-
-      // Perform the update
-      if (!options.quiet) {
-        console.log(chalk.blue('\nStarting update...\n'));
-      }
-
-      const result = await performUpdate({ verbose: !options.quiet, standalone: options.standalone });
-
-      if (result.success) {
-        if (!options.quiet) {
-          console.log(chalk.green(`\n✓ ${result.message}`));
-          console.log(chalk.gray('\nPlease restart your Claude Code session to use the new version.'));
-        }
-      } else {
-        console.error(chalk.red(`\n✗ ${result.message}`));
-        if (result.errors) {
-          result.errors.forEach(err => console.error(chalk.red(`  - ${err}`)));
-        }
-        process.exit(1);
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      console.error(chalk.red(`Update failed: ${message}`));
-      console.error(chalk.gray('Try again with "omc update --force", or reinstall with "omc install --force".'));
-      process.exit(1);
-    }
-  });
-
-/**
- * Update reconcile command - Internal command for post-update reconciliation
- * Called automatically after npm install to ensure hooks/settings are updated with NEW code
- */
-program
-  .command('update-reconcile')
-  .description('Internal: Reconcile runtime state after update (called by update command)')
-  .option('-v, --verbose', 'Show detailed output')
-  .action(async (options) => {
-    try {
-      const reconcileResult = reconcileUpdateRuntime({ verbose: options.verbose });
-      if (!reconcileResult.success) {
-        console.error(chalk.red('Reconciliation failed:'));
-        if (reconcileResult.errors) {
-          reconcileResult.errors.forEach(err => console.error(chalk.red(`  - ${err}`)));
-        }
-        process.exit(1);
-      }
-      if (options.verbose) {
-        console.log(chalk.green(reconcileResult.message));
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      console.error(chalk.red(`Reconciliation error: ${message}`));
-      process.exit(1);
-    }
-  });
-
-/**
  * Version command - Show version information
  */
 program
@@ -928,32 +812,19 @@ program
   .description('Show detailed version information')
   .addHelpText('after', `
 Examples:
-  $ omc version                  Show version, install method, and commit hash`)
+  $ omc version                  Show version and install info`)
   .action(async () => {
-    const installed = getInstalledVersion();
-
     console.log(chalk.blue.bold('\nOMC Version Information\n'));
     console.log(chalk.gray('━'.repeat(50)));
-
     console.log(`\n  Package version:   ${chalk.green(version)}`);
 
-    if (installed) {
-      console.log(`  Installed version: ${chalk.green(installed.version)}`);
-      console.log(`  Install method:    ${chalk.cyan(installed.installMethod)}`);
-      console.log(`  Installed at:      ${chalk.gray(installed.installedAt)}`);
-      if (installed.lastCheckAt) {
-        console.log(`  Last update check: ${chalk.gray(installed.lastCheckAt)}`);
-      }
-      if (installed.commitHash) {
-        console.log(`  Commit hash:       ${chalk.gray(installed.commitHash)}`);
-      }
-    } else {
-      console.log(chalk.yellow('  No installation metadata found'));
-      console.log(chalk.gray('  (Run the install script to create version metadata)'));
+    const installInfo = getInstallInfo();
+    if (installInfo) {
+      console.log(`  Install method:    ${chalk.cyan(installInfo.method)}`);
+      console.log(`  Installed at:      ${chalk.gray(installInfo.installedAt)}`);
     }
 
     console.log(chalk.gray('\n━'.repeat(50)));
-    console.log(chalk.gray('\nTo check for updates, run: omc update --check'));
   });
 
 /**

@@ -143,7 +143,7 @@ Agent Shortcuts (thin wrappers; call the agent directly with `model` for more co
 - `security-review` -> `security-reviewer`: "security review"
 - `review` -> `plan --review`: "review plan", "critique plan"
 
-Utilities: `cancel`, `note`, `learner`, `omc-setup`, `mcp-setup`, `hud`, `omc-doctor`, `omc-help`, `trace`, `release`, `project-session-manager` (`psm` is deprecated alias), `skill`, `writer-memory`, `ralph-init`, `learn-about-omc`
+Utilities: `cancel`, `note`, `learner`, `trace`, `writer-memory`, `ralph-init`
 
 Conflict resolution: explicit mode keywords (`ulw`, `ultrawork`) override defaults. Generic "fast"/"parallel" reads `~/.claude/.omc-config.json` -> `defaultExecutionMode`. Ralph includes ultrawork (persistence wrapper). Autopilot can transition to ralph or ultraqa.
 </skills>

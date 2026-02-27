@@ -7,7 +7,7 @@
  * Ported from oh-my-opencode's keyword-detector hook.
  */
 
-import { isTeamEnabled } from '../../features/auto-update.js';
+import { isTeamEnabled } from '../../utils/omc-config.js';
 import {
   classifyTaskSize,
   isHeavyMode,

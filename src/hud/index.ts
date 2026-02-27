@@ -30,7 +30,7 @@ import type {
   SessionHealth,
 } from "./types.js";
 import { getRuntimePackageVersion } from "../lib/version.js";
-import { compareVersions } from "../features/auto-update.js";
+import { compareVersions } from "../utils/omc-config.js";
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "fs";
 import { join } from "path";
 import { homedir } from "os";

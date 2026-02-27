@@ -5,7 +5,7 @@ import { tmpdir, homedir } from 'os';
 import { execSync } from 'child_process';
 
 // Mock isTeamEnabled so team keywords are detected in CI
-vi.mock('../features/auto-update.js', async (importOriginal) => {
+vi.mock('../utils/omc-config.js', async (importOriginal) => {
   const actual = await importOriginal<Record<string, unknown>>();
   return {
     ...actual,

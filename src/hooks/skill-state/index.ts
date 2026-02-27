@@ -80,17 +80,12 @@ const SKILL_PROTECTION: Record<string, SkillProtectionLevel> = {
 
   // === Instant / read-only → no protection needed ===
   trace: 'none',
-  hud: 'none',
-  'omc-doctor': 'none',
-  'omc-help': 'none',
-  'learn-about-omc': 'none',
   note: 'none',
 
   // === Light protection (simple agent shortcuts, 3 reinforcements) ===
   tdd: 'light',
   'build-fix': 'light',
   analyze: 'light',
-  skill: 'light',
 
   // === Medium protection (review/planning, 5 reinforcements) ===
   'code-review': 'medium',
@@ -101,9 +96,6 @@ const SKILL_PROTECTION: Record<string, SkillProtectionLevel> = {
   'external-context': 'medium',
   sciomc: 'medium',
   learner: 'medium',
-  'omc-setup': 'medium',
-  'mcp-setup': 'medium',
-  'project-session-manager': 'medium',
   'writer-memory': 'medium',
   'ralph-init': 'medium',
 

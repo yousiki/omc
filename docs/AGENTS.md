@@ -21,19 +21,10 @@ This directory contains documentation for end-users and developers:
 | `FEATURES.md` | Developer API reference for internal features |
 | `REFERENCE.md` | API reference and configuration options |
 | `ARCHITECTURE.md` | System architecture overview |
-| `MIGRATION.md` | Version migration guides |
-| `COMPATIBILITY.md` | Compatibility matrix and requirements |
 | `TIERED_AGENTS_V2.md` | Model routing and tiered agent design |
 | `DELEGATION-ENFORCER.md` | Delegation protocol documentation |
 | `SYNC-SYSTEM.md` | State synchronization system |
 | `ANALYTICS-SYSTEM.md` | Analytics collection documentation |
-| `LOCAL_PLUGIN_INSTALL.md` | Plugin installation guide |
-
-## Subdirectories
-
-| Directory | Purpose |
-|-----------|---------|
-| `design/` | Feature design specifications |
 
 ## For AI Agents
 
@@ -54,9 +45,7 @@ This directory contains documentation for end-users and developers:
 | Agent tool assignments change | `CLAUDE.md` (Agent Tool Matrix) |
 | Skill composition or architecture changes | `ARCHITECTURE.md` |
 | New internal API or feature | `FEATURES.md` |
-| Breaking changes or migrations | `MIGRATION.md` |
 | Tiered agent design updates | `TIERED_AGENTS_V2.md` |
-| Platform or version support changes | `COMPATIBILITY.md` |
 | End-user instructions change | `CLAUDE.md` |
 | Major user-facing features | `../README.md` |
 
@@ -70,9 +59,7 @@ This directory contains documentation for end-users and developers:
 
 #### Linking to Raw Content
 
-Use raw GitHub URLs for external accessibility:
-
-[Migration Guide](https://raw.githubusercontent.com/Yeachan-Heo/omc/main/docs/MIGRATION.md)
+Use raw GitHub URLs for external accessibility.
 
 #### Version References
 

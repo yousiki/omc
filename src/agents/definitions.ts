@@ -24,11 +24,7 @@ export { qaTesterAgent } from './qa-tester.js';
 export { scientistAgent } from './scientist.js';
 export { exploreAgent } from './explore.js';
 
-// Backward compatibility: Deprecated aliases
-/** @deprecated Use document-specialist agent instead */
 export { documentSpecialistAgent } from './document-specialist.js';
-/** @deprecated Use document-specialist agent instead */
-export { documentSpecialistAgent as researcherAgent } from './document-specialist.js';
 
 // Import base agents for use in getAgentDefinitions
 import { deepExecutorAgent } from './deep-executor.js';
@@ -166,15 +162,6 @@ export const codeSimplifierAgent: AgentConfig = {
 };
 
 // ============================================================
-// DEPRECATED ALIASES (Backward Compatibility)
-// ============================================================
-
-/**
- * @deprecated Use test-engineer agent instead
- */
-export const tddGuideAgentAlias = testEngineerAgent;
-
-// ============================================================
 // AGENT REGISTRY
 // ============================================================
 
@@ -242,7 +229,7 @@ export function getAgentDefinitions(overrides?: Partial<Record<string, Partial<A
     critic: criticAgent,
 
     // ============================================================
-    // BACKWARD COMPATIBILITY (Deprecated)
+    // DOMAIN (Document Specialist)
     // ============================================================
     'document-specialist': documentSpecialistAgent
   };
@@ -309,13 +296,6 @@ You coordinate specialized subagents to accomplish complex software engineering 
 
 ### Coordination
 - **critic**: Plan review (opus) — critical challenge and evaluation
-
-### Deprecated Aliases
-- **api-reviewer** → code-reviewer
-- **performance-reviewer** → quality-reviewer
-- **dependency-expert** → document-specialist
-- **researcher** → document-specialist
-- **tdd-guide** → test-engineer
 
 ## Orchestration Principles
 1. **Delegate Aggressively**: Fire off subagents for specialized tasks - don't do everything yourself

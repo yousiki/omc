@@ -259,16 +259,7 @@ Always use `omc:` prefix when calling via Task tool.
 |-------|-------------|----------------|
 | `note` | Save notes to compaction-resilient notepad | `/omc:note` |
 | `cancel` | Unified cancellation for all modes | `/omc:cancel` |
-| `omc-setup` | One-time setup wizard | `/omc:omc-setup` |
-| `omc-doctor` | Diagnose and fix installation issues | `/omc:omc-doctor` |
-| `omc-help` | Show OMC usage guide | `/omc:omc-help` |
-| `hud` | Configure HUD statusline | `/omc:hud` |
-| `release` | Automated release workflow | `/omc:release` |
-| `mcp-setup` | Configure MCP servers | `/omc:mcp-setup` |
 | `writer-memory` | Agentic memory system for writers | `/omc:writer-memory` |
-| `project-session-manager` | Manage isolated dev environments (git worktrees + tmux) | `/omc:project-session-manager` |
-| `psm` | **Deprecated** compatibility alias for `project-session-manager` | `/omc:psm` |
-| `skill` | Manage local skills (list, add, remove, search, edit) | `/omc:skill` |
 
 ---
 
@@ -297,13 +288,6 @@ All skills are available as slash commands with the prefix `/omc:`.
 | `/omc:learner` | Extract reusable skill from session |
 | `/omc:note <content>` | Save notes to notepad.md |
 | `/omc:cancel` | Unified cancellation |
-| `/omc:omc-setup` | One-time setup wizard |
-| `/omc:omc-doctor` | Diagnose and fix installation issues |
-| `/omc:omc-help` | Show OMC usage guide |
-| `/omc:hud` | Configure HUD statusline |
-| `/omc:release` | Automated release workflow |
-| `/omc:mcp-setup` | Configure MCP servers |
-| `/omc:psm <arguments>` | Deprecated alias for project session manager |
 
 ---
 
@@ -525,8 +509,6 @@ pipeline: analyze → fix → test this bug
 
 omc includes comprehensive monitoring for agent performance, token usage, and debugging parallel workflows.
 
-For complete documentation, see **[Performance Monitoring Guide](./PERFORMANCE-MONITORING.md)**.
-
 ### Quick Overview
 
 | Feature | Description | Access |
@@ -566,63 +548,10 @@ Enable detailed cost tracking in your status line:
 
 ## Troubleshooting
 
-### Diagnose Installation Issues
-
-```bash
-/omc:omc-doctor
-```
-
-Checks for:
-- Missing dependencies
-- Configuration errors
-- Hook installation status
-- Agent availability
-- Skill registration
-
-### Configure HUD Statusline
-
-```bash
-/omc:hud setup
-```
-
-Installs or repairs the HUD statusline for real-time status updates.
-
-### HUD Configuration (settings.json)
-
-Configure HUD elements in `~/.claude/settings.json`:
-
-```json
-{
-  "omcHud": {
-    "preset": "focused",
-    "elements": {
-      "cwd": true,
-      "gitRepo": true,
-      "gitBranch": true
-    }
-  }
-}
-```
-
-| Element | Description | Default |
-|---------|-------------|---------|
-| `cwd` | Show current working directory | `false` |
-| `gitRepo` | Show git repository name | `false` |
-| `gitBranch` | Show current git branch | `false` |
-| `omcLabel` | Show [OMC] label | `true` |
-| `contextBar` | Show context window usage | `true` |
-| `agents` | Show active agents count | `true` |
-| `todos` | Show todo progress | `true` |
-| `ralph` | Show ralph loop status | `true` |
-| `autopilot` | Show autopilot status | `true` |
-
-Available presets: `minimal`, `focused`, `full`, `dense`, `analytics`, `opencode`
-
 ### Common Issues
 
 | Issue | Solution |
 |-------|----------|
-| Commands not found | Re-run `/omc:omc-setup` |
 | Hooks not executing | Check hook permissions: `chmod +x ~/.claude/hooks/**/*.sh` |
 | Agents not delegating | Verify CLAUDE.md is loaded: check `./.claude/CLAUDE.md` or `~/.claude/CLAUDE.md` |
 | LSP tools not working | Install language servers: `npm install -g typescript-language-server` |

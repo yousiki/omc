@@ -22,7 +22,7 @@ describe('auto-slash command skill aliases', () => {
     tempProjectDir = join(tempRoot, 'project');
 
     mkdirSync(join(tempConfigDir, 'skills', 'team'), { recursive: true });
-    mkdirSync(join(tempConfigDir, 'skills', 'project-session-manager'), { recursive: true });
+    mkdirSync(join(tempConfigDir, 'skills', 'test-skill'), { recursive: true });
     mkdirSync(join(tempProjectDir, '.claude', 'commands'), { recursive: true });
 
     writeFileSync(
@@ -36,14 +36,14 @@ Team body`
     );
 
     writeFileSync(
-      join(tempConfigDir, 'skills', 'project-session-manager', 'SKILL.md'),
+      join(tempConfigDir, 'skills', 'test-skill', 'SKILL.md'),
       `---
-name: project-session-manager
-description: Project session management
-aliases: [psm]
+name: test-skill
+description: Test skill with alias
+aliases: [ts-alias]
 ---
 
-PSM body`
+Test skill body`
     );
 
     process.env.CLAUDE_CONFIG_DIR = tempConfigDir;
@@ -68,34 +68,34 @@ PSM body`
     const names = commands.map((command) => command.name);
 
     expect(names).toContain('team');
-    expect(names).toContain('project-session-manager');
-    expect(names).toContain('psm');
+    expect(names).toContain('test-skill');
+    expect(names).toContain('ts-alias');
 
-    const psm = findCommand('psm');
+    const alias = findCommand('ts-alias');
 
-    expect(psm?.scope).toBe('skill');
-    expect(psm?.metadata.aliasOf).toBe('project-session-manager');
-    expect(psm?.metadata.deprecatedAlias).toBe(true);
-    expect(psm?.metadata.deprecationMessage).toContain('/project-session-manager');
+    expect(alias?.scope).toBe('skill');
+    expect(alias?.metadata.aliasOf).toBe('test-skill');
+    expect(alias?.metadata.deprecatedAlias).toBe(true);
+    expect(alias?.metadata.deprecationMessage).toContain('/test-skill');
 
     const listedNames = listAvailableCommands().map((command) => command.name);
     expect(listedNames).toContain('team');
-    expect(listedNames).toContain('project-session-manager');
-    expect(listedNames).not.toContain('psm');
+    expect(listedNames).toContain('test-skill');
+    expect(listedNames).not.toContain('ts-alias');
   });
 
   it('injects deprecation warning when alias command is executed', async () => {
     const { executeSlashCommand } = await loadExecutor();
 
     const result = executeSlashCommand({
-      command: 'psm',
+      command: 'ts-alias',
       args: '',
-      raw: '/psm',
+      raw: '/ts-alias',
     });
 
     expect(result.success).toBe(true);
     expect(result.replacementText).toContain('Deprecated Alias');
-    expect(result.replacementText).toContain('/psm');
-    expect(result.replacementText).toContain('/project-session-manager');
+    expect(result.replacementText).toContain('/ts-alias');
+    expect(result.replacementText).toContain('/test-skill');
   });
 });

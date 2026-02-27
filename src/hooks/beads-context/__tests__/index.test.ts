@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock dependencies
-vi.mock('../../../features/auto-update.js', () => ({
+vi.mock('../../../utils/omc-config.js', () => ({
   getOMCConfig: vi.fn(() => ({ silentAutoUpdate: false })),
 }));
 
@@ -20,7 +20,7 @@ import {
   BEADS_INSTRUCTIONS,
   BEADS_RUST_INSTRUCTIONS,
 } from '../index.js';
-import { getOMCConfig } from '../../../features/auto-update.js';
+import { getOMCConfig } from '../../../utils/omc-config.js';
 import { contextCollector } from '../../../features/context-injector/index.js';
 
 const mockGetOMCConfig = vi.mocked(getOMCConfig);

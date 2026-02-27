@@ -578,5 +578,4 @@ All state is persisted to `.omc/state/autopilot-state.json` and includes:
 
 - [CHANGELOG.md](../CHANGELOG.md) - Version history
 - [ARCHITECTURE.md](./ARCHITECTURE.md) - System architecture
-- [MIGRATION.md](./MIGRATION.md) - Migration guide
 - [Agent Definitions](../src/agents/definitions.ts) - Agent configuration

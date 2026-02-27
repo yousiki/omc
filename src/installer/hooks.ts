@@ -69,14 +69,6 @@ export function isWindows(): boolean {
   return process.platform === "win32";
 }
 
-/**
- * Check if Node.js hooks should be used.
- * @deprecated Always returns true. Bash hooks were removed in v3.9.0.
- */
-export function shouldUseNodeHooks(): boolean {
-  return true;
-}
-
 /** Get the Claude config directory path (cross-platform) */
 export function getClaudeConfigDir(): string {
   return getConfigDir();
@@ -417,41 +409,3 @@ export const HOOKS_SETTINGS_CONFIG_NODE = {
   },
 };
 
-/**
- * Get the hooks settings config (Node.js only).
- *
- * @deprecated Hooks are now delivered via the plugin's hooks/hooks.json.
- * settings.json hook entries are no longer written by the installer.
- * Kept for test compatibility only.
- */
-export function getHooksSettingsConfig(): typeof HOOKS_SETTINGS_CONFIG_NODE {
-  return HOOKS_SETTINGS_CONFIG_NODE;
-}
-
-// =============================================================================
-// HOOK SCRIPTS EXPORTS
-// =============================================================================
-
-/**
- * Get Node.js hook scripts (Cross-platform)
- * Returns a record of filename -> content for all Node.js hooks
- *
- * @deprecated Hook scripts are no longer installed to ~/.claude/hooks/.
- * All hooks are delivered via the plugin's hooks/hooks.json + scripts/.
- * Kept for test compatibility only.
- */
-export function getHookScripts(): Record<string, string> {
-  return {
-    "keyword-detector.mjs": loadTemplate("keyword-detector.mjs"),
-    "stop-continuation.mjs": loadTemplate("stop-continuation.mjs"),
-    "persistent-mode.mjs": loadTemplate("persistent-mode.mjs"),
-    "session-start.mjs": loadTemplate("session-start.mjs"),
-    "pre-tool-use.mjs": loadTemplate("pre-tool-use.mjs"),
-    "post-tool-use.mjs": loadTemplate("post-tool-use.mjs"),
-    "post-tool-use-failure.mjs": loadTemplate("post-tool-use-failure.mjs"),
-    "code-simplifier.mjs": loadTemplate("code-simplifier.mjs"),
-    // Shared library modules (in lib/ subdirectory)
-    "lib/stdin.mjs": loadTemplate("lib/stdin.mjs"),
-    "lib/atomic-write.mjs": loadTemplate("lib/atomic-write.mjs"),
-  };
-}

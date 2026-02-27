@@ -16,11 +16,11 @@ import {
 } from '../index.js';
 
 // Mock isTeamEnabled
-vi.mock('../../../features/auto-update.js', () => ({
+vi.mock('../../../utils/omc-config.js', () => ({
   isTeamEnabled: vi.fn(() => true),
 }));
 
-import { isTeamEnabled } from '../../../features/auto-update.js';
+import { isTeamEnabled } from '../../../utils/omc-config.js';
 const mockedIsTeamEnabled = vi.mocked(isTeamEnabled);
 
 describe('keyword-detector', () => {

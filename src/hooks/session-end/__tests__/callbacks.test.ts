@@ -2,8 +2,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { formatSessionSummary, interpolatePath, triggerStopCallbacks } from '../callbacks.js';
 import type { SessionMetrics } from '../index.js';
 
-// Mock auto-update module
-vi.mock('../../../features/auto-update.js', () => ({
+// Mock omc-config module
+vi.mock('../../../utils/omc-config.js', () => ({
   getOMCConfig: vi.fn(() => ({
     silentAutoUpdate: false,
     stopHookCallbacks: undefined,
@@ -21,7 +21,7 @@ vi.mock('fs', async () => {
 });
 
 // Import mocked modules
-import { getOMCConfig } from '../../../features/auto-update.js';
+import { getOMCConfig } from '../../../utils/omc-config.js';
 import { writeFileSync, mkdirSync } from 'fs';
 
 const mockGetConfig = vi.mocked(getOMCConfig);

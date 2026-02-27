@@ -6,7 +6,7 @@ import {
   listBuiltinSkillNames,
 } from '../features/builtin-skills/skills.js';
 
-vi.mock('../features/auto-update.js', () => ({
+vi.mock('../utils/omc-config.js', () => ({
   isTeamEnabled: () => true,
 }));
 

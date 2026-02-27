@@ -3,7 +3,7 @@
 
 # skills
 
-40 skill directories for workflow automation and specialized behaviors (42 runtime skill names including compatibility aliases).
+31 skill directories for workflow automation and specialized behaviors.
 
 ## Purpose
 
@@ -60,12 +60,6 @@ Skills are reusable workflow templates that can be invoked via `/omc:skill-name`
 | `learner/SKILL.md` | learner | Extract reusable skill from session |
 | `note/SKILL.md` | note | Save notes for compaction resilience |
 | `cancel/SKILL.md` | cancel | Cancel any active OMC mode |
-| `hud/SKILL.md` | hud | Configure HUD display |
-| `doctor/SKILL.md` | doctor | Diagnose installation issues |
-| `omc-setup/SKILL.md` | omc-setup | One-time setup wizard |
-| `mcp-setup/SKILL.md` | mcp-setup | Configure MCP servers |
-| `help/SKILL.md` | help | Usage guide |
-| `skill/SKILL.md` | skill | Manage local skills |
 
 ### Domain Skills
 
@@ -73,9 +67,7 @@ Skills are reusable workflow templates that can be invoked via `/omc:skill-name`
 |-----------|-------|---------|
 | `frontend-ui-ux/SKILL.md` | frontend-ui-ux | Designer-developer aesthetic |
 | `git-master/SKILL.md` | git-master | Git expertise, atomic commits |
-| `project-session-manager/SKILL.md` | project-session-manager (+ `psm` alias) | Isolated dev environments |
 | `writer-memory/SKILL.md` | writer-memory | Agentic memory for writers |
-| `release/SKILL.md` | release | Automated release workflow |
 
 ## For AI Agents
 
@@ -179,8 +171,8 @@ None - pure markdown files.
 | Planning | plan, ralplan, review, analyze, ralph-init | "plan this", "analyze" |
 | Quality | code-review, security-review, tdd, build-fix | "review", "security", "tdd" |
 | Exploration | deepsearch, deepinit, research | "search", "research" |
-| Utility | learner, note, cancel, hud, doctor, omc-setup, mcp-setup, help | "stop", "cancel" |
-| Domain | frontend-ui-ux, git-master, psm, writer-memory, release | UI context, git context |
+| Utility | learner, note, cancel | "stop", "cancel" |
+| Domain | frontend-ui-ux, git-master, writer-memory | UI context, git context |
 
 ## Auto-Activation
 
