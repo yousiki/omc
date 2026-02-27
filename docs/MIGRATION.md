@@ -6,125 +6,11 @@ This guide covers all migration paths for oh-my-claudecode. Find your current ve
 
 ## Table of Contents
 
-- [Unreleased: Team MCP timeoutSeconds Removal](#unreleased-team-mcp-timeoutseconds-removal)
 - [v3.5.3 → v3.5.5: Test Fixes & Cleanup](#v353--v355-test-fixes--cleanup)
 - [v3.5.2 → v3.5.3: Skill Consolidation](#v352--v353-skill-consolidation)
 - [v2.x → v3.0: Package Rename & Auto-Activation](#v2x--v30-package-rename--auto-activation)
 - [v3.0 → v3.1: Notepad Wisdom & Enhanced Features](#v30--v31-notepad-wisdom--enhanced-features)
 - [v3.x → v4.0: Major Architecture Overhaul](#v3x--v40-major-architecture-overhaul)
-
----
-
-## Unreleased: Team MCP timeoutSeconds Removal
-
-### TL;DR
-
-`omc_run_team_start` no longer accepts `timeoutSeconds`. Passing it now returns an API error. Use `omc_run_team_wait` with `timeout_ms` to limit how long you block (workers keep running), and call `omc_run_team_cleanup` only when you explicitly want to stop worker panes.
-
-### What `timeoutSeconds` Did Before
-
-In earlier versions, `omc_run_team_start` accepted a `timeoutSeconds` parameter that would automatically kill all worker panes if the team had not completed within that duration. Example of the old pattern:
-
-```js
-// OLD — no longer works
-mcp__team__omc_run_team_start({
-  teamName: "my-team",
-  agentTypes: ["claude", "codex"],
-  tasks: [...],
-  cwd: "/path/to/project",
-  timeoutSeconds: 120   // <-- would silently kill workers after 2 minutes
-})
-```
-
-### Why It Was Removed
-
-`timeoutSeconds` was a footgun: it silently killed worker panes mid-task whenever the wall-clock limit was reached, with no way for the caller to distinguish "timed out and killed" from "completed normally". This caused data loss (workers writing files when killed), confusing error states, and made it impossible to resume or inspect stalled teams. Callers who set a conservative timeout often lost work that was 90% done.
-
-The fix separates concerns cleanly:
-- **Wait timeout** (`omc_run_team_wait timeout_ms`) — limits how long *your call* blocks. Workers keep running.
-- **Explicit cleanup** (`omc_run_team_cleanup`) — kills worker panes only when you decide to cancel.
-
-### How to Migrate
-
-**Step 1** — Remove `timeoutSeconds` from every `omc_run_team_start` call.
-
-**Step 2** — Use `omc_run_team_wait` with `timeout_ms` to bound the blocking call. If it times out, workers are still alive; call `omc_run_team_wait` again to keep waiting:
-
-```js
-// NEW — start (no timeoutSeconds)
-const { jobId } = await mcp__team__omc_run_team_start({
-  teamName: "my-team",
-  agentTypes: ["claude", "codex"],
-  tasks: [...],
-  cwd: "/path/to/project",
-})
-
-// Wait up to 5 minutes (workers keep running if this times out)
-const result = await mcp__team__omc_run_team_wait({
-  job_id: jobId,
-  timeout_ms: 300000,
-})
-
-// If result.status === 'running' the wait timed out; call wait again or inspect progress:
-// await mcp__team__omc_run_team_status({ job_id: jobId })
-// await mcp__team__omc_run_team_wait({ job_id: jobId, timeout_ms: 600000 })
-```
-
-**Step 3** — Call `omc_run_team_cleanup` only when you *intentionally* want to cancel and stop worker panes:
-
-```js
-// Explicit cancel — only when you want to stop the workers
-await mcp__team__omc_run_team_cleanup({ job_id: jobId })
-```
-
-### Common Patterns with `/omc-teams`
-
-**Pattern A — Wait with re-try on timeout (recommended)**
-
-```js
-// Start
-const { jobId } = await mcp__team__omc_run_team_start({ ... })
-
-// Wait loop: keep waiting until terminal state
-let result
-do {
-  result = await mcp__team__omc_run_team_wait({ job_id: jobId, timeout_ms: 300000 })
-} while (result.status === 'running')
-```
-
-**Pattern B — Non-blocking progress check**
-
-```js
-const { jobId } = await mcp__team__omc_run_team_start({ ... })
-
-// Do other work, then check progress
-const status = await mcp__team__omc_run_team_status({ job_id: jobId })
-if (status.status === 'running') {
-  // Not done yet; wait or come back later
-}
-```
-
-**Pattern C — Explicit cancel when you give up**
-
-```js
-const { jobId } = await mcp__team__omc_run_team_start({ ... })
-
-const result = await mcp__team__omc_run_team_wait({ job_id: jobId, timeout_ms: 60000 })
-if (result.status === 'running') {
-  // Decided to cancel — explicitly stop worker panes
-  await mcp__team__omc_run_team_cleanup({ job_id: jobId })
-}
-```
-
-### Breaking Change
-
-Passing `timeoutSeconds` to `omc_run_team_start` now returns an API error immediately:
-
-```
-Error: omc_run_team_start no longer accepts timeoutSeconds. Remove timeoutSeconds
-and use omc_run_team_wait timeout_ms to limit the wait call only (workers keep running
-until completion or explicit omc_run_team_cleanup).
-```
 
 ---
 
@@ -671,37 +557,7 @@ Version 3.4.0 introduces powerful parallel execution modes and advanced workflow
 
 ### What's New
 
-#### 1. Ultrapilot: Parallel Autopilot
-
-Execute complex tasks with up to 5 concurrent workers for 3-5x speedup:
-
-```bash
-/oh-my-claudecode:ultrapilot "build a fullstack todo app"
-```
-
-**Key Features:**
-- Automatic task decomposition into parallelizable subtasks
-- File ownership coordination to prevent conflicts
-- Parallel execution with intelligent coordination
-- State files: `.omc/state/ultrapilot-state.json`, `.omc/state/ultrapilot-ownership.json`
-
-**Best for:** Multi-component systems, fullstack apps, large refactoring
-
-#### 2. Swarm: Coordinated Agent Teams
-
-N coordinated agents with atomic task claiming:
-
-```bash
-/oh-my-claudecode:swarm 5:executor "fix all TypeScript errors"
-```
-
-**Key Features:**
-- Shared task pool with atomic claiming (prevents duplicate work)
-- 5-minute timeout per task with auto-release
-- Scales from 2 to 10 workers
-- Clean completion when all tasks done
-
-#### 3. Pipeline: Sequential Agent Chaining
+#### 1. Pipeline: Sequential Agent Chaining
 
 Chain agents with data passing between stages:
 
@@ -726,7 +582,7 @@ Smart cancellation that auto-detects active mode:
 # Or just say: "stop", "cancel", "abort"
 ```
 
-**Auto-detects and cancels:** autopilot, ultrapilot, ralph, ultrawork, ultraqa, swarm, pipeline
+**Auto-detects and cancels:** autopilot, ralph, ultrawork, ultraqa, pipeline
 
 **Deprecation Notice:**
 Individual cancel commands are deprecated but still work:
@@ -736,6 +592,8 @@ Individual cancel commands are deprecated but still work:
 - `/oh-my-claudecode:cancel-autopilot` (deprecated)
 
 Use `/oh-my-claudecode:cancel` instead.
+
+
 
 #### 6. Explore-High Agent
 
@@ -806,8 +664,6 @@ None. All v3.3.x features and commands continue to work in v3.4.0.
 ### New Tools Available
 
 Once upgraded, you automatically gain access to:
-- Ultrapilot (parallel autopilot)
-- Swarm coordination
 - Pipeline workflows
 - Unified cancel command
 - Explore-high agent
@@ -818,8 +674,7 @@ Once upgraded, you automatically gain access to:
 
 | Scenario | Recommended Mode | Why |
 |----------|------------------|-----|
-| Multi-component systems | `ultrapilot` | Parallel workers handle independent components |
-| Many small fixes | `swarm` | Atomic task claiming prevents duplicate work |
+| Multi-component systems | `team` | Coordinated agents handle independent components |
 | Sequential dependencies | `pipeline` | Data passes between stages |
 | Single complex task | `autopilot` | Full autonomous execution |
 | Must complete | `ralph` | Persistence guarantee |
@@ -848,19 +703,14 @@ After upgrading, verify new features:
    npm list -g oh-my-claudecode
    ```
 
-2. **Test ultrapilot**:
-   ```bash
-   /oh-my-claudecode:ultrapilot "create a simple React component"
-   ```
-
-3. **Test unified cancel**:
+2. **Test unified cancel**:
    ```bash
    /oh-my-claudecode:cancel
    ```
 
-4. **Check state directory**:
+3. **Check state directory**:
    ```bash
-   ls -la .omc/state/  # Should see ultrapilot-state.json after running ultrapilot
+   ls -la .omc/state/
    ```
 
 ---

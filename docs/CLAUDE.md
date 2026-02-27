@@ -9,7 +9,7 @@ Your role is to coordinate specialized agents, tools, and skills so work is comp
 - Delegate specialized or tool-heavy work to the most appropriate agent.
 - Keep users informed with concise progress updates while work is in flight.
 - Prefer clear evidence over assumptions: verify outcomes before final claims.
-- Choose the lightest-weight path that preserves quality (direct action, tmux worker, or agent).
+- Choose the lightest-weight path that preserves quality (direct action or agent).
 - Use context files and concrete outputs so delegated tasks are grounded.
 - Consult official documentation before implementing with SDKs, frameworks, or APIs.
 </operating_principles>
@@ -89,20 +89,14 @@ Compatibility aliases may still be normalized during routing, but canonical runt
 ---
 
 <tools>
-External AI (tmux CLI workers):
+Team Coordination (Claude Code native):
 - For **Claude agents**: use `/team N:executor "task"` — spawns Claude Code agent teammates via `TeamCreate`/`Task`
-- For **Codex or Gemini CLI workers**: use `/omc-teams N:codex "task"` or `/omc-teams N:gemini "task"` — spawns CLI processes in tmux panes via `bridge/runtime-cli.cjs`
-- omc-teams MCP tools: `mcp__team__omc_run_team_start`, `mcp__team__omc_run_team_wait`, `mcp__team__omc_run_team_status`, `mcp__team__omc_run_team_cleanup`
 
 OMC State:
 - `state_read`, `state_write`, `state_clear`, `state_list_active`, `state_get_status`
 - State stored at `{worktree}/.omc/state/{mode}-state.json` (not in `~/.claude/`)
 - Session-scoped state: `.omc/state/sessions/{sessionId}/` when session id is available; legacy `.omc/state/{mode}-state.json` as fallback
-- Supported modes: autopilot, ultrapilot, team, pipeline, ralph, ultrawork, ultraqa
-
-Team Coordination (Claude Code native):
-- `TeamCreate`, `TeamDelete`, `SendMessage`, `TaskCreate`, `TaskList`, `TaskGet`, `TaskUpdate`
-- Lifecycle: `TeamCreate` -> `TaskCreate` x N -> `Task(team_name, name)` x N to spawn teammates -> teammates claim/complete tasks -> `SendMessage(shutdown_request)` -> `TeamDelete`
+- Supported modes: autopilot, team, pipeline, ralph, ultrawork, ultraqa
 
 Notepad (session memory at `{worktree}/.omc/notepad.md`):
 - `notepad_read` (sections: all/priority/working/manual)
@@ -131,11 +125,7 @@ Workflow Skills:
 - `autopilot` ("autopilot", "build me", "I want a"): full autonomous execution from idea to working code
 - `ralph` ("ralph", "don't stop", "must complete"): self-referential loop with verifier verification; includes ultrawork
 - `ultrawork` ("ulw", "ultrawork"): maximum parallelism with parallel agent orchestration
-- `swarm` ("swarm"): **deprecated compatibility alias** over Team; use `/team` (still routes to Team staged pipeline for now)
-- `ultrapilot` ("ultrapilot", "parallel build"): compatibility facade over Team; maps onto Team's staged runtime
 - `team` ("team", "coordinated team", "team ralph"): N coordinated Claude agents using Claude Code native teams with stage-aware agent routing; supports `team ralph` for persistent team execution
-- `omc-teams` ("omc-teams", "codex", "gemini"): Spawn `claude`, `codex`, or `gemini` CLI workers in tmux panes via `bridge/runtime-cli.cjs`; use when you need CLI process workers rather than Claude Code native agents. Note: bare "codex" or "gemini" alone routes here; when all three ("claude codex gemini") appear together, `ccg` takes priority
-- `ccg` ("ccg", "tri-model", "claude codex gemini"): Fan out backend/analytical tasks to Codex + frontend/UI tasks to Gemini in parallel tmux panes, then Claude synthesizes; requires codex and gemini CLIs. Priority: matches when all three model names appear together, overriding bare "codex"/"gemini" routing to omc-teams
 - `pipeline` ("pipeline", "chain agents"): sequential agent chaining with data passing
 - `ultraqa` (activated by autopilot): QA cycling -- test, verify, fix, repeat
 - `plan` ("plan this", "plan the"): strategic planning; supports `--consensus` and `--review` modes, with RALPLAN-DR structured deliberation in consensus mode
@@ -152,11 +142,9 @@ Agent Shortcuts (thin wrappers; call the agent directly with `model` for more co
 - `security-review` -> `security-reviewer`: "security review"
 - `review` -> `plan --review`: "review plan", "critique plan"
 
-Notifications: `configure-notifications` ("configure discord", "setup discord", "discord webhook", "configure telegram", "setup telegram", "telegram bot", "configure slack", "setup slack")
-
 Utilities: `cancel`, `note`, `learner`, `omc-setup`, `mcp-setup`, `hud`, `omc-doctor`, `omc-help`, `trace`, `release`, `project-session-manager` (`psm` is deprecated alias), `skill`, `writer-memory`, `ralph-init`, `learn-about-omc`
 
-Conflict resolution: explicit mode keywords (`ulw`, `ultrawork`) override defaults. Generic "fast"/"parallel" reads `~/.claude/.omc-config.json` -> `defaultExecutionMode`. Ralph includes ultrawork (persistence wrapper). Autopilot can transition to ralph or ultraqa. Autopilot and ultrapilot are mutually exclusive. Keyword disambiguation: bare "codex" or "gemini" routes to `omc-teams`; the full phrase "claude codex gemini" routes to `ccg` (longest-match priority).
+Conflict resolution: explicit mode keywords (`ulw`, `ultrawork`) override defaults. Generic "fast"/"parallel" reads `~/.claude/.omc-config.json` -> `defaultExecutionMode`. Ralph includes ultrawork (persistence wrapper). Autopilot can transition to ralph or ultraqa.
 </skills>
 
 ---

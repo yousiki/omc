@@ -8,8 +8,8 @@ Complete reference for oh-my-claudecode. For quick start, see the main [README.m
 
 - [Installation](#installation)
 - [Configuration](#configuration)
-- [Agents (28 Total)](#agents-28-total)
-- [Skills (37 Total)](#skills-37-total)
+- [Agents](#agents)
+- [Skills](#skills)
 - [Slash Commands](#slash-commands)
 - [Hooks System](#hooks-system)
 - [Magic Keywords](#magic-keywords)
@@ -99,8 +99,6 @@ If both configurations exist, **project-scoped takes precedence** over global:
 | `OMC_STATE_DIR` | _(unset)_ | Centralized state directory. When set, OMC stores state at `$OMC_STATE_DIR/{project-id}/` instead of `{worktree}/.omc/`. This preserves state across worktree deletions. The project identifier is derived from the git remote URL (or worktree path for local-only repos). |
 | `OMC_BRIDGE_SCRIPT` | _(auto-detected)_ | Path to the Python bridge script |
 | `OMC_PARALLEL_EXECUTION` | `true` | Enable/disable parallel agent execution |
-| `OMC_CODEX_DEFAULT_MODEL` | _(provider default)_ | Default model for Codex CLI workers |
-| `OMC_GEMINI_DEFAULT_MODEL` | _(provider default)_ | Default model for Gemini CLI workers |
 | `DISABLE_OMC` | _(unset)_ | Set to any value to disable all OMC hooks |
 | `OMC_SKIP_HOOKS` | _(unset)_ | Comma-separated list of hook names to skip |
 
@@ -159,33 +157,9 @@ This is a TypeScript monorepo using:
 - Tests alongside source files
 ```
 
-### Stop Callback Notification Tags
-
-Configure tags for Telegram/Discord stop callbacks with `omc config-stop-callback`.
-
-```bash
-# Set/replace tags
-omc config-stop-callback telegram --enable --token <bot_token> --chat <chat_id> --tag-list "@alice,bob"
-omc config-stop-callback discord --enable --webhook <url> --tag-list "@here,123456789012345678,role:987654321098765432"
-
-# Incremental updates
-omc config-stop-callback telegram --add-tag charlie
-omc config-stop-callback discord --remove-tag @here
-omc config-stop-callback discord --clear-tags
-
-# Inspect current callback config
-omc config-stop-callback telegram --show
-omc config-stop-callback discord --show
-```
-
-Tag behavior:
-- Telegram: `alice` is normalized to `@alice`
-- Discord: supports `@here`, `@everyone`, numeric user IDs (`<@id>`), and role tags (`role:<id>` -> `<@&id>`)
-- `file` callbacks ignore tag options
-
 ---
 
-## Agents (28 Total)
+## Agents
 
 Always use `oh-my-claudecode:` prefix when calling via Task tool.
 
@@ -245,7 +219,7 @@ Always use `oh-my-claudecode:` prefix when calling via Task tool.
 
 ---
 
-## Skills (37 Total)
+## Skills
 
 ### Core Skills
 
@@ -254,9 +228,7 @@ Always use `oh-my-claudecode:` prefix when calling via Task tool.
 | `orchestrate` | Multi-agent orchestration mode | - |
 | `autopilot` | Full autonomous execution from idea to working code | `/oh-my-claudecode:autopilot` |
 | `ultrawork` | Maximum performance with parallel agents | `/oh-my-claudecode:ultrawork` |
-| `ultrapilot` | Parallel autopilot with 3-5x speedup | `/oh-my-claudecode:ultrapilot` |
 | `team` | N coordinated agents on shared task list using native teams | `/oh-my-claudecode:team` |
-| `swarm` | **Deprecated** compatibility facade over team orchestration (use `team`) | `/oh-my-claudecode:swarm` |
 | `pipeline` | Sequential agent chaining | `/oh-my-claudecode:pipeline` |
 | `ralph` | Self-referential development until completion | `/oh-my-claudecode:ralph` |
 | `ralph-init` | Initialize PRD for structured task tracking | `/oh-my-claudecode:ralph-init` |
@@ -309,9 +281,7 @@ All skills are available as slash commands with the prefix `/oh-my-claudecode:`.
 | `/oh-my-claudecode:orchestrate <task>` | Activate multi-agent orchestration mode |
 | `/oh-my-claudecode:autopilot <task>` | Full autonomous execution |
 | `/oh-my-claudecode:ultrawork <task>` | Maximum performance mode with parallel agents |
-| `/oh-my-claudecode:ultrapilot <task>` | Parallel autopilot (3-5x faster) |
 | `/oh-my-claudecode:team <N>:<agent> <task>` | Coordinated native team workflow |
-| `/oh-my-claudecode:swarm <N>:<agent> <task>` | Deprecated alias for Team orchestration |
 | `/oh-my-claudecode:pipeline <stages>` | Sequential agent chaining |
 | `/oh-my-claudecode:ralph-init <task>` | Initialize PRD for structured task tracking |
 | `/oh-my-claudecode:ralph <task>` | Self-referential loop until task completion |
@@ -339,7 +309,7 @@ All skills are available as slash commands with the prefix `/oh-my-claudecode:`.
 
 ## Hooks System
 
-Oh-my-claudecode includes 31 lifecycle hooks that enhance Claude Code's behavior.
+Oh-my-claudecode includes lifecycle hooks that enhance Claude Code's behavior.
 
 ### Execution Mode Hooks
 
@@ -348,10 +318,8 @@ Oh-my-claudecode includes 31 lifecycle hooks that enhance Claude Code's behavior
 | `autopilot` | Full autonomous execution from idea to working code |
 | `ultrawork` | Maximum parallel agent execution |
 | `ralph` | Persistence until verified complete |
-| `ultrapilot` | Parallel autopilot with file ownership |
 | `team-pipeline` | Native team staged pipeline orchestration |
 | `ultraqa` | QA cycling until goal met |
-| `swarm` | Coordinated multi-agent with SQLite task claiming |
 | `mode-registry` | Tracks active execution mode state (including team/ralph/ultrawork/ralplan) |
 | `persistent-mode` | Maintains mode state across sessions |
 
@@ -433,7 +401,6 @@ explicitly enabled via `~/.omc/config.json`.
 | `session-end` | Session termination handling |
 | `non-interactive-env` | CI/non-interactive environment handling |
 | `agent-usage-reminder` | Reminder to use specialized agents |
-| `background-notification` | Background task completion notifications |
 | `plugin-patterns` | Plugin pattern detection |
 | `setup` | Initial setup and configuration |
 
@@ -448,7 +415,6 @@ Just include these words anywhere in your prompt to activate enhanced modes:
 | `ultrawork`, `ulw`, `uw` | Activates parallel agent orchestration |
 | `eco`, `efficient`, `save-tokens`, `budget` | Token-efficient parallel execution |
 | `autopilot`, `build me`, `I want a` | Full autonomous execution |
-| `ultrapilot`, `parallel build`, `swarm build` | Parallel autopilot (3-5x faster) |
 | `ralph`, `don't stop`, `must complete` | Persistence until verified complete |
 | `plan this`, `plan the` | Planning interview workflow |
 | `ralplan` | Iterative planning consensus with structured deliberation (`--deliberate` for high-risk mode) |
@@ -456,7 +422,6 @@ Just include these words anywhere in your prompt to activate enhanced modes:
 | `analyze`, `investigate`, `debug` | Deep analysis mode |
 | `sciomc` | Parallel research orchestration |
 | `tdd`, `test first`, `red green` | TDD workflow enforcement |
-| `swarm N agents` | Coordinated agent swarm |
 | `pipeline`, `chain agents` | Sequential agent chaining |
 | `stop`, `cancel`, `abort` | Unified cancellation |
 
@@ -480,9 +445,6 @@ analyze why the tests are failing
 # Autonomous execution
 autopilot: build a todo app with React
 
-# Parallel autopilot
-ultrapilot: build a fullstack todo app
-
 # Persistence mode
 ralph: refactor the authentication module
 
@@ -491,9 +453,6 @@ plan this feature
 
 # TDD workflow
 tdd: implement password validation
-
-# Coordinated swarm
-swarm 5 agents: fix all lint errors
 
 # Agent chaining
 pipeline: analyze → fix → test this bug

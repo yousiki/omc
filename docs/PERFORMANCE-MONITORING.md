@@ -437,10 +437,9 @@ cleanupReplayFiles(process.cwd()); // Keeps last 10 sessions
 **Symptoms**: Merge conflicts, unexpected file changes
 
 **Solutions**:
-1. Use `ultrapilot` mode for automatic file ownership
+1. Use `team` mode with file-scoped task decomposition
 2. Check `detectFileConflicts()` before parallel execution
 3. Review file_ownership in agent state
-4. Use `swarm` mode with explicit task isolation
 
 ### Missing Analytics Data
 
