@@ -8,7 +8,7 @@
 ## Purpose
 
 Hooks intercept Claude Code events to enable:
-- **Execution modes**: autopilot, ultrawork, ralph, ultrapilot, swarm, pipeline (mode-registry)
+- **Execution modes**: autopilot, ultrawork, ralph, team, pipeline (mode-registry)
 - **Validation**: thinking blocks, empty messages, comments
 - **Recovery**: edit errors, session recovery, context window
 - **Enhancement**: rules injection, directory READMEs, notepad
@@ -30,8 +30,6 @@ Hooks intercept Claude Code events to enable:
 | `autopilot/` | Full autonomous execution | "autopilot", "build me" |
 | `ultrawork/` | Maximum parallel execution | "ulw", "ultrawork" |
 | `ralph/` | Persistence until verified | "ralph", "don't stop" |
-| `ultrapilot/` | Parallel autopilot with file ownership | "ultrapilot" |
-| `swarm/` | N coordinated agents with task claiming | "swarm N agents" |
 | `ultraqa/` | QA cycling until goal met | test failures |
 | `mode-registry/` | Tracks active execution mode  | internal |
 | `persistent-mode/` | Maintains mode state across sessions | internal |
@@ -81,7 +79,6 @@ Hooks intercept Claude Code events to enable:
 | `omc-orchestrator/` | Orchestrator behavior |
 | `subagent-tracker/` | Tracks spawned sub-agents |
 | `session-end/` | Session termination handling |
-| `background-notification/` | Background task notifications |
 
 ### Setup Hooks
 
@@ -147,18 +144,6 @@ export function createHook(config: HookConfig) {
 - Loops until verified complete
 - Supports structured PRD format
 
-**ultrapilot/** - Parallel autopilot:
-- Decomposes tasks into subtasks
-- Assigns file ownership to workers
-- Coordinates parallel execution
-- Integrates results
-
-**swarm/** - Coordinated multi-agent:
-- SQLite-based task claiming
-- 5-minute timeout per task
-- Atomic claim/release
-- Clean completion detection
-
 **learner/** - Skill extraction:
 - Detects skill patterns in conversation
 - Extracts to local skill files
@@ -203,7 +188,6 @@ writeState('autopilot-state', state);
 ### External
 | Package | Purpose |
 |---------|---------|
-| `better-sqlite3` | Swarm task coordination |
 | `fs`, `path` | State file operations |
 
 ## Hook Events
@@ -237,11 +221,9 @@ return {
 **Mode priority** (checked after bypass, may inject continuation message):
 1. Ralph (explicit persistence loop)
 2. Autopilot (full orchestration)
-3. Ultrapilot (parallel workers)
-4. Swarm (coordinated agents)
-5. Pipeline (sequential stages)
-6. UltraQA (test cycling)
-7. Ultrawork (parallel execution)
+3. Pipeline (sequential stages)
+4. UltraQA (test cycling)
+5. Ultrawork (parallel execution)
 
 **Session isolation**: Hooks only enforce for matching `session_id`. Stale states (>2 hours) are ignored.
 
@@ -252,9 +234,7 @@ return {
 | Hook | State File |
 |------|------------|
 | autopilot | `.omc/state/autopilot-state.json` |
-| ultrapilot | `.omc/state/ultrapilot-state.json` |
 | ralph | `.omc/state/ralph-state.json` |
-| swarm | `.omc/state/swarm-tasks.db` (SQLite) |
 | learner | `~/.claude/local-skills/` |
 
 <!-- MANUAL: -->

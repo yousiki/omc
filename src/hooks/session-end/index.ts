@@ -2,7 +2,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as readline from 'readline';
 import { triggerStopCallbacks } from './callbacks.js';
-import { notify } from '../../notifications/index.js';
 import { cleanupBridgeSessions } from '../../tools/python-repl/bridge-manager.js';
 import { resolveToWorktreeRoot } from '../../lib/worktree-paths.js';
 import { SESSION_END_MODE_STATE_FILES, SESSION_METRICS_MODE_FILES } from '../../lib/mode-names.js';
@@ -430,52 +429,6 @@ export async function processSessionEnd(input: SessionEndInput): Promise<HookOut
     session_id: input.session_id,
     cwd: input.cwd,
   });
-
-  // Trigger new notification system (in addition to legacy callbacks)
-  try {
-    await notify('session-end', {
-      sessionId: input.session_id,
-      projectPath: input.cwd,
-      durationMs: metrics.duration_ms,
-      agentsSpawned: metrics.agents_spawned,
-      agentsCompleted: metrics.agents_completed,
-      modesUsed: metrics.modes_used,
-      reason: metrics.reason,
-      timestamp: metrics.ended_at,
-      profileName: process.env.OMC_NOTIFY_PROFILE,
-    });
-  } catch {
-    // Notification failures should never block session end
-  }
-
-  // Wake OpenClaw gateway for session-end (non-blocking)
-  if (process.env.OMC_OPENCLAW === "1") {
-    import("../../openclaw/index.js").then(({ wakeOpenClaw }) =>
-      wakeOpenClaw("session-end", {
-        sessionId: input.session_id,
-        projectPath: input.cwd,
-        contextSummary: `Duration: ${metrics.duration_ms}ms, Agents: ${metrics.agents_completed}/${metrics.agents_spawned}`,
-        reason: metrics.reason,
-      }).catch(() => {})
-    ).catch(() => {});
-  }
-
-  // Clean up reply session registry and stop daemon if no active sessions remain
-  try {
-    const { removeSession, loadAllMappings } = await import('../../notifications/session-registry.js');
-    const { stopReplyListener } = await import('../../notifications/reply-listener.js');
-
-    // Remove this session's message mappings
-    removeSession(input.session_id);
-
-    // Stop daemon if registry is now empty (no other active sessions)
-    const remainingMappings = loadAllMappings();
-    if (remainingMappings.length === 0) {
-      await stopReplyListener();
-    }
-  } catch {
-    // Reply listener cleanup failures should never block session end
-  }
 
   // Return simple response - metrics are persisted to .omc/sessions/
   return { continue: true };

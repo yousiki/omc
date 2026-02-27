@@ -224,7 +224,6 @@ export const HEAVY_MODE_KEYWORDS = new Set([
   'ultrawork',
   'pipeline',
   'ralplan',
-  'ccg',
 ]);
 
 /**

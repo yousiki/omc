@@ -362,10 +362,6 @@ describe('task-size-detector', () => {
       expect(isHeavyMode('ralplan')).toBe(true);
     });
 
-    it('returns true for ccg', () => {
-      expect(isHeavyMode('ccg')).toBe(true);
-    });
-
     it('returns false for cancel', () => {
       expect(isHeavyMode('cancel')).toBe(false);
     });
@@ -390,14 +386,6 @@ describe('task-size-detector', () => {
       expect(isHeavyMode('analyze')).toBe(false);
     });
 
-    it('returns false for codex', () => {
-      expect(isHeavyMode('codex')).toBe(false);
-    });
-
-    it('returns false for gemini', () => {
-      expect(isHeavyMode('gemini')).toBe(false);
-    });
-
     it('returns false for unknown keyword', () => {
       expect(isHeavyMode('unknown-mode')).toBe(false);
     });
@@ -405,14 +393,14 @@ describe('task-size-detector', () => {
 
   describe('HEAVY_MODE_KEYWORDS set', () => {
     it('contains expected heavy modes', () => {
-      const expected = ['ralph', 'autopilot', 'team', 'ultrawork', 'pipeline', 'ralplan', 'ccg'];
+      const expected = ['ralph', 'autopilot', 'team', 'ultrawork', 'pipeline', 'ralplan'];
       for (const mode of expected) {
         expect(HEAVY_MODE_KEYWORDS.has(mode)).toBe(true);
       }
     });
 
     it('does not contain lightweight modes', () => {
-      const lightweight = ['cancel', 'plan', 'tdd', 'ultrathink', 'deepsearch', 'analyze', 'codex', 'gemini'];
+      const lightweight = ['cancel', 'plan', 'tdd', 'ultrathink', 'deepsearch', 'analyze'];
       for (const mode of lightweight) {
         expect(HEAVY_MODE_KEYWORDS.has(mode)).toBe(false);
       }

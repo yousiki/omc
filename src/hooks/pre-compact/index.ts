@@ -19,8 +19,6 @@ import {
 } from "fs";
 import { promises as fsPromises } from "fs";
 import { join } from "path";
-import { initJobDb, getActiveJobs, getRecentJobs, getJobStats } from '../../lib/job-state-db.js';
-
 // ============================================================================
 // Types
 // ============================================================================
@@ -51,11 +49,6 @@ export interface CompactCheckpoint {
     completed: number;
   };
   wisdom_exported: boolean;
-  background_jobs?: {
-    active: Array<{ jobId: string; provider: string; model: string; agentRole: string; spawnedAt: string }>;
-    recent: Array<{ jobId: string; provider: string; status: string; agentRole: string; completedAt?: string }>;
-    stats: { total: number; active: number; completed: number; failed: number } | null;
-  };
 }
 
 export interface HookOutput {
@@ -281,52 +274,6 @@ function readTodoSummary(directory: string): {
 }
 
 /**
- * Get summary of active and recent background jobs from SQLite DB
- * Queries .omc/state/jobs.db for Codex/Gemini job statuses
- */
-async function getActiveJobsSummary(directory: string): Promise<{
-  activeJobs: Array<{ jobId: string; provider: string; model: string; agentRole: string; spawnedAt: string }>;
-  recentJobs: Array<{ jobId: string; provider: string; status: string; agentRole: string; completedAt?: string }>;
-  stats: { total: number; active: number; completed: number; failed: number } | null;
-}> {
-  try {
-    const dbReady = await initJobDb(directory);
-    if (!dbReady) {
-      return { activeJobs: [], recentJobs: [], stats: null };
-    }
-
-    const active = getActiveJobs(undefined, directory);
-    const recent = getRecentJobs(undefined, 5 * 60 * 1000, directory); // Last 5 minutes
-
-    // Filter recent to only completed/failed (not active ones which are already listed)
-    const recentCompleted = recent.filter(j => j.status === 'completed' || j.status === 'failed');
-
-    const stats = getJobStats(directory);
-
-    return {
-      activeJobs: active.map(j => ({
-        jobId: j.jobId,
-        provider: j.provider,
-        model: j.model,
-        agentRole: j.agentRole,
-        spawnedAt: j.spawnedAt,
-      })),
-      recentJobs: recentCompleted.slice(0, 10).map(j => ({
-        jobId: j.jobId,
-        provider: j.provider,
-        status: j.status,
-        agentRole: j.agentRole,
-        completedAt: j.completedAt,
-      })),
-      stats,
-    };
-  } catch (error) {
-    console.error('[PreCompact] Error reading job state DB:', error);
-    return { activeJobs: [], recentJobs: [], stats: null };
-  }
-}
-
-/**
  * Create a compact checkpoint
  */
 export async function createCompactCheckpoint(
@@ -335,7 +282,6 @@ export async function createCompactCheckpoint(
 ): Promise<CompactCheckpoint> {
   const activeModes = await saveModeSummary(directory);
   const todoSummary = readTodoSummary(directory);
-  const jobsSummary = await getActiveJobsSummary(directory);
 
   return {
     created_at: new Date().toISOString(),
@@ -343,11 +289,6 @@ export async function createCompactCheckpoint(
     active_modes: activeModes as CompactCheckpoint["active_modes"],
     todo_summary: todoSummary,
     wisdom_exported: false,
-    background_jobs: {
-      active: jobsSummary.activeJobs,
-      recent: jobsSummary.recentJobs,
-      stats: jobsSummary.stats,
-    },
   };
 }
 
@@ -416,36 +357,6 @@ export function formatCompactSummary(checkpoint: CompactCheckpoint): string {
     lines.push(`- In Progress: ${checkpoint.todo_summary.in_progress}`);
     lines.push(`- Completed: ${checkpoint.todo_summary.completed}`);
     lines.push("");
-  }
-
-  // Background jobs
-  const jobs = checkpoint.background_jobs;
-  if (jobs && (jobs.active.length > 0 || jobs.recent.length > 0)) {
-    lines.push("## Background Jobs (Codex/Gemini)");
-    lines.push("");
-
-    if (jobs.active.length > 0) {
-      lines.push("### Currently Running");
-      for (const job of jobs.active) {
-        const age = Math.round((Date.now() - new Date(job.spawnedAt).getTime()) / 1000);
-        lines.push(`- **${job.jobId}** ${job.provider}/${job.model} (${job.agentRole}) - ${age}s ago`);
-      }
-      lines.push("");
-    }
-
-    if (jobs.recent.length > 0) {
-      lines.push("### Recently Completed");
-      for (const job of jobs.recent) {
-        const icon = job.status === 'completed' ? 'OK' : 'FAIL';
-        lines.push(`- **${job.jobId}** [${icon}] ${job.provider} (${job.agentRole})`);
-      }
-      lines.push("");
-    }
-
-    if (jobs.stats) {
-      lines.push(`**Job Stats:** ${jobs.stats.active} active, ${jobs.stats.completed} completed, ${jobs.stats.failed} failed (${jobs.stats.total} total)`);
-      lines.push("");
-    }
   }
 
   // Wisdom status

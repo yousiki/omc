@@ -327,20 +327,6 @@ export {
 } from './preemptive-compaction/index.js';
 
 export {
-  // Background Notification
-  createBackgroundNotificationHook,
-  processBackgroundNotification,
-  processBackgroundNotificationHook,
-  checkBackgroundNotifications,
-  handleBackgroundEvent,
-  HOOK_NAME as BACKGROUND_NOTIFICATION_HOOK_NAME,
-  type BackgroundNotificationHookConfig,
-  type BackgroundNotificationHookInput,
-  type BackgroundNotificationHookOutput,
-  type NotificationCheckResult
-} from './background-notification/index.js';
-
-export {
   // Directory README / AGENTS.md Injector
   createDirectoryReadmeInjectorHook,
   getReadmesForPath,

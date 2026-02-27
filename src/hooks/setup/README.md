@@ -41,14 +41,11 @@ Performs periodic maintenance tasks to keep OMC state clean.
 **What it does:**
 - Prunes old state files (default: 7 days old)
 - Cleans up orphaned session state files (>24 hours old)
-- Runs VACUUM on swarm SQLite database (if exists and sqlite3 available)
 
 **Protected Files (Never Pruned):**
 - `autopilot-state.json`
-- `ultrapilot-state.json`
 - `ralph-state.json`
 - `ultrawork-state.json`
-- `swarm-state.json`
 
 **Example Input:**
 ```json
@@ -68,7 +65,7 @@ Performs periodic maintenance tasks to keep OMC state clean.
   "continue": true,
   "hookSpecificOutput": {
     "hookEventName": "Setup",
-    "additionalContext": "OMC maintenance completed:\n- 3 old state files pruned\n- 1 orphaned state files cleaned\n- Swarm database vacuumed"
+    "additionalContext": "OMC maintenance completed:\n- 3 old state files pruned\n- 1 orphaned state files cleaned"
   }
 }
 ```
@@ -289,12 +286,10 @@ All errors are caught and added to the `errors` array in `SetupResult`. The hook
 
 - `fs`: File system operations
 - `path`: Path manipulation
-- `child_process`: For running `sqlite3` VACUUM command
 
 ## Notes
 
 - Directory creation is idempotent (won't fail if directories already exist)
 - Protected state files are never pruned, even if old
 - Environment variable setting requires `CLAUDE_ENV_FILE` to be set
-- SQLite VACUUM requires `sqlite3` command to be available
 - All operations are safe and won't delete active/critical state

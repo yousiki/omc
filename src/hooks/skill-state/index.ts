@@ -74,7 +74,6 @@ const SKILL_PROTECTION: Record<string, SkillProtectionLevel> = {
   ralph: 'none',
   ultrawork: 'none',
   team: 'none',
-  'omc-teams': 'none',
   ultraqa: 'none',
   pipeline: 'none',
   cancel: 'none',
@@ -92,7 +91,6 @@ const SKILL_PROTECTION: Record<string, SkillProtectionLevel> = {
   'build-fix': 'light',
   analyze: 'light',
   skill: 'light',
-  'configure-notifications': 'light',
 
   // === Medium protection (review/planning, 5 reinforcements) ===
   'code-review': 'medium',
@@ -108,7 +106,6 @@ const SKILL_PROTECTION: Record<string, SkillProtectionLevel> = {
   'project-session-manager': 'medium',
   'writer-memory': 'medium',
   'ralph-init': 'medium',
-  ccg: 'medium',
 
   // === Heavy protection (long-running, 10 reinforcements) ===
   deepinit: 'heavy',
