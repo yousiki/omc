@@ -17,7 +17,6 @@ import { TaskTool } from '../hooks/beads-context/types.js';
 import { install as installOmc, HOOKS_DIR, isProjectScopedPlugin, isRunningAsPlugin } from '../installer/index.js';
 import { getConfigDir } from '../utils/config-dir.js';
 import { purgeStalePluginCacheVersions } from '../utils/paths.js';
-import type { NotificationConfig } from '../notifications/types.js';
 
 /** GitHub repository information */
 export const REPO_OWNER = 'Yeachan-Heo';
@@ -152,12 +151,8 @@ export interface OMCConfig {
   setupCompleted?: string;
   /** Version of setup wizard that was completed */
   setupVersion?: string;
-  /** Stop hook callback configuration (legacy, use notifications instead) */
+  /** Stop hook callback configuration */
   stopHookCallbacks?: StopHookCallbacksConfig;
-  /** Multi-platform lifecycle notification configuration */
-  notifications?: NotificationConfig;
-  /** Named notification profiles (keyed by profile name) */
-  notificationProfiles?: Record<string, NotificationConfig>;
   /** Whether HUD statusline is enabled (default: true). Set to false to skip HUD installation. */
   hudEnabled?: boolean;
   /** Whether to prompt for upgrade at session start when a new version is available (default: true).
@@ -189,8 +184,6 @@ export function getOMCConfig(): OMCConfig {
       setupCompleted: config.setupCompleted,
       setupVersion: config.setupVersion,
       stopHookCallbacks: config.stopHookCallbacks,
-      notifications: config.notifications,
-      notificationProfiles: config.notificationProfiles,
       hudEnabled: config.hudEnabled,
       autoUpgradePrompt: config.autoUpgradePrompt,
     };

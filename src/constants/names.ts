@@ -27,9 +27,6 @@ export const TOOL_CATEGORIES = {
   MEMORY: 'memory',
   TRACE: 'trace',
   SKILLS: 'skills',
-  INTEROP: 'interop',
-  CODEX: 'codex',
-  GEMINI: 'gemini',
 } as const;
 export type ToolCategory = typeof TOOL_CATEGORIES[keyof typeof TOOL_CATEGORIES];
 

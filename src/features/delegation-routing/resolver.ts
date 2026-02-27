@@ -10,7 +10,7 @@ import type {
   DelegationDecision,
   ResolveDelegationOptions,
   DelegationTool,
-} from '../../shared/types.js';
+} from './types.js';
 import {
   isDelegationEnabled,
   ROLE_CATEGORY_DEFAULTS,
@@ -74,20 +74,6 @@ function resolveFromConfig(
   const provider = route.provider;
   let tool = route.tool;
 
-  // Warn and fall back to claude for deprecated codex/gemini providers
-  if (provider === 'codex' || provider === 'gemini') {
-    console.warn('[OMC] Codex/Gemini MCP delegation is deprecated. Use /team to coordinate CLI workers instead.');
-    const agentOrModel = route.model || route.agentType || agentRole;
-    const fallbackChain = route.fallback;
-    return {
-      provider: 'claude',
-      tool: 'Task',
-      agentOrModel,
-      reason: `Configured routing for role "${agentRole}" (deprecated provider "${provider}", falling back to Claude Task)`,
-      fallbackChain,
-    };
-  }
-
   // Only claude → Task is valid; correct any mismatch
   if (tool !== 'Task') {
     console.warn(`[delegation-routing] Provider/tool mismatch: ${provider} with ${tool}. Correcting to Task.`);
@@ -126,13 +112,6 @@ function resolveDefault(
   }
 
   // Fall back to default provider or claude
-  const defaultProvider = config?.defaultProvider || 'claude';
-
-  if (defaultProvider === 'codex' || defaultProvider === 'gemini') {
-    console.warn('[OMC] Codex/Gemini MCP delegation is deprecated. Use /team to coordinate CLI workers instead.');
-  }
-
-  // Default to claude Task (codex/gemini default providers fall back to claude)
   return {
     provider: 'claude',
     tool: 'Task',
@@ -142,7 +121,7 @@ function resolveDefault(
 }
 
 /**
- * Parse fallback chain format ["claude:explore", "codex:gpt-5"]
+ * Parse fallback chain format ["claude:explore", "claude:architect"]
  */
 export function parseFallbackChain(
   fallback: string[] | undefined
@@ -156,7 +135,7 @@ export function parseFallbackChain(
       const parts = entry.split(':');
       if (parts.length >= 2) {
         const provider = parts[0].trim();
-        const agentOrModel = parts.slice(1).join(':').trim(); // Handle cases like "codex:gpt-5.3-codex"
+        const agentOrModel = parts.slice(1).join(':').trim(); // Handle cases with multiple colons
         // Skip entries with empty provider or empty agent/model
         if (provider && agentOrModel) {
           return {

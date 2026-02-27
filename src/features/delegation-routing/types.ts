@@ -1,20 +1,50 @@
 /**
  * Delegation Routing Types
  *
- * Re-exports from shared types for convenience plus
- * delegation-specific constants and helpers.
+ * Type definitions for the delegation routing system.
+ * Now that external providers (codex/gemini) are removed,
+ * delegation is Claude-only but the routing config structure
+ * is preserved for role-based agent selection.
  */
 
-import type { DelegationRoutingConfig } from '../../shared/types.js';
+/** Provider for delegation - now only 'claude' */
+export type DelegationProvider = 'claude';
 
-export type {
-  DelegationProvider,
-  DelegationTool,
-  DelegationRoute,
-  DelegationRoutingConfig,
-  DelegationDecision,
-  ResolveDelegationOptions,
-} from '../../shared/types.js';
+/** Tool used for delegation */
+export type DelegationTool = 'Task';
+
+/** A configured route for a specific role */
+export interface DelegationRoute {
+  provider: DelegationProvider;
+  tool: DelegationTool;
+  model?: string;
+  agentType?: string;
+  fallback?: string[];
+}
+
+/** Configuration for delegation routing */
+export interface DelegationRoutingConfig {
+  enabled?: boolean;
+  defaultProvider?: DelegationProvider;
+  roles?: Record<string, DelegationRoute>;
+}
+
+/** Decision result from the delegation resolver */
+export interface DelegationDecision {
+  provider: DelegationProvider;
+  tool: DelegationTool;
+  agentOrModel: string;
+  reason: string;
+  fallbackChain?: string[];
+}
+
+/** Options passed to resolveDelegation */
+export interface ResolveDelegationOptions {
+  agentRole: string;
+  explicitTool?: DelegationTool;
+  explicitModel?: string;
+  config?: DelegationRoutingConfig;
+}
 
 /**
  * Default delegation routing configuration

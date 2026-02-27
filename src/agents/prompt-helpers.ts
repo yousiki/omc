@@ -1,8 +1,8 @@
 /**
  * Prompt Injection Helper
  *
- * Shared utilities for injecting system prompts into Codex/Gemini MCP tools.
- * Enables agents to pass their personality/guidelines when consulting external models.
+ * Shared utilities for injecting system prompts into agent tool calls.
+ * Enables agents to pass their personality/guidelines when invoking subagents.
  */
 
 import { readdirSync } from 'fs';

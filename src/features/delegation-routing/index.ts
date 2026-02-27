@@ -15,7 +15,7 @@ export {
   isDelegationEnabled,
 } from './types.js';
 
-// Re-export shared types for convenience
+// Re-export types for convenience
 export type {
   DelegationProvider,
   DelegationTool,
@@ -23,4 +23,4 @@ export type {
   DelegationRoutingConfig,
   DelegationDecision,
   ResolveDelegationOptions,
-} from '../../shared/types.js';
+} from './types.js';

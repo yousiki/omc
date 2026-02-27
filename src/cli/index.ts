@@ -43,12 +43,7 @@ import {
   isInstalled,
   getInstallInfo
 } from '../installer/index.js';
-import {
-  waitCommand,
-  waitStatusCommand,
-  waitDaemonCommand,
-  waitDetectCommand
-} from './commands/wait.js';
+
 import { doctorConflictsCommand } from './commands/doctor-conflicts.js';
 import {
   teleportCommand,
@@ -58,7 +53,6 @@ import {
 
 import { getRuntimePackageVersion } from '../lib/version.js';
 import { launchCommand } from './launch.js';
-import { interopCommand } from './interop.js';
 import { warnIfWin32 } from './win32-warning.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -86,46 +80,22 @@ program
   .action(defaultAction);
 
 /**
- * Launch command - Native tmux shell launch for Claude Code
+ * Launch command - Launch Claude Code
  */
 program
   .command('launch [args...]')
-  .description('Launch Claude Code with native tmux shell integration')
+  .description('Launch Claude Code')
   .allowUnknownOption()
   .addHelpText('after', `
 Examples:
   $ omc                                Launch Claude Code
   $ omc --madmax                       Launch with permissions bypass
   $ omc --yolo                         Launch with permissions bypass (alias)
-  $ omc --notify false                 Launch without CCNotifier events
   $ omc launch                         Explicit launch subcommand (same as bare omc)
   $ omc launch --madmax                Explicit launch with flags
-
-Options:
-  --notify <bool>   Enable/disable CCNotifier events. false sets OMC_NOTIFY=0
-                    and suppresses all stop/session-start/session-idle notifications.
-                    Default: true
-
-Environment:
-  OMC_NOTIFY=0              Suppress all notifications (set by --notify false)
 `)
   .action(async (args: string[]) => {
     await launchCommand(args);
-  });
-
-/**
- * Interop command - Split-pane tmux session with OMC and OMX
- */
-program
-  .command('interop')
-  .description('Launch split-pane tmux session with Claude Code (OMC) and Codex (OMX)')
-  .addHelpText('after', `
-Requirements:
-  - Must be running inside a tmux session
-  - Claude CLI must be installed
-  - Codex CLI recommended (graceful fallback if missing)`)
-  .action(() => {
-    interopCommand();
   });
 
 /**
@@ -1093,76 +1063,6 @@ Examples:
       console.error(chalk.gray('For more diagnostics, run "omc doctor conflicts".'));
       process.exit(1);
     }
-  });
-
-/**
- * Wait command - Rate limit wait and auto-resume
- *
- * Zero learning curve design:
- * - `omc wait` alone shows status and suggests next action
- * - `omc wait --start` starts the daemon (shortcut)
- * - `omc wait --stop` stops the daemon (shortcut)
- * - Subcommands available for power users
- */
-const waitCmd = program
-  .command('wait')
-  .description('Rate limit wait and auto-resume (just run "omc wait" to get started)')
-  .option('--json', 'Output as JSON')
-  .option('--start', 'Start the auto-resume daemon')
-  .option('--stop', 'Stop the auto-resume daemon')
-  .addHelpText('after', `
-Examples:
-  $ omc wait                     Show status and suggestions
-  $ omc wait --start             Start auto-resume daemon
-  $ omc wait --stop              Stop auto-resume daemon
-  $ omc wait status              Show detailed rate limit status
-  $ omc wait detect              Scan for blocked tmux sessions`)
-  .action(async (options) => {
-    await waitCommand(options);
-  });
-
-waitCmd
-  .command('status')
-  .description('Show detailed rate limit and daemon status')
-  .option('--json', 'Output as JSON')
-  .action(async (options) => {
-    await waitStatusCommand(options);
-  });
-
-waitCmd
-  .command('daemon <action>')
-  .description('Start or stop the auto-resume daemon')
-  .option('-v, --verbose', 'Enable verbose logging')
-  .option('-f, --foreground', 'Run in foreground (blocking)')
-  .option('-i, --interval <seconds>', 'Poll interval in seconds', '60')
-  .addHelpText('after', `
-Examples:
-  $ omc wait daemon start            Start background daemon
-  $ omc wait daemon stop             Stop the daemon
-  $ omc wait daemon start -f         Run in foreground`)
-  .action(async (action: string, options) => {
-    if (action !== 'start' && action !== 'stop') {
-      console.error(chalk.red(`Invalid action "${action}". Valid options: start, stop`));
-      console.error(chalk.gray('Example: omc wait daemon start'));
-      process.exit(1);
-    }
-    await waitDaemonCommand(action as 'start' | 'stop', {
-      verbose: options.verbose,
-      foreground: options.foreground,
-      interval: parseInt(options.interval),
-    });
-  });
-
-waitCmd
-  .command('detect')
-  .description('Scan for blocked Claude Code sessions in tmux')
-  .option('--json', 'Output as JSON')
-  .option('-l, --lines <number>', 'Number of pane lines to analyze', '15')
-  .action(async (options) => {
-    await waitDetectCommand({
-      json: options.json,
-      lines: parseInt(options.lines),
-    });
   });
 
 /**
