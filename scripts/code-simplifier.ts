@@ -20,30 +20,43 @@ import {
 import { join } from 'path';
 import { homedir } from 'os';
 import { execSync } from 'child_process';
-import { readStdin } from './lib/stdin.mjs';
+import { readStdin } from './lib/stdin.js';
+
+interface HookInput {
+  cwd?: string;
+  directory?: string;
+}
+
+interface OmcConfig {
+  codeSimplifier?: {
+    enabled?: boolean;
+    extensions?: string[];
+    maxFiles?: number;
+  };
+}
 
 const DEFAULT_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.py', '.go', '.rs'];
 const DEFAULT_MAX_FILES = 10;
 const MARKER_FILENAME = 'code-simplifier-triggered.marker';
 
-function readJsonFile(filePath) {
+function readJsonFile(filePath: string): OmcConfig | null {
   try {
     if (!existsSync(filePath)) return null;
-    return JSON.parse(readFileSync(filePath, 'utf-8'));
+    return JSON.parse(readFileSync(filePath, 'utf-8')) as OmcConfig;
   } catch {
     return null;
   }
 }
 
-function readOmcConfig() {
+function readOmcConfig(): OmcConfig | null {
   return readJsonFile(join(homedir(), '.omc', 'config.json'));
 }
 
-function isEnabled(config) {
+function isEnabled(config: OmcConfig | null): boolean {
   return config?.codeSimplifier?.enabled === true;
 }
 
-function getModifiedFiles(cwd, extensions, maxFiles) {
+function getModifiedFiles(cwd: string, extensions: string[], maxFiles: number): string[] {
   try {
     const output = execSync('git diff HEAD --name-only', {
       cwd,
@@ -63,7 +76,7 @@ function getModifiedFiles(cwd, extensions, maxFiles) {
   }
 }
 
-function buildMessage(files) {
+function buildMessage(files: string[]): string {
   const fileList = files.map((f) => `  - ${f}`).join('\n');
   const fileArgs = files.join('\\n');
   return (
@@ -76,12 +89,12 @@ function buildMessage(files) {
   );
 }
 
-async function main() {
+async function main(): Promise<void> {
   try {
     const input = await readStdin();
-    let data = {};
+    let data: HookInput = {};
     try {
-      data = JSON.parse(input);
+      data = JSON.parse(input) as HookInput;
     } catch {
       process.stdout.write(JSON.stringify({ continue: true }) + '\n');
       return;
@@ -133,7 +146,7 @@ async function main() {
     );
   } catch (error) {
     try {
-      process.stderr.write(`[code-simplifier] Error: ${error?.message || error}\n`);
+      process.stderr.write(`[code-simplifier] Error: ${(error as Error)?.message || error}\n`);
     } catch {
       // ignore
     }
@@ -145,7 +158,7 @@ async function main() {
   }
 }
 
-process.on('uncaughtException', (error) => {
+process.on('uncaughtException', (error: Error) => {
   try {
     process.stderr.write(`[code-simplifier] Uncaught: ${error?.message || error}\n`);
   } catch {
@@ -159,9 +172,9 @@ process.on('uncaughtException', (error) => {
   process.exit(0);
 });
 
-process.on('unhandledRejection', (error) => {
+process.on('unhandledRejection', (error: unknown) => {
   try {
-    process.stderr.write(`[code-simplifier] Unhandled: ${error?.message || error}\n`);
+    process.stderr.write(`[code-simplifier] Unhandled: ${(error as Error)?.message || error}\n`);
   } catch {
     // ignore
   }

@@ -19,10 +19,27 @@
  *   - { continue: true, suppressOutput: true } otherwise
  */
 
-import { existsSync, readFileSync, writeFileSync, mkdirSync, statSync, openSync, readSync, closeSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { existsSync, readFileSync, writeFileSync, statSync, openSync, readSync, closeSync } from 'node:fs';
+import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { readStdin } from './lib/stdin.mjs';
+import { readStdin } from './lib/stdin.js';
+
+interface HookInput {
+  stop_reason?: string;
+  stopReason?: string;
+  end_turn_reason?: string;
+  endTurnReason?: string;
+  user_requested?: boolean;
+  userRequested?: boolean;
+  session_id?: string;
+  sessionId?: string;
+  transcript_path?: string;
+  transcriptPath?: string;
+}
+
+interface GuardState {
+  blockCount?: number;
+}
 
 const THRESHOLD = parseInt(process.env.OMC_CONTEXT_GUARD_THRESHOLD || '75', 10);
 const MAX_BLOCKS = 2;
@@ -31,7 +48,7 @@ const MAX_BLOCKS = 2;
  * Detect if stop was triggered by context-limit related reasons.
  * Mirrors the logic in persistent-mode.cjs to stay consistent.
  */
-function isContextLimitStop(data) {
+function isContextLimitStop(data: HookInput): boolean {
   const reason = (data.stop_reason || data.stopReason || '').toLowerCase();
   const contextPatterns = [
     'context_limit', 'context_window', 'context_exceeded',
@@ -50,7 +67,7 @@ function isContextLimitStop(data) {
 /**
  * Detect if stop was triggered by user abort.
  */
-function isUserAbort(data) {
+function isUserAbort(data: HookInput): boolean {
   if (data.user_requested || data.userRequested) return true;
 
   const reason = (data.stop_reason || data.stopReason || '').toLowerCase();
@@ -66,7 +83,7 @@ function isUserAbort(data) {
 /**
  * Estimate context usage percentage from the transcript file.
  */
-function estimateContextPercent(transcriptPath) {
+function estimateContextPercent(transcriptPath: string): number {
   if (!transcriptPath) return 0;
 
   let fd = -1;
@@ -89,8 +106,8 @@ function estimateContextPercent(transcriptPath) {
 
     if (!windowMatch || !inputMatch) return 0;
 
-    const lastWindow = parseInt(windowMatch[windowMatch.length - 1].match(/(\d+)/)[1], 10);
-    const lastInput = parseInt(inputMatch[inputMatch.length - 1].match(/(\d+)/)[1], 10);
+    const lastWindow = parseInt(windowMatch[windowMatch.length - 1].match(/(\d+)/)![1], 10);
+    const lastInput = parseInt(inputMatch[inputMatch.length - 1].match(/(\d+)/)![1], 10);
 
     if (lastWindow === 0) return 0;
     return Math.round((lastInput / lastWindow) * 100);
@@ -105,35 +122,35 @@ function estimateContextPercent(transcriptPath) {
  * Retry guard: track how many times we've blocked this transcript.
  * Prevents infinite block loops by capping at MAX_BLOCKS.
  */
-function getBlockCount(sessionId) {
+function getBlockCount(sessionId: string): number {
   if (!sessionId) return 0;
   const guardFile = join(tmpdir(), `omc-context-guard-${sessionId}.json`);
   try {
     if (existsSync(guardFile)) {
-      const data = JSON.parse(readFileSync(guardFile, 'utf-8'));
+      const data = JSON.parse(readFileSync(guardFile, 'utf-8')) as GuardState;
       return data.blockCount || 0;
     }
   } catch { /* ignore */ }
   return 0;
 }
 
-function incrementBlockCount(sessionId) {
+function incrementBlockCount(sessionId: string): void {
   if (!sessionId) return;
   const guardFile = join(tmpdir(), `omc-context-guard-${sessionId}.json`);
   try {
     let count = 0;
     if (existsSync(guardFile)) {
-      const data = JSON.parse(readFileSync(guardFile, 'utf-8'));
+      const data = JSON.parse(readFileSync(guardFile, 'utf-8')) as GuardState;
       count = data.blockCount || 0;
     }
     writeFileSync(guardFile, JSON.stringify({ blockCount: count + 1 }));
   } catch { /* ignore */ }
 }
 
-async function main() {
+async function main(): Promise<void> {
   try {
     const input = await readStdin();
-    const data = JSON.parse(input);
+    const data = JSON.parse(input) as HookInput;
 
     // CRITICAL: Never block context-limit stops (compaction deadlock)
     if (isContextLimitStop(data)) {

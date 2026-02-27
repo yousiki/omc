@@ -1,7 +1,7 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 
 /**
- * PostToolUse Hook: Verification Reminder System (Node.js)
+ * PostToolUse Hook: Verification Reminder System
  * Monitors tool execution and provides contextual guidance
  * Cross-platform: Windows, macOS, Linux
  */
@@ -10,18 +10,58 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync, appendFileSync, ren
 import { join, dirname } from 'path';
 import { homedir } from 'os';
 import { fileURLToPath, pathToFileURL } from 'url';
-import { readStdin } from './lib/stdin.mjs';
+import { readStdin } from './lib/stdin.js';
 
 // Get the directory of this script to resolve the dist module
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const distDir = join(__dirname, '..', 'dist', 'hooks', 'notepad');
 
+interface NotepadModule {
+  setPriorityContext: (directory: string, content: string) => void;
+  addWorkingMemoryEntry: (directory: string, content: string) => void;
+}
+
+interface SessionData {
+  tool_counts: Record<string, number>;
+  last_tool: string;
+  total_calls: number;
+  started_at: number;
+  updated_at?: number;
+}
+
+interface StatsData {
+  sessions: Record<string, SessionData>;
+}
+
+interface HookData {
+  tool_name?: string;
+  toolName?: string;
+  tool_response?: string | Record<string, unknown>;
+  toolOutput?: string | Record<string, unknown>;
+  session_id?: string;
+  sessionId?: string;
+  cwd?: string;
+  directory?: string;
+  tool_input?: Record<string, unknown> | string;
+  toolInput?: Record<string, unknown> | string;
+}
+
+interface OmcConfig {
+  bashHistory?: boolean | { enabled?: boolean };
+}
+
+interface AgentTrackingData {
+  agents?: Array<{ status: string; agent_type: string }>;
+  total_completed?: number;
+  total_failed?: number;
+}
+
 // Try to import notepad functions (may fail if not built)
-let setPriorityContext = null;
-let addWorkingMemoryEntry = null;
+let setPriorityContext: NotepadModule['setPriorityContext'] | null = null;
+let addWorkingMemoryEntry: NotepadModule['addWorkingMemoryEntry'] | null = null;
 try {
-  const notepadModule = await import(pathToFileURL(join(distDir, 'index.js')).href);
+  const notepadModule = await import(pathToFileURL(join(distDir, 'index.js')).href) as NotepadModule;
   setPriorityContext = notepadModule.setPriorityContext;
   addWorkingMemoryEntry = notepadModule.addWorkingMemoryEntry;
 } catch {
@@ -29,7 +69,7 @@ try {
 }
 
 // Debug logging helper - gated behind OMC_DEBUG env var
-const debugLog = (...args) => {
+const debugLog = (...args: unknown[]): void => {
   if (process.env.OMC_DEBUG) console.error('[omc:debug:post-tool-verifier]', ...args);
 };
 
@@ -46,31 +86,31 @@ try {
 } catch {}
 
 // Load session statistics
-function loadStats() {
+function loadStats(): StatsData {
   try {
     if (existsSync(STATE_FILE)) {
       return JSON.parse(readFileSync(STATE_FILE, 'utf-8'));
     }
   } catch (e) {
-    debugLog('Failed to load stats:', e.message);
+    debugLog('Failed to load stats:', (e as Error).message);
   }
   return { sessions: {} };
 }
 
 // Save session statistics
-function saveStats(stats) {
+function saveStats(stats: StatsData): void {
   const tmpFile = `${STATE_FILE}.tmp.${process.pid}.${Date.now()}.${Math.random().toString(36).slice(2)}`;
   try {
     writeFileSync(tmpFile, JSON.stringify(stats, null, 2));
     renameSync(tmpFile, STATE_FILE);
   } catch (e) {
-    debugLog('Failed to save stats:', e.message);
+    debugLog('Failed to save stats:', (e as Error).message);
     try { unlinkSync(tmpFile); } catch {}
   }
 }
 
 // Update stats for this session
-function updateStats(toolName, sessionId) {
+function updateStats(toolName: string, sessionId: string): number {
   const stats = loadStats();
 
   if (!stats.sessions[sessionId]) {
@@ -93,11 +133,11 @@ function updateStats(toolName, sessionId) {
 }
 
 // Read bash history config (default: enabled)
-function getBashHistoryConfig() {
+function getBashHistoryConfig(): boolean {
   try {
     const configPath = join(cfgDir, '.omc-config.json');
     if (existsSync(configPath)) {
-      const config = JSON.parse(readFileSync(configPath, 'utf-8'));
+      const config: OmcConfig = JSON.parse(readFileSync(configPath, 'utf-8'));
       if (config.bashHistory === false) return false;
       if (typeof config.bashHistory === 'object' && config.bashHistory.enabled === false) return false;
     }
@@ -106,7 +146,7 @@ function getBashHistoryConfig() {
 }
 
 // Append command to ~/.bash_history (Unix only - no bash_history on Windows)
-function appendToBashHistory(command) {
+function appendToBashHistory(command: string): void {
   if (process.platform === 'win32') return;
   if (!command || typeof command !== 'string') return;
 
@@ -130,7 +170,7 @@ function appendToBashHistory(command) {
 const CLAUDE_TEMP_CWD_PATTERN = /zsh:\d+: permission denied:.*\/T\/claude-[a-z0-9]+-cwd/gi;
 
 // Strip Claude Code temp CWD noise before pattern matching
-function stripClaudeTempCwdErrors(output) {
+function stripClaudeTempCwdErrors(output: string): string {
   return output.replace(CLAUDE_TEMP_CWD_PATTERN, '');
 }
 
@@ -143,7 +183,7 @@ const CLAUDE_EXIT_CODE_PREFIX = /^Error: Exit code \d+\s*$/gm;
  * AND substantial content that doesn't itself indicate real errors.
  * Example: `gh pr checks` exits 8 (pending) but outputs valid CI status.
  */
-export function isNonZeroExitWithOutput(output) {
+export function isNonZeroExitWithOutput(output: string): boolean {
   if (!output) return false;
   const cleaned = stripClaudeTempCwdErrors(output);
 
@@ -176,7 +216,7 @@ export function isNonZeroExitWithOutput(output) {
 }
 
 // Detect failures in Bash output
-export function detectBashFailure(output) {
+export function detectBashFailure(output: string): boolean {
   const cleaned = stripClaudeTempCwdErrors(output);
   const errorPatterns = [
     /error:/i,
@@ -195,7 +235,7 @@ export function detectBashFailure(output) {
 }
 
 // Detect background operation
-function detectBackgroundOperation(output) {
+function detectBackgroundOperation(output: string): boolean {
   const bgPatterns = [
     /started/i,
     /running/i,
@@ -213,7 +253,7 @@ function detectBackgroundOperation(output) {
  * <remember>content</remember> -> Working Memory
  * <remember priority>content</remember> -> Priority Context
  */
-function processRememberTags(output, directory) {
+function processRememberTags(output: string, directory: string): void {
   if (!setPriorityContext || !addWorkingMemoryEntry) {
     return; // Notepad module not available
   }
@@ -224,7 +264,7 @@ function processRememberTags(output, directory) {
 
   // Process priority remember tags first
   const priorityRegex = /<remember\s+priority>([\s\S]*?)<\/remember>/gi;
-  let match;
+  let match: RegExpExecArray | null;
   while ((match = priorityRegex.exec(output)) !== null) {
     const content = match[1].trim();
     if (content) {
@@ -249,7 +289,7 @@ function processRememberTags(output, directory) {
 // Detect write failure
 // Patterns are tightened to tool-level failure phrases to avoid false positives
 // when edited file content contains error-handling code (issue #1005)
-export function detectWriteFailure(output) {
+export function detectWriteFailure(output: string): boolean {
   const cleaned = stripClaudeTempCwdErrors(output);
   const errorPatterns = [
     /\berror:/i,              // "error:" with word boundary — avoids "setError", "console.error"
@@ -266,11 +306,11 @@ export function detectWriteFailure(output) {
 }
 
 // Get agent completion summary from tracking state
-function getAgentCompletionSummary(directory) {
+function getAgentCompletionSummary(directory: string): string {
   const trackingFile = join(directory, '.omc', 'state', 'subagent-tracking.json');
   try {
     if (existsSync(trackingFile)) {
-      const data = JSON.parse(readFileSync(trackingFile, 'utf-8'));
+      const data: AgentTrackingData = JSON.parse(readFileSync(trackingFile, 'utf-8'));
       const agents = data.agents || [];
       const running = agents.filter(a => a.status === 'running');
       const completed = data.total_completed || 0;
@@ -278,7 +318,7 @@ function getAgentCompletionSummary(directory) {
 
       if (running.length === 0 && completed === 0 && failed === 0) return '';
 
-      const parts = [];
+      const parts: string[] = [];
       if (running.length > 0) {
         parts.push(`Running: ${running.length} [${running.map(a => a.agent_type.replace('omc:', '')).join(', ')}]`);
       }
@@ -292,7 +332,13 @@ function getAgentCompletionSummary(directory) {
 }
 
 // Generate contextual message
-function generateMessage(toolName, toolOutput, sessionId, toolCount, directory) {
+function generateMessage(
+  toolName: string,
+  toolOutput: string,
+  sessionId: string,
+  toolCount: number,
+  directory: string
+): string {
   let message = '';
 
   switch (toolName) {
@@ -374,7 +420,7 @@ function generateMessage(toolName, toolOutput, sessionId, toolCount, directory) 
   return message;
 }
 
-async function main() {
+async function main(): Promise<void> {
   // Skip guard: check OMC_SKIP_HOOKS env var (see issue #838)
   const _skipHooks = (process.env.OMC_SKIP_HOOKS || '').split(',').map(s => s.trim());
   if (process.env.DISABLE_OMC === '1' || _skipHooks.includes('post-tool-use')) {
@@ -384,7 +430,7 @@ async function main() {
 
   try {
     const input = await readStdin();
-    const data = JSON.parse(input);
+    const data: HookData = JSON.parse(input);
 
     const toolName = data.tool_name || data.toolName || '';
     const rawResponse = data.tool_response || data.toolOutput || '';
@@ -398,7 +444,7 @@ async function main() {
     // Append Bash commands to ~/.bash_history for terminal recall
     if ((toolName === 'Bash' || toolName === 'bash') && getBashHistoryConfig()) {
       const toolInput = data.tool_input || data.toolInput || {};
-      const command = typeof toolInput === 'string' ? toolInput : (toolInput.command || '');
+      const command = typeof toolInput === 'string' ? toolInput : ((toolInput as Record<string, unknown>).command as string || '');
       appendToBashHistory(command);
     }
 
@@ -416,7 +462,11 @@ async function main() {
     const message = generateMessage(toolName, toolOutput, sessionId, toolCount, directory);
 
     // Build response - use hookSpecificOutput.additionalContext for PostToolUse
-    const response = { continue: true };
+    const response: {
+      continue: boolean;
+      suppressOutput?: boolean;
+      hookSpecificOutput?: { hookEventName: string; additionalContext: string };
+    } = { continue: true };
     if (message) {
       response.hookSpecificOutput = {
         hookEventName: 'PostToolUse',
@@ -427,7 +477,7 @@ async function main() {
     }
 
     console.log(JSON.stringify(response, null, 2));
-  } catch (error) {
+  } catch {
     // On error, always continue
     console.log(JSON.stringify({ continue: true, suppressOutput: true }));
   }

@@ -1,14 +1,14 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 
 /**
- * PreToolUse Hook: OMC Reminder Enforcer (Node.js)
+ * PreToolUse Hook: OMC Reminder Enforcer
  * Injects contextual reminders before every tool execution
  * Cross-platform: Windows, macOS, Linux
  */
 
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
-import { readStdin } from './lib/stdin.mjs';
+import { readStdin } from './lib/stdin.js';
 
 const SESSION_ID_PATTERN = /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,255}$/;
 const MODE_STATE_FILES = [
@@ -20,8 +20,54 @@ const MODE_STATE_FILES = [
   'team-state.json',
 ];
 
+interface AgentTrackingData {
+  agents?: Array<{ status: string; agent_type: string }>;
+  total_spawned?: number;
+  total_completed?: number;
+  total_failed?: number;
+}
+
+interface TodoItem {
+  status: string;
+}
+
+interface TodoData {
+  todos?: TodoItem[];
+}
+
+interface ModeState {
+  active?: boolean;
+  session_id?: string;
+  [key: string]: unknown;
+}
+
+interface TeamState extends ModeState {
+  team_name?: string;
+  teamName?: string;
+}
+
+interface ToolInput {
+  subagent_type?: string;
+  model?: string;
+  description?: string;
+  run_in_background?: boolean;
+  team_name?: string;
+  [key: string]: unknown;
+}
+
+interface HookData {
+  tool_name?: string;
+  toolName?: string;
+  cwd?: string;
+  directory?: string;
+  session_id?: string;
+  sessionId?: string;
+  toolInput?: ToolInput;
+  tool_input?: ToolInput;
+}
+
 // Simple JSON field extraction
-function extractJsonField(input, field, defaultValue = '') {
+function extractJsonField(input: string, field: string, defaultValue: string = ''): string {
   try {
     const data = JSON.parse(input);
     return data[field] ?? defaultValue;
@@ -33,11 +79,11 @@ function extractJsonField(input, field, defaultValue = '') {
 }
 
 // Get agent tracking info from state file
-function getAgentTrackingInfo(directory) {
+function getAgentTrackingInfo(directory: string): { running: number; total: number } {
   const trackingFile = join(directory, '.omc', 'state', 'subagent-tracking.json');
   try {
     if (existsSync(trackingFile)) {
-      const data = JSON.parse(readFileSync(trackingFile, 'utf-8'));
+      const data: AgentTrackingData = JSON.parse(readFileSync(trackingFile, 'utf-8'));
       const running = (data.agents || []).filter(a => a.status === 'running').length;
       return { running, total: data.total_spawned || 0 };
     }
@@ -46,7 +92,7 @@ function getAgentTrackingInfo(directory) {
 }
 
 // Get todo status from project-local todos only
-function getTodoStatus(directory) {
+function getTodoStatus(directory: string): string {
   let pending = 0;
   let inProgress = 0;
 
@@ -60,8 +106,8 @@ function getTodoStatus(directory) {
     if (existsSync(todoFile)) {
       try {
         const content = readFileSync(todoFile, 'utf-8');
-        const data = JSON.parse(content);
-        const todos = data.todos || data;
+        const data: TodoData | TodoItem[] = JSON.parse(content);
+        const todos: TodoItem[] = (data as TodoData).todos ?? (Array.isArray(data) ? data : []);
         if (Array.isArray(todos)) {
           pending += todos.filter(t => t.status === 'pending').length;
           inProgress += todos.filter(t => t.status === 'in_progress').length;
@@ -83,11 +129,11 @@ function getTodoStatus(directory) {
   return '';
 }
 
-function isValidSessionId(sessionId) {
+function isValidSessionId(sessionId: string): boolean {
   return typeof sessionId === 'string' && SESSION_ID_PATTERN.test(sessionId);
 }
 
-function readJsonFile(filePath) {
+function readJsonFile(filePath: string): ModeState | null {
   try {
     if (!existsSync(filePath)) return null;
     return JSON.parse(readFileSync(filePath, 'utf-8'));
@@ -96,7 +142,7 @@ function readJsonFile(filePath) {
   }
 }
 
-function hasActiveJsonMode(stateDir, { allowSessionTagged = false } = {}) {
+function hasActiveJsonMode(stateDir: string, { allowSessionTagged = false } = {}): boolean {
   for (const file of MODE_STATE_FILES) {
     const state = readJsonFile(join(stateDir, file));
     if (!state || state.active !== true) continue;
@@ -106,7 +152,7 @@ function hasActiveJsonMode(stateDir, { allowSessionTagged = false } = {}) {
   return false;
 }
 
-function hasActiveMode(directory, sessionId) {
+function hasActiveMode(directory: string, sessionId: string): boolean {
   const stateDir = join(directory, '.omc', 'state');
 
   if (isValidSessionId(sessionId)) {
@@ -122,8 +168,8 @@ function hasActiveMode(directory, sessionId) {
  * Reads team-state.json from session-scoped or legacy paths.
  * Returns the team state object if active, null otherwise.
  */
-function getActiveTeamState(directory, sessionId) {
-  const paths = [];
+function getActiveTeamState(directory: string, sessionId: string): TeamState | null {
+  const paths: string[] = [];
 
   // Session-scoped path (preferred)
   if (sessionId && SESSION_ID_PATTERN.test(sessionId)) {
@@ -134,7 +180,7 @@ function getActiveTeamState(directory, sessionId) {
   paths.push(join(directory, '.omc', 'state', 'team-state.json'));
 
   for (const statePath of paths) {
-    const state = readJsonFile(statePath);
+    const state = readJsonFile(statePath) as TeamState | null;
     if (state && state.active === true) {
       // Respect session isolation: skip state tagged to a different session
       if (sessionId && state.session_id && state.session_id !== sessionId) {
@@ -147,7 +193,12 @@ function getActiveTeamState(directory, sessionId) {
 }
 
 // Generate agent spawn message with metadata
-function generateAgentSpawnMessage(toolInput, directory, todoStatus, sessionId) {
+function generateAgentSpawnMessage(
+  toolInput: ToolInput | null,
+  directory: string,
+  todoStatus: string,
+  sessionId: string
+): string {
   if (!toolInput || typeof toolInput !== 'object') {
     return `${todoStatus}Launch multiple agents in parallel when tasks are independent. Use run_in_background for long operations.`;
   }
@@ -180,8 +231,8 @@ function generateAgentSpawnMessage(toolInput, directory, todoStatus, sessionId) 
 }
 
 // Generate contextual message based on tool type
-function generateMessage(toolName, todoStatus, modeActive = false) {
-  const messages = {
+function generateMessage(toolName: string, todoStatus: string, modeActive: boolean = false): string {
+  const messages: Record<string, string> = {
     TodoWrite: `${todoStatus}Mark todos in_progress BEFORE starting, completed IMMEDIATELY after finishing.`,
     Bash: `${todoStatus}Use parallel execution for independent tasks. Use run_in_background for long operations (npm install, builds, tests).`,
     Edit: `${todoStatus}Verify changes work after editing. Test functionality before marking complete.`,
@@ -197,23 +248,23 @@ function generateMessage(toolName, todoStatus, modeActive = false) {
 }
 
 // Record Skill/Task invocations to flow trace (best-effort)
-async function recordToolInvocation(data, directory) {
+async function recordToolInvocation(data: HookData, directory: string): Promise<void> {
   try {
     const toolName = data.toolName || data.tool_name || '';
     const sessionId = data.session_id || data.sessionId || '';
     if (!sessionId || !directory) return;
 
     if (toolName === 'Skill') {
-      const skillName = data.toolInput?.skill || data.tool_input?.skill || '';
+      const skillName = data.toolInput?.skill || (data.tool_input as Record<string, unknown>)?.skill || '';
       if (skillName) {
         const { recordSkillInvoked } = await import('../src/hooks/subagent-tracker/flow-tracer.ts');
-        recordSkillInvoked(directory, sessionId, skillName);
+        recordSkillInvoked(directory, sessionId, skillName as string);
       }
     }
   } catch { /* best-effort, never block tool execution */ }
 }
 
-async function main() {
+async function main(): Promise<void> {
   // Skip guard: check OMC_SKIP_HOOKS env var (see issue #838)
   const _skipHooks = (process.env.OMC_SKIP_HOOKS || '').split(',').map(s => s.trim());
   if (process.env.DISABLE_OMC === '1' || _skipHooks.includes('pre-tool-use')) {
@@ -228,7 +279,7 @@ async function main() {
     const directory = extractJsonField(input, 'cwd') || extractJsonField(input, 'directory', process.cwd());
 
     // Record Skill invocations to flow trace
-    let data = {};
+    let data: HookData = {};
     try { data = JSON.parse(input); } catch {}
     recordToolInvocation(data, directory);
 
@@ -242,10 +293,10 @@ async function main() {
 
     const todoStatus = getTodoStatus(directory);
 
-    let message;
+    let message: string;
     if (toolName === 'Task' || toolName === 'TaskCreate' || toolName === 'TaskUpdate') {
       const toolInput = data.toolInput || data.tool_input || null;
-      message = generateAgentSpawnMessage(toolInput, directory, todoStatus, sessionId);
+      message = generateAgentSpawnMessage(toolInput ?? null, directory, todoStatus, sessionId);
     } else {
       message = generateMessage(toolName, todoStatus, modeActive);
     }
@@ -262,7 +313,7 @@ async function main() {
         additionalContext: message
       }
     }, null, 2));
-  } catch (error) {
+  } catch {
     // On error, always continue
     console.log(JSON.stringify({ continue: true, suppressOutput: true }));
   }

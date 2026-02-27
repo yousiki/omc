@@ -16,7 +16,14 @@
  */
 
 import { statSync, openSync, readSync, closeSync } from 'node:fs';
-import { readStdin } from './lib/stdin.mjs';
+import { readStdin } from './lib/stdin.js';
+
+interface HookInput {
+  tool_name?: string;
+  toolName?: string;
+  transcript_path?: string;
+  transcriptPath?: string;
+}
 
 const THRESHOLD = parseInt(process.env.OMC_CONTEXT_SAFETY_THRESHOLD || '55', 10);
 // TeamCreate was removed from BLOCKED_TOOLS in issue #1006.
@@ -29,7 +36,7 @@ const BLOCKED_TOOLS = new Set(['ExitPlanMode']);
  * Estimate context usage percentage from the transcript file.
  * Reads the last 4KB of the transcript to find the most recent usage entry.
  */
-function estimateContextPercent(transcriptPath) {
+function estimateContextPercent(transcriptPath: string): number {
   if (!transcriptPath) return 0;
 
   let fd = -1;
@@ -55,8 +62,8 @@ function estimateContextPercent(transcriptPath) {
     if (!windowMatch || !inputMatch) return 0;
 
     // Take the last occurrence of each
-    const lastWindow = parseInt(windowMatch[windowMatch.length - 1].match(/(\d+)/)[1], 10);
-    const lastInput = parseInt(inputMatch[inputMatch.length - 1].match(/(\d+)/)[1], 10);
+    const lastWindow = parseInt(windowMatch[windowMatch.length - 1].match(/(\d+)/)![1], 10);
+    const lastInput = parseInt(inputMatch[inputMatch.length - 1].match(/(\d+)/)![1], 10);
 
     if (lastWindow === 0) return 0;
     return Math.round((lastInput / lastWindow) * 100);
@@ -67,10 +74,10 @@ function estimateContextPercent(transcriptPath) {
   }
 }
 
-async function main() {
+async function main(): Promise<void> {
   try {
     const input = await readStdin();
-    const data = JSON.parse(input);
+    const data = JSON.parse(input) as HookInput;
 
     const toolName = data.tool_name || data.toolName || '';
 

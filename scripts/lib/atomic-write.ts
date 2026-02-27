@@ -12,14 +12,14 @@ import { randomUUID } from 'crypto';
 /**
  * Ensure directory exists
  */
-export function ensureDirSync(dir) {
+export function ensureDirSync(dir: string): void {
   if (existsSync(dir)) {
     return;
   }
   try {
     mkdirSync(dir, { recursive: true });
   } catch (err) {
-    if (err.code === 'EEXIST') {
+    if ((err as NodeJS.ErrnoException).code === 'EEXIST') {
       return;
     }
     throw err;
@@ -30,15 +30,15 @@ export function ensureDirSync(dir) {
  * Write string content atomically to a file.
  * Uses temp file + atomic rename pattern with fsync for durability.
  *
- * @param {string} filePath Target file path
- * @param {string} content String content to write
+ * @param filePath Target file path
+ * @param content String content to write
  */
-export function atomicWriteFileSync(filePath, content) {
+export function atomicWriteFileSync(filePath: string, content: string): void {
   const dir = dirname(filePath);
   const base = basename(filePath);
   const tempPath = join(dir, `.${base}.tmp.${randomUUID()}`);
 
-  let fd = null;
+  let fd: number | null = null;
   let success = false;
 
   try {

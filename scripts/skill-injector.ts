@@ -13,12 +13,58 @@
 import { existsSync, readdirSync, readFileSync, realpathSync } from 'fs';
 import { join, basename } from 'path';
 import { homedir } from 'os';
-import { readStdin } from './lib/stdin.mjs';
+import { readStdin } from './lib/stdin.js';
+
+interface HookInput {
+  prompt?: string;
+  session_id?: string;
+  sessionId?: string;
+  cwd?: string;
+}
+
+interface SkillFrontmatter {
+  name: string;
+  triggers: string[];
+  content: string;
+}
+
+interface SkillCandidate {
+  path: string;
+  scope: 'project' | 'user';
+}
+
+interface MatchedSkill {
+  path: string;
+  name: string;
+  content: string;
+  score: number;
+  scope: string;
+  triggers: string[];
+}
+
+interface SkillMetadata {
+  path: string;
+  triggers: string[];
+  score: number;
+  scope: string;
+}
+
+interface BridgeModule {
+  matchSkillsForInjection: (
+    prompt: string,
+    directory: string,
+    sessionId: string,
+    options: { maxResults: number }
+  ) => MatchedSkill[];
+  markSkillsInjected: (sessionId: string, paths: string[], directory: string) => void;
+}
 
 // Try to load the bridge module (TS source, run via bun)
-let bridge = null;
+let bridge: BridgeModule | null = null;
 try {
-  bridge = await import('../src/hooks/learner/bridge.ts');
+  // Dynamic path string prevents tsc from flagging .ts extension (Bun resolves it at runtime)
+  const bridgePath = '../src/hooks/learner/bridge.ts';
+  bridge = await import(bridgePath) as BridgeModule;
 } catch {
   // Bridge not available - use fallback
 }
@@ -36,10 +82,10 @@ const MAX_SKILLS_PER_SESSION = 5;
 // =============================================================================
 
 // In-memory cache (resets each process - known limitation, fixed by bridge)
-const injectedCacheFallback = new Map();
+const injectedCacheFallback = new Map<string, Set<string>>();
 
 // Parse YAML frontmatter from skill file (fallback)
-function parseSkillFrontmatterFallback(content) {
+function parseSkillFrontmatterFallback(content: string): SkillFrontmatter | null {
   const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
   if (!match) return null;
 
@@ -47,7 +93,7 @@ function parseSkillFrontmatterFallback(content) {
   const body = match[2].trim();
 
   // Simple YAML parsing for triggers
-  const triggers = [];
+  const triggers: string[] = [];
   const triggerMatch = yamlContent.match(/triggers:\s*\n((?:\s+-\s*.+\n?)*)/);
   if (triggerMatch) {
     const lines = triggerMatch[1].split('\n');
@@ -65,9 +111,9 @@ function parseSkillFrontmatterFallback(content) {
 }
 
 // Find all skill files (fallback - NON-RECURSIVE for backward compat)
-function findSkillFilesFallback(directory) {
-  const candidates = [];
-  const seenPaths = new Set();
+function findSkillFilesFallback(directory: string): SkillCandidate[] {
+  const candidates: SkillCandidate[] = [];
+  const seenPaths = new Set<string>();
 
   // Project-level skills (higher priority)
   const projectDir = join(directory, PROJECT_SKILLS_SUBDIR);
@@ -123,16 +169,16 @@ function findSkillFilesFallback(directory) {
 }
 
 // Find matching skills (fallback)
-function findMatchingSkillsFallback(prompt, directory, sessionId) {
+function findMatchingSkillsFallback(prompt: string, directory: string, sessionId: string): MatchedSkill[] {
   const promptLower = prompt.toLowerCase();
   const candidates = findSkillFilesFallback(directory);
-  const matches = [];
+  const matches: MatchedSkill[] = [];
 
   // Get or create session cache
   if (!injectedCacheFallback.has(sessionId)) {
     injectedCacheFallback.set(sessionId, new Set());
   }
-  const alreadyInjected = injectedCacheFallback.get(sessionId);
+  const alreadyInjected = injectedCacheFallback.get(sessionId)!;
 
   for (const candidate of candidates) {
     // Skip if already injected this session
@@ -183,7 +229,7 @@ function findMatchingSkillsFallback(prompt, directory, sessionId) {
 // =============================================================================
 
 // Find matching skills - delegates to bridge or fallback
-function findMatchingSkills(prompt, directory, sessionId) {
+function findMatchingSkills(prompt: string, directory: string, sessionId: string): MatchedSkill[] {
   if (bridge) {
     // Use bridge (RECURSIVE discovery, persistent session cache)
     const matches = bridge.matchSkillsForInjection(prompt, directory, sessionId, {
@@ -203,7 +249,7 @@ function findMatchingSkills(prompt, directory, sessionId) {
 }
 
 // Format skills for injection
-function formatSkillsMessage(skills) {
+function formatSkillsMessage(skills: MatchedSkill[]): string {
   const lines = [
     '<mnemosyne>',
     '',
@@ -217,7 +263,7 @@ function formatSkillsMessage(skills) {
     lines.push(`### ${skill.name} (${skill.scope})`);
 
     // Add metadata block for programmatic parsing
-    const metadata = {
+    const metadata: SkillMetadata = {
       path: skill.path,
       triggers: skill.triggers,
       score: skill.score,
@@ -237,7 +283,7 @@ function formatSkillsMessage(skills) {
 }
 
 // Main
-async function main() {
+async function main(): Promise<void> {
   try {
     const input = await readStdin();
     if (!input.trim()) {
@@ -245,8 +291,8 @@ async function main() {
       return;
     }
 
-    let data = {};
-    try { data = JSON.parse(input); } catch { /* ignore parse errors */ }
+    let data: HookInput = {};
+    try { data = JSON.parse(input) as HookInput; } catch { /* ignore parse errors */ }
 
     const prompt = data.prompt || '';
     const sessionId = data.session_id || data.sessionId || 'unknown';
@@ -263,7 +309,8 @@ async function main() {
     // Record skill activations to flow trace (best-effort)
     if (matchingSkills.length > 0) {
       try {
-        const { recordSkillActivated } = await import('../src/hooks/subagent-tracker/flow-tracer.ts');
+        const flowTracerPath = '../src/hooks/subagent-tracker/flow-tracer.ts';
+        const { recordSkillActivated } = await import(flowTracerPath);
         for (const skill of matchingSkills) {
           recordSkillActivated(directory, sessionId, skill.name, skill.scope || 'learned');
         }
@@ -281,7 +328,7 @@ async function main() {
     } else {
       console.log(JSON.stringify({ continue: true, suppressOutput: true }));
     }
-  } catch (error) {
+  } catch {
     // On any error, allow continuation
     console.log(JSON.stringify({ continue: true, suppressOutput: true }));
   }

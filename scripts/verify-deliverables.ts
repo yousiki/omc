@@ -21,14 +21,43 @@
  */
 
 import { existsSync, readFileSync, statSync } from 'node:fs';
-import { join, normalize, isAbsolute, resolve } from 'node:path';
-import { readStdin } from './lib/stdin.mjs';
+import { join, normalize, isAbsolute } from 'node:path';
+import { readStdin } from './lib/stdin.js';
+
+interface HookInput {
+  cwd?: string;
+  directory?: string;
+  session_id?: string;
+  sessionId?: string;
+}
+
+interface StageRequirements {
+  files?: string[];
+  minSize?: number;
+  requiredPatterns?: string[];
+  requiredSections?: string[];
+}
+
+interface DeliverableConfig {
+  [stage: string]: StageRequirements;
+}
+
+interface TeamState {
+  current_phase?: string;
+  currentPhase?: string;
+}
+
+interface FileIssue {
+  exists?: boolean;
+  path: string;
+  reason: string;
+}
 
 /**
  * Sanitize a file path to prevent directory traversal attacks.
  * Rejects absolute paths and paths containing '..' segments.
  */
-function sanitizePath(filePath) {
+function sanitizePath(filePath: string): string | null {
   const normalized = normalize(filePath);
   if (isAbsolute(normalized) || normalized.startsWith('..')) {
     return null;
@@ -39,12 +68,12 @@ function sanitizePath(filePath) {
 /**
  * Load deliverable requirements from project config or OMC defaults.
  */
-function loadDeliverableConfig(directory) {
+function loadDeliverableConfig(directory: string): DeliverableConfig | null {
   // Priority 1: Project-specific overrides
   const projectConfig = join(directory, '.omc', 'deliverables.json');
   if (existsSync(projectConfig)) {
     try {
-      return JSON.parse(readFileSync(projectConfig, 'utf-8'));
+      return JSON.parse(readFileSync(projectConfig, 'utf-8')) as DeliverableConfig;
     } catch { /* fall through to defaults */ }
   }
 
@@ -54,7 +83,7 @@ function loadDeliverableConfig(directory) {
     const defaultConfig = join(pluginRoot, 'templates', 'deliverables.json');
     if (existsSync(defaultConfig)) {
       try {
-        return JSON.parse(readFileSync(defaultConfig, 'utf-8'));
+        return JSON.parse(readFileSync(defaultConfig, 'utf-8')) as DeliverableConfig;
       } catch { /* fall through */ }
     }
   }
@@ -65,13 +94,13 @@ function loadDeliverableConfig(directory) {
 /**
  * Determine the current team stage from OMC state.
  */
-function detectStage(directory, sessionId) {
+function detectStage(directory: string, sessionId: string): string | null {
   // Try session-scoped state first
   if (sessionId) {
     const sessionState = join(directory, '.omc', 'state', 'sessions', sessionId, 'team-state.json');
     if (existsSync(sessionState)) {
       try {
-        const data = JSON.parse(readFileSync(sessionState, 'utf-8'));
+        const data = JSON.parse(readFileSync(sessionState, 'utf-8')) as TeamState;
         return data.current_phase || data.currentPhase || null;
       } catch { /* fall through */ }
     }
@@ -81,7 +110,7 @@ function detectStage(directory, sessionId) {
   const legacyState = join(directory, '.omc', 'state', 'team-state.json');
   if (existsSync(legacyState)) {
     try {
-      const data = JSON.parse(readFileSync(legacyState, 'utf-8'));
+      const data = JSON.parse(readFileSync(legacyState, 'utf-8')) as TeamState;
       return data.current_phase || data.currentPhase || null;
     } catch { /* fall through */ }
   }
@@ -92,7 +121,7 @@ function detectStage(directory, sessionId) {
 /**
  * Check if a file exists and meets minimum size requirements.
  */
-function checkFile(directory, filePath, minSize = 200) {
+function checkFile(directory: string, filePath: string, minSize = 200): FileIssue | null {
   const safePath = sanitizePath(filePath);
   if (!safePath) return { exists: false, path: filePath, reason: 'invalid path (traversal blocked)' };
 
@@ -116,7 +145,7 @@ function checkFile(directory, filePath, minSize = 200) {
 /**
  * Check if a file contains required patterns (e.g., PASS/FAIL verdict).
  */
-function checkPatterns(directory, filePath, patterns) {
+function checkPatterns(directory: string, filePath: string, patterns: string[]): FileIssue | null {
   if (!patterns || patterns.length === 0) return null;
 
   const safePath = sanitizePath(filePath);
@@ -140,10 +169,10 @@ function checkPatterns(directory, filePath, patterns) {
   return null; // passes
 }
 
-async function main() {
+async function main(): Promise<void> {
   try {
     const input = await readStdin();
-    const data = JSON.parse(input);
+    const data = JSON.parse(input) as HookInput;
 
     const directory = data.cwd || data.directory || process.cwd();
     const sessionId = data.session_id || data.sessionId || '';
@@ -173,7 +202,7 @@ async function main() {
     }
 
     // Check each required file
-    const issues = [];
+    const issues: FileIssue[] = [];
     const minSize = requirements.minSize || 200;
 
     for (const filePath of requirements.files) {

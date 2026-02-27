@@ -5,8 +5,31 @@
 
 import { existsSync, readFileSync, mkdirSync } from 'fs';
 import { join, sep, resolve } from 'path';
-import { readStdin } from './lib/stdin.mjs';
-import { atomicWriteFileSync } from './lib/atomic-write.mjs';
+import { readStdin } from './lib/stdin.js';
+import { atomicWriteFileSync } from './lib/atomic-write.js';
+
+interface HookInput {
+  tool_name?: string;
+  tool_input?: unknown;
+  error?: string;
+  is_interrupt?: boolean;
+  cwd?: string;
+  directory?: string;
+}
+
+interface ErrorState {
+  tool_name: string;
+  timestamp: string;
+  retry_count?: number;
+}
+
+interface ErrorRecord {
+  tool_name: string;
+  tool_input_preview: string;
+  error: string;
+  timestamp: string;
+  retry_count: number;
+}
 
 // Constants
 const RETRY_WINDOW_MS = 60000; // 60 seconds
@@ -14,14 +37,14 @@ const MAX_ERROR_LENGTH = 500;
 const MAX_INPUT_PREVIEW_LENGTH = 200;
 
 // Validate that targetPath is contained within basePath (prevent path traversal)
-function isPathContained(targetPath, basePath) {
+function isPathContained(targetPath: string, basePath: string): boolean {
   const normalizedTarget = resolve(targetPath);
   const normalizedBase = resolve(basePath);
   return normalizedTarget.startsWith(normalizedBase + sep) || normalizedTarget === normalizedBase;
 }
 
 // Initialize .omc directory if needed
-function initOmcDir(directory) {
+function initOmcDir(directory: string): string {
   const cwd = process.cwd();
   // Validate directory is contained within cwd
   if (!isPathContained(directory, cwd)) {
@@ -42,7 +65,7 @@ function initOmcDir(directory) {
 }
 
 // Truncate string to max length
-function truncate(str, maxLength) {
+function truncate(str: unknown, maxLength: number): string {
   if (!str) return '';
   const text = String(str);
   if (text.length <= maxLength) return text;
@@ -50,7 +73,7 @@ function truncate(str, maxLength) {
 }
 
 // Create input preview from tool_input
-function createInputPreview(toolInput) {
+function createInputPreview(toolInput: unknown): string {
   if (!toolInput) return '';
 
   try {
@@ -63,18 +86,18 @@ function createInputPreview(toolInput) {
 }
 
 // Read existing error state
-function readErrorState(statePath) {
+function readErrorState(statePath: string): ErrorState | null {
   try {
     if (!existsSync(statePath)) return null;
     const content = readFileSync(statePath, 'utf-8');
-    return JSON.parse(content);
+    return JSON.parse(content) as ErrorState;
   } catch {
     return null;
   }
 }
 
 // Calculate retry count
-function calculateRetryCount(existingState, toolName, currentTime) {
+function calculateRetryCount(existingState: ErrorState | null, toolName: string, currentTime: number): number {
   if (!existingState || existingState.tool_name !== toolName) {
     return 1; // First failure for this tool
   }
@@ -94,10 +117,10 @@ function calculateRetryCount(existingState, toolName, currentTime) {
 }
 
 // Write error state
-function writeErrorState(stateDir, toolName, toolInputPreview, error, retryCount) {
+function writeErrorState(stateDir: string, toolName: string, toolInputPreview: string, error: string, retryCount: number): void {
   const statePath = join(stateDir, 'last-tool-error.json');
 
-  const errorState = {
+  const errorState: ErrorRecord = {
     tool_name: toolName,
     tool_input_preview: toolInputPreview,
     error: truncate(error, MAX_ERROR_LENGTH),
@@ -110,10 +133,10 @@ function writeErrorState(stateDir, toolName, toolInputPreview, error, retryCount
   } catch {}
 }
 
-async function main() {
+async function main(): Promise<void> {
   try {
     const input = await readStdin();
-    const data = JSON.parse(input);
+    const data = JSON.parse(input) as HookInput;
 
     // Official SDK fields (snake_case)
     const toolName = data.tool_name || '';
@@ -154,7 +177,7 @@ async function main() {
     // The PostToolUse hook (post-tool-verifier.mjs) provides similar guidance for
     // successful Bash calls with error patterns, but PostToolUseFailure is a separate
     // event that needs its own guidance injection.
-    let guidance;
+    let guidance: string;
     if (retryCount >= 5) {
       guidance = `Tool "${toolName}" has failed ${retryCount} times. Stop retrying the same approach — try a different command, check dependencies, or ask the user for guidance.`;
     } else {
@@ -168,7 +191,7 @@ async function main() {
         additionalContext: guidance,
       },
     }));
-  } catch (error) {
+  } catch {
     // Never block on hook errors
     console.log(JSON.stringify({ continue: true }));
   }

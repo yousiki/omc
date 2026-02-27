@@ -1,7 +1,7 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 
 /**
- * OMC Keyword Detector Hook (Node.js)
+ * OMC Keyword Detector Hook
  * Detects magic keywords and invokes skill tools
  * Cross-platform: Windows, macOS, Linux
  *
@@ -24,7 +24,43 @@
 import { writeFileSync, readFileSync, mkdirSync, existsSync, unlinkSync } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
-import { readStdin } from './lib/stdin.mjs';
+import { readStdin } from './lib/stdin.js';
+
+interface SkillMatch {
+  name: string;
+  args: string;
+}
+
+interface HookData {
+  prompt?: string;
+  message?: { content?: string };
+  parts?: Array<{ type: string; text?: string }>;
+  cwd?: string;
+  directory?: string;
+  session_id?: string;
+  sessionId?: string;
+}
+
+interface ModeState {
+  active?: boolean;
+  session_id?: string;
+  linked_team?: boolean;
+  linked_ralph?: boolean;
+  [key: string]: unknown;
+}
+
+interface HookOutput {
+  continue: boolean;
+  hookSpecificOutput?: {
+    hookEventName: string;
+    additionalContext: string;
+  };
+  suppressOutput?: boolean;
+}
+
+interface ClaudeSettings {
+  env?: Record<string, string>;
+}
 
 const ULTRATHINK_MESSAGE = `<think-mode>
 
@@ -44,15 +80,15 @@ Use your extended thinking capabilities to provide the most thorough and well-re
 `;
 
 // Extract prompt from various JSON structures
-function extractPrompt(input) {
+function extractPrompt(input: string): string {
   try {
-    const data = JSON.parse(input);
+    const data: HookData = JSON.parse(input);
     if (data.prompt) return data.prompt;
     if (data.message?.content) return data.message.content;
     if (Array.isArray(data.parts)) {
       return data.parts
         .filter(p => p.type === 'text')
-        .map(p => p.text)
+        .map(p => p.text || '')
         .join(' ');
     }
     return '';
@@ -63,7 +99,7 @@ function extractPrompt(input) {
 }
 
 // Sanitize text to prevent false positives from code blocks, XML tags, URLs, and file paths
-function sanitizeForKeywordDetection(text) {
+function sanitizeForKeywordDetection(text: string): string {
   return text
     // 1. Strip XML-style tag blocks: <tag-name ...>...</tag-name> (multi-line, greedy on tag name)
     .replace(/<(\w[\w-]*)[\s>][\s\S]*?<\/\1>/g, '')
@@ -81,8 +117,8 @@ function sanitizeForKeywordDetection(text) {
 }
 
 // Create state file for a mode
-function activateState(directory, prompt, stateName, sessionId) {
-  const state = {
+function activateState(directory: string, prompt: string, stateName: string, sessionId: string): void {
+  const state: ModeState = {
     active: true,
     started_at: new Date().toISOString(),
     original_prompt: prompt,
@@ -112,7 +148,7 @@ function activateState(directory, prompt, stateName, sessionId) {
 /**
  * Clear state files for cancel operation
  */
-function clearStateFiles(directory, modeNames, sessionId) {
+function clearStateFiles(directory: string, modeNames: string[], sessionId: string): void {
   for (const name of modeNames) {
     const localPath = join(directory, '.omc', 'state', `${name}-state.json`);
     const globalPath = join(homedir(), '.omc', 'state', `${name}-state.json`);
@@ -130,8 +166,8 @@ function clearStateFiles(directory, modeNames, sessionId) {
  * Link ralph and team state files for composition.
  * Updates both state files to reference each other.
  */
-function linkRalphTeam(directory, sessionId) {
-  const getStatePath = (modeName) => {
+function linkRalphTeam(directory: string, sessionId: string): void {
+  const getStatePath = (modeName: string): string => {
     if (sessionId && /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,255}$/.test(sessionId)) {
       return join(directory, '.omc', 'state', 'sessions', sessionId, `${modeName}-state.json`);
     }
@@ -142,7 +178,7 @@ function linkRalphTeam(directory, sessionId) {
   try {
     const ralphPath = getStatePath('ralph');
     if (existsSync(ralphPath)) {
-      const state = JSON.parse(readFileSync(ralphPath, 'utf-8'));
+      const state: ModeState = JSON.parse(readFileSync(ralphPath, 'utf-8'));
       state.linked_team = true;
       writeFileSync(ralphPath, JSON.stringify(state, null, 2), { mode: 0o600 });
     }
@@ -152,7 +188,7 @@ function linkRalphTeam(directory, sessionId) {
   try {
     const teamPath = getStatePath('team');
     if (existsSync(teamPath)) {
-      const state = JSON.parse(readFileSync(teamPath, 'utf-8'));
+      const state: ModeState = JSON.parse(readFileSync(teamPath, 'utf-8'));
       state.linked_ralph = true;
       writeFileSync(teamPath, JSON.stringify(state, null, 2), { mode: 0o600 });
     }
@@ -162,15 +198,14 @@ function linkRalphTeam(directory, sessionId) {
 /**
  * Check if the team feature is enabled in Claude Code settings.
  * Reads ~/.claude/settings.json and checks for CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS env var.
- * @returns {boolean} true if team feature is enabled
  */
-function isTeamEnabled() {
+function isTeamEnabled(): boolean {
   try {
     // Check settings.json first (authoritative, user-controlled)
     const cfgDir = process.env.CLAUDE_CONFIG_DIR || join(homedir(), '.claude');
     const settingsPath = join(cfgDir, 'settings.json');
     if (existsSync(settingsPath)) {
-      const settings = JSON.parse(readFileSync(settingsPath, 'utf-8'));
+      const settings: ClaudeSettings = JSON.parse(readFileSync(settingsPath, 'utf-8'));
       if (settings.env?.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS === '1' ||
           settings.env?.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS === 'true') {
         return true;
@@ -190,7 +225,7 @@ function isTeamEnabled() {
 /**
  * Create a skill invocation message that tells Claude to use the Skill tool
  */
-function createSkillInvocation(skillName, originalPrompt, args = '') {
+function createSkillInvocation(skillName: string, originalPrompt: string, args: string = ''): string {
   const argsSection = args ? `\nArguments: ${args}` : '';
   return `[MAGIC KEYWORD: ${skillName.toUpperCase()}]
 
@@ -207,7 +242,7 @@ IMPORTANT: Invoke the skill IMMEDIATELY. Do not proceed without loading the skil
 /**
  * Create multi-skill invocation message for combined keywords
  */
-function createMultiSkillInvocation(skills, originalPrompt) {
+function createMultiSkillInvocation(skills: SkillMatch[], originalPrompt: string): string {
   if (skills.length === 0) return '';
   if (skills.length === 1) {
     return createSkillInvocation(skills[0].name, originalPrompt, skills[0].args);
@@ -234,8 +269,8 @@ IMPORTANT: Invoke ALL skills listed above. Start with the first skill IMMEDIATEL
 /**
  * Create combined output for multiple skill matches
  */
-function createCombinedOutput(skillMatches, originalPrompt) {
-  const parts = [];
+function createCombinedOutput(skillMatches: SkillMatch[], originalPrompt: string): string {
+  const parts: string[] = [];
   if (skillMatches.length > 0) {
     parts.push('## Section 1: Skill Invocations\n\n' + createMultiSkillInvocation(skillMatches, originalPrompt));
   }
@@ -246,12 +281,12 @@ function createCombinedOutput(skillMatches, originalPrompt) {
 /**
  * Resolve conflicts between detected keywords
  */
-function resolveConflicts(matches) {
+function resolveConflicts(matches: SkillMatch[]): SkillMatch[] {
   const names = matches.map(m => m.name);
 
   // Cancel is exclusive
   if (names.includes('cancel')) {
-    return [matches.find(m => m.name === 'cancel')];
+    return [matches.find(m => m.name === 'cancel')!];
   }
 
   let resolved = [...matches];
@@ -277,7 +312,7 @@ function resolveConflicts(matches) {
  * Create proper hook output with additionalContext (Claude Code hooks API)
  * The 'message' field is NOT a valid hook output - use hookSpecificOutput.additionalContext
  */
-function createHookOutput(additionalContext) {
+function createHookOutput(additionalContext: string): HookOutput {
   return {
     continue: true,
     hookSpecificOutput: {
@@ -288,7 +323,7 @@ function createHookOutput(additionalContext) {
 }
 
 // Main
-async function main() {
+async function main(): Promise<void> {
   // Skip guard: check OMC_SKIP_HOOKS env var (see issue #838)
   const _skipHooks = (process.env.OMC_SKIP_HOOKS || '').split(',').map(s => s.trim());
   if (process.env.DISABLE_OMC === '1' || _skipHooks.includes('keyword-detector')) {
@@ -303,7 +338,7 @@ async function main() {
       return;
     }
 
-    let data = {};
+    let data: HookData = {};
     try { data = JSON.parse(input); } catch {}
     const directory = data.cwd || data.directory || process.cwd();
     const sessionId = data.session_id || data.sessionId || '';
@@ -317,7 +352,7 @@ async function main() {
     const cleanPrompt = sanitizeForKeywordDetection(prompt).toLowerCase();
 
     // Collect all matching keywords
-    const matches = [];
+    const matches: SkillMatch[] = [];
 
     // Cancel keywords
     if (/\b(cancelomc|stopomc)\b/i.test(cleanPrompt)) {
@@ -402,8 +437,8 @@ async function main() {
     }
 
     // Deduplicate matches by keyword name before conflict resolution
-    const seen = new Set();
-    const uniqueMatches = [];
+    const seen = new Set<string>();
+    const uniqueMatches: SkillMatch[] = [];
     for (const m of matches) {
       if (!seen.has(m.name)) {
         seen.add(m.name);
@@ -415,7 +450,7 @@ async function main() {
     const resolved = resolveConflicts(uniqueMatches);
 
     // Import flow tracer once (best-effort)
-    let tracer = null;
+    let tracer: { recordKeywordDetected: (d: string, s: string, k: string) => void; recordModeChange: (d: string, s: string, from: string, to: string) => void } | null = null;
     try { tracer = await import('../src/hooks/subagent-tracker/flow-tracer.ts'); } catch { /* silent */ }
 
     // Record detected keywords to flow trace
@@ -480,7 +515,7 @@ async function main() {
     if (skillMatches.length > 0) {
       console.log(JSON.stringify(createHookOutput(createMultiSkillInvocation(skillMatches, prompt))));
     }
-  } catch (error) {
+  } catch {
     // On any error, allow continuation
     console.log(JSON.stringify({ continue: true, suppressOutput: true }));
   }

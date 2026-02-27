@@ -1,7 +1,7 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 
 /**
- * OMC Session Start Hook (Node.js)
+ * OMC Session Start Hook
  * Restores persistent mode states when session starts
  * Cross-platform: Windows, macOS, Linux
  */
@@ -17,28 +17,101 @@ const __dirname = dirname(__filename);
 /** Claude config directory (respects CLAUDE_CONFIG_DIR env var) */
 const configDir = process.env.CLAUDE_CONFIG_DIR || join(homedir(), '.claude');
 
+interface ReadStdinFn {
+  (timeoutMs?: number): Promise<string>;
+}
+
 // Import timeout-protected stdin reader (prevents hangs on Linux/Windows, see issue #240, #524)
-let readStdin;
+let readStdin: ReadStdinFn;
 try {
-  const mod = await import(pathToFileURL(join(__dirname, 'lib', 'stdin.mjs')).href);
+  const mod = await import(pathToFileURL(join(__dirname, 'lib', 'stdin.js')).href) as { readStdin: ReadStdinFn };
   readStdin = mod.readStdin;
 } catch {
   // Fallback: inline timeout-protected readStdin if lib module is missing
-  readStdin = (timeoutMs = 5000) => new Promise((resolve) => {
-    const chunks = [];
+  readStdin = (timeoutMs: number = 5000): Promise<string> => new Promise((resolve) => {
+    const chunks: Buffer[] = [];
     let settled = false;
     const timeout = setTimeout(() => {
       if (!settled) { settled = true; process.stdin.removeAllListeners(); process.stdin.destroy(); resolve(Buffer.concat(chunks).toString('utf-8')); }
     }, timeoutMs);
-    process.stdin.on('data', (chunk) => { chunks.push(chunk); });
+    process.stdin.on('data', (chunk: Buffer) => { chunks.push(chunk); });
     process.stdin.on('end', () => { if (!settled) { settled = true; clearTimeout(timeout); resolve(Buffer.concat(chunks).toString('utf-8')); } });
     process.stdin.on('error', () => { if (!settled) { settled = true; clearTimeout(timeout); resolve(''); } });
     if (process.stdin.readableEnded) { if (!settled) { settled = true; clearTimeout(timeout); resolve(Buffer.concat(chunks).toString('utf-8')); } }
   });
 }
 
+interface ModeState {
+  active?: boolean;
+  session_id?: string;
+  started_at?: string;
+  original_prompt?: string;
+  prompt?: string;
+  iteration?: number;
+  max_iterations?: number;
+  [key: string]: unknown;
+}
+
+interface TodoItem {
+  status: string;
+}
+
+interface TodoData {
+  todos?: TodoItem[];
+}
+
+interface PackageJson {
+  version?: string;
+}
+
+interface DriftComponent {
+  component: string;
+  current: string;
+  expected: string;
+}
+
+interface DriftInfo {
+  pluginVersion: string;
+  npmVersion: string | null;
+  claudeMdVersion: string | null;
+  drift: DriftComponent[];
+}
+
+interface UpdateInfo {
+  currentVersion: string;
+  latestVersion: string;
+}
+
+interface HudCheckResult {
+  installed: boolean;
+  reason?: string;
+}
+
+interface UpdateCache {
+  timestamp?: number;
+  updateAvailable?: boolean;
+  latestVersion?: string;
+  currentVersion?: string;
+}
+
+interface UpdateState {
+  lastNotifiedDrift?: string;
+  lastNotifiedAt?: string;
+}
+
+interface ClaudeSettings {
+  statusLine?: string;
+}
+
+interface HookData {
+  cwd?: string;
+  directory?: string;
+  session_id?: string;
+  sessionId?: string;
+}
+
 // Read JSON file safely
-function readJsonFile(path) {
+function readJsonFile(path: string): ModeState | null {
   try {
     if (!existsSync(path)) return null;
     return JSON.parse(readFileSync(path, 'utf-8'));
@@ -48,7 +121,7 @@ function readJsonFile(path) {
 }
 
 // Semantic version comparison (for cache cleanup sorting)
-function semverCompare(a, b) {
+function semverCompare(a: string, b: string): number {
   const pa = a.replace(/^v/, '').split('.').map(s => parseInt(s, 10) || 0);
   const pb = b.replace(/^v/, '').split('.').map(s => parseInt(s, 10) || 0);
   for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
@@ -60,32 +133,32 @@ function semverCompare(a, b) {
 }
 
 // Extract OMC version from CLAUDE.md content
-function extractOmcVersion(content) {
+function extractOmcVersion(content: string): string | null {
   const match = content.match(/<!-- OMC:VERSION:(\d+\.\d+\.\d+[^\s]*?) -->/);
   return match ? match[1] : null;
 }
 
 // Get plugin version from CLAUDE_PLUGIN_ROOT
-function getPluginVersion() {
+function getPluginVersion(): string | null {
   try {
     const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT;
     if (!pluginRoot) return null;
-    const pkg = readJsonFile(join(pluginRoot, 'package.json'));
-    return pkg?.version || null;
+    const pkg = readJsonFile(join(pluginRoot, 'package.json')) as PackageJson | null;
+    return (pkg as PackageJson)?.version || null;
   } catch { return null; }
 }
 
 // Get npm global package version
-function getNpmVersion() {
+function getNpmVersion(): string | null {
   try {
     const versionFile = join(configDir, '.omc-version.json');
-    const data = readJsonFile(versionFile);
+    const data = readJsonFile(versionFile) as { version?: string } | null;
     return data?.version || null;
   } catch { return null; }
 }
 
 // Get CLAUDE.md version
-function getClaudeMdVersion() {
+function getClaudeMdVersion(): string | null {
   try {
     const claudeMdPath = join(configDir, 'CLAUDE.md');
     if (!existsSync(claudeMdPath)) return null;  // File doesn't exist
@@ -96,7 +169,7 @@ function getClaudeMdVersion() {
 }
 
 // Detect version drift between components
-function detectVersionDrift() {
+function detectVersionDrift(): DriftInfo | null {
   const pluginVersion = getPluginVersion();
   const npmVersion = getNpmVersion();
   const claudeMdVersion = getClaudeMdVersion();
@@ -104,7 +177,7 @@ function detectVersionDrift() {
   // Need at least plugin version to detect drift
   if (!pluginVersion) return null;
 
-  const drift = [];
+  const drift: DriftComponent[] = [];
 
   if (npmVersion && npmVersion !== pluginVersion) {
     drift.push({ component: 'npm package (omc CLI)', current: npmVersion, expected: pluginVersion });
@@ -130,13 +203,13 @@ function detectVersionDrift() {
 }
 
 // Check if we should notify (once per unique drift combination)
-function shouldNotifyDrift(driftInfo) {
+function shouldNotifyDrift(driftInfo: DriftInfo): boolean {
   const stateFile = join(configDir, '.omc', 'update-state.json');
   const driftKey = `plugin:${driftInfo.pluginVersion}-npm:${driftInfo.npmVersion}-claude:${driftInfo.claudeMdVersion}`;
 
   try {
     if (existsSync(stateFile)) {
-      const state = JSON.parse(readFileSync(stateFile, 'utf-8'));
+      const state: UpdateState = JSON.parse(readFileSync(stateFile, 'utf-8'));
       if (state.lastNotifiedDrift === driftKey) return false;
     }
   } catch {}
@@ -155,7 +228,7 @@ function shouldNotifyDrift(driftInfo) {
 }
 
 // Check npm registry for available update (with 24h cache)
-async function checkNpmUpdate(currentVersion) {
+async function checkNpmUpdate(currentVersion: string): Promise<UpdateInfo | null> {
   const cacheFile = join(configDir, '.omc', 'update-check.json');
   const CACHE_DURATION = 24 * 60 * 60 * 1000;
   const now = Date.now();
@@ -163,9 +236,9 @@ async function checkNpmUpdate(currentVersion) {
   // Check cache
   try {
     if (existsSync(cacheFile)) {
-      const cached = JSON.parse(readFileSync(cacheFile, 'utf-8'));
+      const cached: UpdateCache = JSON.parse(readFileSync(cacheFile, 'utf-8'));
       if (cached.timestamp && (now - cached.timestamp) < CACHE_DURATION) {
-        return (cached.updateAvailable && semverCompare(cached.latestVersion, currentVersion) > 0)
+        return (cached.updateAvailable && cached.latestVersion && semverCompare(cached.latestVersion, currentVersion) > 0)
           ? { currentVersion, latestVersion: cached.latestVersion }
           : null;
       }
@@ -182,7 +255,7 @@ async function checkNpmUpdate(currentVersion) {
     clearTimeout(timeoutId);
     if (!response.ok) return null;
 
-    const data = await response.json();
+    const data = await response.json() as { version: string };
     const latestVersion = data.version;
     const updateAvailable = semverCompare(latestVersion, currentVersion) > 0;
 
@@ -198,7 +271,7 @@ async function checkNpmUpdate(currentVersion) {
 }
 
 // Check if HUD is properly installed (with retry for race conditions)
-async function checkHudInstallation(retryCount = 0) {
+async function checkHudInstallation(retryCount: number = 0): Promise<HudCheckResult> {
   const hudDir = join(configDir, 'hud');
   // Support both legacy (omc-hud.mjs) and current (omc-hud.mjs) naming
   const hudScriptOmc = join(hudDir, 'omc-hud.mjs');
@@ -227,7 +300,7 @@ async function checkHudInstallation(retryCount = 0) {
         }
         return { installed: false, reason: 'settings.json empty (possible race condition)' };
       }
-      const settings = JSON.parse(content);
+      const settings: ClaudeSettings = JSON.parse(content);
       if (!settings.statusLine) {
         // Retry once if statusLine not found (could be mid-write)
         if (retryCount < MAX_RETRIES) {
@@ -245,7 +318,7 @@ async function checkHudInstallation(retryCount = 0) {
       await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
       return checkHudInstallation(retryCount + 1);
     }
-    console.error('HUD check error:', err.message);
+    console.error('HUD check error:', (err as Error).message);
     return { installed: false, reason: 'Could not read settings' };
   }
 
@@ -253,15 +326,15 @@ async function checkHudInstallation(retryCount = 0) {
 }
 
 // Main
-async function main() {
+async function main(): Promise<void> {
   try {
     const input = await readStdin();
-    let data = {};
+    let data: HookData = {};
     try { data = JSON.parse(input); } catch {}
 
     const directory = data.cwd || data.directory || process.cwd();
     const sessionId = data.session_id || data.sessionId || '';
-    const messages = [];
+    const messages: string[] = [];
 
     // Check for version drift between components
     const driftInfo = detectVersionDrift();
@@ -296,7 +369,7 @@ async function main() {
 
     // Check for ultrawork state - only restore if session matches (issue #311)
     // Session-scoped ONLY when session_id exists — no legacy fallback
-    let ultraworkState = null;
+    let ultraworkState: ModeState | null = null;
     if (sessionId && /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,255}$/.test(sessionId)) {
       // Session-scoped ONLY — no legacy fallback
       ultraworkState = readJsonFile(join(directory, '.omc', 'state', 'sessions', sessionId, 'ultrawork-state.json'));
@@ -327,7 +400,7 @@ Continue working in ultrawork mode until all tasks are complete.
 
     // Check for ralph loop state
     // Session-scoped ONLY when session_id exists — no legacy fallback
-    let ralphState = null;
+    let ralphState: ModeState | null = null;
     if (sessionId && /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,255}$/.test(sessionId)) {
       // Session-scoped ONLY — no legacy fallback
       ralphState = readJsonFile(join(directory, '.omc', 'state', 'sessions', sessionId, 'ralph-state.json'));
@@ -371,8 +444,8 @@ Continue working until the task is verified complete.
     for (const todoFile of localTodoPaths) {
       if (existsSync(todoFile)) {
         try {
-          const data = readJsonFile(todoFile);
-          const todos = data?.todos || (Array.isArray(data) ? data : []);
+          const todoData = readJsonFile(todoFile) as TodoData | TodoItem[] | null;
+          const todos: TodoItem[] = (todoData as TodoData)?.todos ?? (Array.isArray(todoData) ? todoData : []);
           incompleteCount += todos.filter(t => t.status !== 'completed' && t.status !== 'cancelled').length;
         } catch {}
       }
@@ -409,7 +482,7 @@ ${cleanContent}
 </notepad-context>`);
           }
         }
-      } catch (err) {
+      } catch {
         // Silently ignore notepad read errors
       }
     }
@@ -455,7 +528,7 @@ ${cleanContent}
                     symlinkSync(symlinkTarget, versionPath, isWin ? 'junction' : undefined);
                   }
                 } catch (swapErr) {
-                  if (swapErr?.code !== 'EEXIST') {
+                  if ((swapErr as NodeJS.ErrnoException)?.code !== 'EEXIST') {
                     // Leave as-is rather than losing it
                   }
                 }
@@ -467,7 +540,7 @@ ${cleanContent}
                   symlinkSync(symlinkTarget, versionPath, isWin ? 'junction' : undefined);
                 } catch (symlinkErr) {
                   // EEXIST: another session raced us — safe to ignore.
-                  if (symlinkErr?.code !== 'EEXIST') {
+                  if ((symlinkErr as NodeJS.ErrnoException)?.code !== 'EEXIST') {
                     // Symlink genuinely failed. Leave the path as-is.
                   }
                 }
@@ -491,7 +564,7 @@ ${cleanContent}
     } else {
       console.log(JSON.stringify({ continue: true, suppressOutput: true }));
     }
-  } catch (error) {
+  } catch {
     console.log(JSON.stringify({ continue: true, suppressOutput: true }));
   }
 }

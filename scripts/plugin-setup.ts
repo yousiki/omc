@@ -11,6 +11,34 @@ import { homedir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+interface Settings {
+  statusLine?: {
+    type: string;
+    command: string;
+  };
+  [key: string]: unknown;
+}
+
+interface OmcConfig {
+  nodeBinary?: string;
+  [key: string]: unknown;
+}
+
+interface HookEntry {
+  command?: string;
+  [key: string]: unknown;
+}
+
+interface HookGroup {
+  hooks?: HookEntry[];
+  [key: string]: unknown;
+}
+
+interface HooksJson {
+  hooks?: Record<string, HookGroup[]>;
+  [key: string]: unknown;
+}
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -113,9 +141,9 @@ console.log('[OMC] Installed HUD wrapper script');
 
 // 3. Configure settings.json
 try {
-  let settings = {};
+  let settings: Settings = {};
   if (existsSync(SETTINGS_FILE)) {
-    settings = JSON.parse(readFileSync(SETTINGS_FILE, 'utf-8'));
+    settings = JSON.parse(readFileSync(SETTINGS_FILE, 'utf-8')) as Settings;
   }
 
   // Use bun to run the HUD script directly (handles TypeScript natively)
@@ -129,18 +157,18 @@ try {
   // Persist the runtime binary path to .omc-config.json for use by hooks
   try {
     const configPath = join(CLAUDE_DIR, '.omc-config.json');
-    let omcConfig = {};
+    let omcConfig: OmcConfig = {};
     if (existsSync(configPath)) {
-      omcConfig = JSON.parse(readFileSync(configPath, 'utf-8'));
+      omcConfig = JSON.parse(readFileSync(configPath, 'utf-8')) as OmcConfig;
     }
     omcConfig.nodeBinary = 'bun';
     writeFileSync(configPath, JSON.stringify(omcConfig, null, 2));
     console.log('[OMC] Saved runtime binary path: bun');
   } catch (e) {
-    console.log('[OMC] Warning: Could not save runtime binary path (non-fatal):', e.message);
+    console.log('[OMC] Warning: Could not save runtime binary path (non-fatal):', (e as Error).message);
   }
 } catch (e) {
-  console.log('[OMC] Warning: Could not configure settings.json:', e.message);
+  console.log('[OMC] Warning: Could not configure settings.json:', (e as Error).message);
 }
 
 // Patch hooks.json to use bun so hooks work on all platforms.
@@ -157,7 +185,7 @@ try {
 try {
   const hooksJsonPath = join(__dirname, '..', 'hooks', 'hooks.json');
   if (existsSync(hooksJsonPath)) {
-    const data = JSON.parse(readFileSync(hooksJsonPath, 'utf-8'));
+    const data = JSON.parse(readFileSync(hooksJsonPath, 'utf-8')) as HooksJson;
     let patched = false;
 
     // Pattern 1 (new): node "${CLAUDE_PLUGIN_ROOT}/scripts/run.cjs" <rest>
@@ -199,7 +227,7 @@ try {
     }
   }
 } catch (e) {
-  console.log('[OMC] Warning: Could not patch hooks.json:', e.message);
+  console.log('[OMC] Warning: Could not patch hooks.json:', (e as Error).message);
 }
 
 console.log('[OMC] Setup complete! Restart Claude Code to activate HUD.');

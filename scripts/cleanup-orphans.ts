@@ -9,7 +9,7 @@
  * teammates confirm shutdown.
  *
  * Usage:
- *   node cleanup-orphans.mjs [--team-name <name>] [--dry-run]
+ *   node cleanup-orphans.ts [--team-name <name>] [--dry-run]
  *
  * When --team-name is provided, only checks for orphans from that team.
  * When omitted, scans for ALL orphan claude agent processes.
@@ -21,10 +21,22 @@
  *   1 - Error during cleanup
  */
 
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
+
+interface OrphanProcess {
+  pid: number;
+  team: string;
+  cmd: string;
+}
+
+interface KillResult {
+  pid: number;
+  team: string;
+  action: 'would_kill' | 'killed' | 'failed';
+}
 
 const args = process.argv.slice(2);
 const teamNameIdx = args.indexOf('--team-name');
@@ -43,8 +55,8 @@ if (rawTeamName && !teamName) {
  * Find claude agent processes that match team patterns.
  * Cross-platform: uses ps on Unix, tasklist on Windows.
  */
-function findOrphanProcesses(filterTeam) {
-  const orphans = [];
+function findOrphanProcesses(filterTeam: string | null): OrphanProcess[] {
+  const orphans: OrphanProcess[] = [];
 
   try {
     if (process.platform === 'win32') {
@@ -54,7 +66,9 @@ function findOrphanProcesses(filterTeam) {
       for (const line of output.split('\n')) {
         if (line.includes('--team-name') || line.includes('team_name')) {
           // Restrict team name match to valid slug characters (alphanumeric + hyphens)
-          const match = line.match(/--team-name[=\s]+([\w][\w-]{0,63})/i) || line.match(/team_name[=:]\s*"?([\w][\w-]{0,63})"?/i);
+          const match =
+            line.match(/--team-name[=\s]+([\w][\w-]{0,63})/i) ||
+            line.match(/team_name[=:]\s*"?([\w][\w-]{0,63})"?/i);
           if (match) {
             const procTeam = match[1];
             if (filterTeam && procTeam !== filterTeam) continue;
@@ -72,11 +86,14 @@ function findOrphanProcesses(filterTeam) {
 
       for (const line of output.split('\n')) {
         // Match claude agent processes with team context
-        if ((line.includes('claude') || line.includes('node')) &&
-            (line.includes('--team-name') || line.includes('team_name'))) {
-
+        if (
+          (line.includes('claude') || line.includes('node')) &&
+          (line.includes('--team-name') || line.includes('team_name'))
+        ) {
           // Restrict team name match to valid slug characters
-          const match = line.match(/--team-name[=\s]+([\w][\w-]{0,63})/i) || line.match(/team_name[=:]\s*"?([\w][\w-]{0,63})"?/i);
+          const match =
+            line.match(/--team-name[=\s]+([\w][\w-]{0,63})/i) ||
+            line.match(/team_name[=:]\s*"?([\w][\w-]{0,63})"?/i);
           if (match) {
             const procTeam = match[1];
             if (filterTeam && procTeam !== filterTeam) continue;
@@ -97,7 +114,7 @@ function findOrphanProcesses(filterTeam) {
   return orphans;
 }
 
-function getWindowsProcessListOutput() {
+function getWindowsProcessListOutput(): string {
   try {
     // Primary path: WMIC (legacy but still available on some systems).
     return execSync(
@@ -120,7 +137,7 @@ function getWindowsProcessListOutput() {
 /**
  * Check if a team's config still exists (i.e., team is still active).
  */
-function teamConfigExists(name) {
+function teamConfigExists(name: string): boolean {
   const configDir = process.env.CLAUDE_CONFIG_DIR || join(homedir(), '.claude');
   const configPath = join(configDir, 'teams', name, 'config.json');
   return existsSync(configPath);
@@ -129,7 +146,7 @@ function teamConfigExists(name) {
 /**
  * Kill a process: SIGTERM first, SIGKILL after 5s if still alive.
  */
-function killProcess(pid) {
+function killProcess(pid: number): boolean {
   // Validate PID is a positive integer (prevent command injection)
   if (!Number.isInteger(pid) || pid <= 0) return false;
 
@@ -156,31 +173,35 @@ function killProcess(pid) {
   }
 }
 
-function main() {
+function main(): void {
   const processes = findOrphanProcesses(teamName);
 
   if (processes.length === 0) {
-    console.log(JSON.stringify({
-      orphans: 0,
-      message: teamName
-        ? `No orphan processes found for team "${teamName}".`
-        : 'No orphan agent processes found.',
-    }));
+    console.log(
+      JSON.stringify({
+        orphans: 0,
+        message: teamName
+          ? `No orphan processes found for team "${teamName}".`
+          : 'No orphan agent processes found.',
+      })
+    );
     process.exit(0);
   }
 
   // Filter to actual orphans: processes whose team config no longer exists
-  const orphans = processes.filter(p => !teamConfigExists(p.team));
+  const orphans = processes.filter((p) => !teamConfigExists(p.team));
 
   if (orphans.length === 0) {
-    console.log(JSON.stringify({
-      orphans: 0,
-      message: `Found ${processes.length} team process(es) but all have active team configs.`,
-    }));
+    console.log(
+      JSON.stringify({
+        orphans: 0,
+        message: `Found ${processes.length} team process(es) but all have active team configs.`,
+      })
+    );
     process.exit(0);
   }
 
-  const results = [];
+  const results: KillResult[] = [];
 
   for (const orphan of orphans) {
     if (dryRun) {
@@ -189,18 +210,22 @@ function main() {
     } else {
       const killed = killProcess(orphan.pid);
       results.push({ pid: orphan.pid, team: orphan.team, action: killed ? 'killed' : 'failed' });
-      console.error(`[cleanup] ${killed ? 'Killed' : 'Failed to kill'} PID ${orphan.pid} (team: ${orphan.team})`);
+      console.error(
+        `[cleanup] ${killed ? 'Killed' : 'Failed to kill'} PID ${orphan.pid} (team: ${orphan.team})`
+      );
     }
   }
 
-  console.log(JSON.stringify({
-    orphans: orphans.length,
-    dryRun,
-    results,
-    message: dryRun
-      ? `Found ${orphans.length} orphan(s). Re-run without --dry-run to clean up.`
-      : `Cleaned up ${results.filter(r => r.action === 'killed').length}/${orphans.length} orphan(s).`,
-  }));
+  console.log(
+    JSON.stringify({
+      orphans: orphans.length,
+      dryRun,
+      results,
+      message: dryRun
+        ? `Found ${orphans.length} orphan(s). Re-run without --dry-run to clean up.`
+        : `Cleaned up ${results.filter((r) => r.action === 'killed').length}/${orphans.length} orphan(s).`,
+    })
+  );
 }
 
 main();

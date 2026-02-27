@@ -1,7 +1,7 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 
 /**
- * OMC Persistent Mode Hook (Node.js)
+ * OMC Persistent Mode Hook
  * Minimal continuation enforcer for all OMC modes.
  * Stripped down for reliability — no optional imports, no PRD, no notepad pruning.
  *
@@ -25,10 +25,63 @@ const __dirname = dirname(__filename);
 
 // Dynamic import for the shared stdin module
 const { readStdin } = await import(
-  pathToFileURL(join(__dirname, "lib", "stdin.mjs")).href
+  pathToFileURL(join(__dirname, "lib", "stdin.js")).href
 );
 
-function readJsonFile(path) {
+interface ModeState {
+  active?: boolean;
+  session_id?: string;
+  project_path?: string;
+  started_at?: string;
+  last_checked_at?: string;
+  iteration?: number;
+  max_iterations?: number;
+  reinforcement_count?: number;
+  max_reinforcements?: number;
+  phase?: string;
+  current_phase?: string;
+  current_stage?: number;
+  stages?: unknown[];
+  all_passing?: boolean;
+  cycle?: number;
+  max_cycles?: number;
+  original_prompt?: string;
+  prompt?: string;
+  [key: string]: unknown;
+}
+
+interface StateResult {
+  state: ModeState | null;
+  path: string;
+  isGlobal: boolean;
+}
+
+interface ToolError {
+  timestamp?: string;
+  retry_count?: number;
+  tool_name?: string;
+  error?: string;
+}
+
+interface HookData {
+  cwd?: string;
+  directory?: string;
+  sessionId?: string;
+  session_id?: string;
+  sessionid?: string;
+  stop_reason?: string;
+  stopReason?: string;
+  end_turn_reason?: string;
+  endTurnReason?: string;
+  user_requested?: boolean;
+  userRequested?: boolean;
+}
+
+interface TaskData {
+  status?: string;
+}
+
+function readJsonFile(path: string): ModeState | null {
   try {
     if (!existsSync(path)) return null;
     return JSON.parse(readFileSync(path, "utf-8"));
@@ -37,7 +90,7 @@ function readJsonFile(path) {
   }
 }
 
-function writeJsonFile(path, data) {
+function writeJsonFile(path: string, data: ModeState): boolean {
   try {
     // Ensure directory exists
     const dir = dirname(path);
@@ -55,9 +108,9 @@ function writeJsonFile(path, data) {
  * Read last tool error from state directory.
  * Returns null if file doesn't exist or error is stale (>60 seconds old).
  */
-function readLastToolError(stateDir) {
+function readLastToolError(stateDir: string): ToolError | null {
   const errorPath = join(stateDir, "last-tool-error.json");
-  const toolError = readJsonFile(errorPath);
+  const toolError = readJsonFile(errorPath) as ToolError | null;
 
   if (!toolError || !toolError.timestamp) return null;
 
@@ -75,7 +128,7 @@ function readLastToolError(stateDir) {
 /**
  * Clear tool error state file atomically.
  */
-function clearToolErrorState(stateDir) {
+function clearToolErrorState(stateDir: string): void {
   const errorPath = join(stateDir, "last-tool-error.json");
   try {
     if (existsSync(errorPath)) {
@@ -90,7 +143,7 @@ function clearToolErrorState(stateDir) {
  * Generate retry guidance message for tool errors.
  * After 5+ retries, suggests alternative approaches.
  */
-function getToolErrorRetryGuidance(toolError) {
+function getToolErrorRetryGuidance(toolError: ToolError | null): string {
   if (!toolError) return "";
 
   const retryCount = toolError.retry_count || 1;
@@ -138,7 +191,7 @@ const STALE_STATE_THRESHOLD_MS = 2 * 60 * 60 * 1000; // 2 hours
  * A state is considered stale if it hasn't been updated recently.
  * We check both `last_checked_at` and `started_at` - using whichever is more recent.
  */
-function isStaleState(state) {
+function isStaleState(state: ModeState | null): boolean {
   if (!state) return true;
 
   const lastChecked = state.last_checked_at
@@ -156,7 +209,7 @@ function isStaleState(state) {
 /**
  * Normalize a path for comparison.
  */
-function normalizePath(p) {
+function normalizePath(p: string): string {
   if (!p) return "";
   let normalized = resolve(p);
   normalized = normalize(normalized);
@@ -171,10 +224,10 @@ function normalizePath(p) {
  * Check if a state belongs to the current project.
  */
 function isStateForCurrentProject(
-  state,
-  currentDirectory,
-  isGlobalState = false,
-) {
+  state: ModeState | null,
+  currentDirectory: string,
+  isGlobalState: boolean = false,
+): boolean {
   if (!state) return true;
 
   if (!state.project_path) {
@@ -191,7 +244,7 @@ function isStateForCurrentProject(
  * Read state file from local or global location, tracking the source.
  * Returns { state, path, isGlobal } to track where the state was loaded from.
  */
-function readStateFile(stateDir, globalStateDir, filename) {
+function readStateFile(stateDir: string, globalStateDir: string, filename: string): StateResult {
   const localPath = join(stateDir, filename);
   const globalPath = join(globalStateDir, filename);
 
@@ -206,7 +259,7 @@ function readStateFile(stateDir, globalStateDir, filename) {
 
 const SESSION_ID_ALLOWLIST = /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,255}$/;
 
-function sanitizeSessionId(sessionId) {
+function sanitizeSessionId(sessionId: string): string {
   if (!sessionId || typeof sessionId !== "string") return "";
   return SESSION_ID_ALLOWLIST.test(sessionId) ? sessionId : "";
 }
@@ -216,7 +269,7 @@ function sanitizeSessionId(sessionId) {
  * If sessionId is provided, ONLY reads the session-scoped path.
  * Falls back to legacy path when sessionId is not provided.
  */
-function readStateFileWithSession(stateDir, globalStateDir, filename, sessionId) {
+function readStateFileWithSession(stateDir: string, globalStateDir: string, filename: string, sessionId: string): StateResult {
   const safeSessionId = sanitizeSessionId(sessionId);
   if (safeSessionId) {
     const sessionsDir = join(stateDir, "sessions", safeSessionId);
@@ -228,14 +281,14 @@ function readStateFileWithSession(stateDir, globalStateDir, filename, sessionId)
   return readStateFile(stateDir, globalStateDir, filename);
 }
 
-function isValidSessionId(sessionId) {
+function isValidSessionId(sessionId: string): boolean {
   return typeof sessionId === "string" && SESSION_ID_ALLOWLIST.test(sessionId);
 }
 
 /**
  * Count incomplete Tasks from Claude Code's native Task system.
  */
-function countIncompleteTasks(sessionId) {
+function countIncompleteTasks(sessionId: string): number {
   if (!sessionId || typeof sessionId !== "string") return 0;
   if (!/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,255}$/.test(sessionId)) return 0;
 
@@ -251,7 +304,7 @@ function countIncompleteTasks(sessionId) {
     for (const file of files) {
       try {
         const content = readFileSync(join(taskDir, file), "utf-8");
-        const task = JSON.parse(content);
+        const task: TaskData = JSON.parse(content);
         if (task.status === "pending" || task.status === "in_progress") count++;
       } catch {
         /* skip */
@@ -263,7 +316,15 @@ function countIncompleteTasks(sessionId) {
   return count;
 }
 
-function countIncompleteTodos(sessionId, projectDir) {
+interface TodoItem {
+  status: string;
+}
+
+interface TodoData {
+  todos?: TodoItem[];
+}
+
+function countIncompleteTodos(sessionId: string, projectDir: string): number {
   let count = 0;
 
   // Session-specific todos only (no global scan)
@@ -279,11 +340,11 @@ function countIncompleteTodos(sessionId, projectDir) {
       `${sessionId}.json`,
     );
     try {
-      const data = readJsonFile(sessionTodoPath);
-      const todos = Array.isArray(data)
+      const data = readJsonFile(sessionTodoPath) as TodoData | TodoItem[] | null;
+      const todos: TodoItem[] = Array.isArray(data)
         ? data
-        : Array.isArray(data?.todos)
-          ? data.todos
+        : Array.isArray((data as TodoData)?.todos)
+          ? (data as TodoData).todos!
           : [];
       count += todos.filter(
         (t) => t.status !== "completed" && t.status !== "cancelled",
@@ -299,11 +360,11 @@ function countIncompleteTodos(sessionId, projectDir) {
     join(projectDir, ".claude", "todos.json"),
   ]) {
     try {
-      const data = readJsonFile(path);
-      const todos = Array.isArray(data)
+      const data = readJsonFile(path) as TodoData | TodoItem[] | null;
+      const todos: TodoItem[] = Array.isArray(data)
         ? data
-        : Array.isArray(data?.todos)
-          ? data.todos
+        : Array.isArray((data as TodoData)?.todos)
+          ? (data as TodoData).todos!
           : [];
       count += todos.filter(
         (t) => t.status !== "completed" && t.status !== "cancelled",
@@ -324,7 +385,7 @@ function countIncompleteTodos(sessionId, projectDir) {
  *
  * See: https://github.com/Yeachan-Heo/omc/issues/213
  */
-function isContextLimitStop(data) {
+function isContextLimitStop(data: HookData): boolean {
   const reason = (data.stop_reason || data.stopReason || "").toLowerCase();
 
   const contextPatterns = [
@@ -358,7 +419,7 @@ function isContextLimitStop(data) {
 /**
  * Detect if stop was triggered by user abort (Ctrl+C, cancel button, etc.)
  */
-function isUserAbort(data) {
+function isUserAbort(data: HookData): boolean {
   if (data.user_requested || data.userRequested) return true;
 
   const reason = (data.stop_reason || data.stopReason || "").toLowerCase();
@@ -378,10 +439,10 @@ function isUserAbort(data) {
   );
 }
 
-async function main() {
+async function main(): Promise<void> {
   try {
     const input = await readStdin();
-    let data = {};
+    let data: HookData = {};
     try {
       data = JSON.parse(input);
     } catch {}
@@ -707,7 +768,7 @@ async function main() {
     console.log(JSON.stringify({ continue: true, suppressOutput: true }));
   } catch (error) {
     // On any error, allow stop rather than blocking forever
-    console.error(`[persistent-mode] Error: ${error.message}`);
+    console.error(`[persistent-mode] Error: ${(error as Error).message}`);
     console.log(JSON.stringify({ continue: true, suppressOutput: true }));
   }
 }

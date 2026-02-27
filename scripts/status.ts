@@ -1,11 +1,25 @@
 #!/usr/bin/env node
 
-import { spawnSync } from 'node:child_process';
+import { spawnSync, SpawnSyncReturns } from 'node:child_process';
 
 const SESSION_PREFIX = 'omc-team-';
 
-function runTmux(args) {
-  const result = spawnSync('tmux', args, {
+interface TmuxResult {
+  ok: boolean;
+  code: number;
+  stderr: string;
+  stdout: string;
+}
+
+interface PaneRow {
+  session: string;
+  paneId: string;
+  command: string;
+  status: string;
+}
+
+function runTmux(args: string[]): TmuxResult {
+  const result: SpawnSyncReturns<string> = spawnSync('tmux', args, {
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
   });
@@ -27,7 +41,7 @@ function runTmux(args) {
   };
 }
 
-function printTable(rows) {
+function printTable(rows: PaneRow[]): void {
   const headers = ['session', 'pane ID', 'command', 'status'];
   const widths = [
     headers[0].length,
@@ -43,7 +57,7 @@ function printTable(rows) {
     widths[3] = Math.max(widths[3], row.status.length);
   }
 
-  const format = (cols) =>
+  const format = (cols: string[]): string =>
     cols
       .map((col, idx) => col.padEnd(widths[idx]))
       .join('  ')
@@ -62,7 +76,7 @@ function printTable(rows) {
   }
 }
 
-function parsePaneLine(line, session) {
+function parsePaneLine(line: string, session: string): PaneRow | null {
   const trimmed = line.trim();
   if (!trimmed) return null;
 
@@ -81,7 +95,7 @@ function parsePaneLine(line, session) {
   };
 }
 
-function main() {
+function main(): void {
   const sessionsResult = runTmux(['list-sessions', '-F', '#{session_name}']);
 
   if (!sessionsResult.ok) {
@@ -100,7 +114,7 @@ function main() {
     process.exit(0);
   }
 
-  const rows = [];
+  const rows: PaneRow[] = [];
   let sawDeadPane = false;
 
   for (const session of sessions) {
@@ -122,7 +136,7 @@ function main() {
     const paneLines = panesResult.stdout
       .split('\n')
       .map((line) => parsePaneLine(line, session))
-      .filter(Boolean);
+      .filter((row): row is PaneRow => row !== null);
 
     for (const pane of paneLines) {
       if (pane.status === 'dead') {

@@ -1,26 +1,25 @@
 #!/usr/bin/env node
-'use strict';
 /**
- * OMC Cross-platform hook runner (run.cjs)
+ * OMC Cross-platform hook runner (run.ts)
  *
  * Uses process.execPath (the Node binary already running this script) to spawn
- * the target .mjs hook, bypassing PATH / shell discovery issues.
+ * the target hook, bypassing PATH / shell discovery issues.
  *
  * Replaces the `sh + find-node.sh` chain that fails on Windows because
  * /usr/bin/sh is a PE32+ binary the OS refuses to execute natively.
  * Fixes issues #909, #899, #892, #869.
  *
  * Usage (from hooks.json, after setup patches the absolute node path in):
- *   /abs/path/to/node "${CLAUDE_PLUGIN_ROOT}/scripts/run.cjs" \
+ *   /abs/path/to/node "${CLAUDE_PLUGIN_ROOT}/scripts/run.ts" \
  *       "${CLAUDE_PLUGIN_ROOT}/scripts/<hook>.mjs" [args...]
  *
  * During post-install setup, the leading `node` token is replaced with
  * process.execPath so nvm/fnm users and Windows users all get the right binary.
  */
 
-const { spawnSync } = require('child_process');
-const { existsSync, realpathSync } = require('fs');
-const { join, basename, dirname } = require('path');
+import { spawnSync } from 'child_process';
+import { existsSync, readdirSync, realpathSync } from 'fs';
+import { join, dirname } from 'path';
 
 const target = process.argv[2];
 if (!target) {
@@ -44,7 +43,7 @@ if (!target) {
  *
  * See: https://github.com/Yeachan-Heo/omc/issues/1007
  */
-function resolveTarget(targetPath) {
+function resolveTarget(targetPath: string): string | null {
   // Fast path: target exists (common case)
   if (existsSync(targetPath)) return targetPath;
 
@@ -63,21 +62,20 @@ function resolveTarget(targetPath) {
     const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT;
     if (!pluginRoot) return null;
 
-    const cacheBase = dirname(pluginRoot);          // .../omc/
+    const cacheBase = dirname(pluginRoot);           // .../omc/
     const scriptRelative = targetPath.slice(pluginRoot.length); // /scripts/persistent-mode.cjs
 
     if (!scriptRelative || !existsSync(cacheBase)) return null;
 
     // Find version directories (real dirs or valid symlinks), pick latest
-    const { readdirSync, lstatSync, readlinkSync } = require('fs');
-    const entries = readdirSync(cacheBase).filter(v => /^\d+\.\d+\.\d+/.test(v));
+    const entries = readdirSync(cacheBase).filter((v) => /^\d+\.\d+\.\d+/.test(v));
 
     // Sort descending by semver
     entries.sort((a, b) => {
       const pa = a.split('.').map(Number);
       const pb = b.split('.').map(Number);
       for (let i = 0; i < 3; i++) {
-        if ((pa[i] || 0) !== (pb[i] || 0)) return (pb[i] || 0) - (pa[i] || 0);
+        if ((pa[i] ?? 0) !== (pb[i] ?? 0)) return (pb[i] ?? 0) - (pa[i] ?? 0);
       }
       return 0;
     });
