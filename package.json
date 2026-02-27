@@ -1,5 +1,5 @@
 {
-  "name": "oh-my-claude-sisyphus",
+  "name": "oh-my-claudecode",
   "version": "4.5.1",
   "description": "Multi-agent orchestration system for Claude Code - Inspired by oh-my-opencode",
   "type": "module",
@@ -10,9 +10,7 @@
     }
   },
   "bin": {
-    "oh-my-claudecode": "src/cli/index.ts",
-    "omc": "src/cli/index.ts",
-    "omc-cli": "src/cli/index.ts"
+    "omc": "src/cli/index.ts"
   },
   "scripts": {
     "start": "bun src/index.ts",
